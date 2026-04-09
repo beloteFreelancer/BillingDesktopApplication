@@ -1,14 +1,18 @@
 package purchasepack;
 
+import Utils.CompanySettingUtil;
 import ca.odell.glazedlists.GlazedLists;
 import ca.odell.glazedlists.swing.AutoCompleteSupport;
 import com.selrom.db.DataUtil;
 import itempack.item_master;
+import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Frame;
 import java.awt.HeadlessException;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.Window;
 import java.awt.event.KeyEvent;
 import java.io.BufferedReader;
 import java.io.File;
@@ -24,20 +28,30 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JDesktopPane;
+import javax.swing.JDialog;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import menupack.menu_form;
+import menupack.UserSession;
 
 /**
  *
  * @author K.SELVAKUMAR, copyrights K.SELVAKUMAR, +91 99427 32229,
- * mysoft.java@gmail.com
+ *         mysoft.java@gmail.com
  */
 public final class preturn_entry extends javax.swing.JInternalFrame {
 
@@ -74,6 +88,7 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
             return column == 3 || column == 4 || column == 5 || column == 6 || column == 7 || column == 9;
         }
     }
+
     sample2 s2 = new sample2();
     sample2 s3 = new sample2();
     sample2 s4 = new sample2();
@@ -169,7 +184,11 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
     final void get_defaults() {
         try {
             Connection conn = util.getConnection();
-            PreparedStatement ps = conn.prepareStatement("select pur_rate_edit,rprice,wprice,rdis,wdis from setting_bill");
+            String companyWhere = UserSession.hasSelectedCompany()
+                    ? " WHERE companyID='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            PreparedStatement ps = conn
+                    .prepareStatement("select pur_rate_edit,rprice,wprice,rdis,wdis from company" + companyWhere);
             ResultSet r = ps.executeQuery();
             while (r.next()) {
                 pur_rate_edit = r.getString(1);
@@ -193,7 +212,8 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
         try {
             int sno = 1;
             Connection conn = util.getConnection();
-            PreparedStatement ps = conn.prepareStatement("select max(grn) from preturn");
+            String companyFilter = UserSession.hasSelectedCompany() ? " where company_id='" + UserSession.getSelectedCompanyID() + "'" : "";
+            PreparedStatement ps = conn.prepareStatement("select max(grn) from preturn" + companyFilter);
             ResultSet r = ps.executeQuery();
             boolean selva = false;
             while (r.next()) {
@@ -220,7 +240,7 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
             while (set1.next()) {
                 scode = set1.getString(1);
             }
-            ps = conn.prepareStatement("select distinct scode from setting_bill");
+            ps = conn.prepareStatement("select distinct scode from company");
             set1 = ps.executeQuery();
             while (set1.next()) {
                 actual_code = set1.getString(1);
@@ -238,8 +258,10 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
     void get_item_details_using_item_no() {
         try {
             Connection conn = util.getConnection();
-            PreparedStatement ps = conn.prepareStatement("select ino,iname,barcode,prate,mrp,rprice,wprice,taxp from item where ino=? order by ino limit 1");
+            PreparedStatement ps = conn.prepareStatement(
+                    "select ino,iname,barcode,prate,mrp,rprice,wprice,taxp from item where ino=? AND company_id=? order by ino limit 1");
             ps.setString(1, h8.getText());
+            ps.setString(2, UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "");
             ResultSet r = ps.executeQuery();
             while (r.next()) {
                 h8.setText(r.getString(1));
@@ -259,8 +281,10 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
     void get_item_details_using_barcode() {
         try {
             Connection conn = util.getConnection();
-            PreparedStatement ps = conn.prepareStatement("select ino,iname,prate,mrp,rprice,wprice,taxp from item where barcode=? order by ino limit 1");
+            PreparedStatement ps = conn.prepareStatement(
+                    "select ino,iname,prate,mrp,rprice,wprice,taxp from item where barcode=? AND company_id=? order by ino limit 1");
             ps.setString(1, h7.getText());
+            ps.setString(2, UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "");
             ResultSet r = ps.executeQuery();
             while (r.next()) {
                 h8.setText(r.getString(1));
@@ -276,13 +300,16 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
         }
     }
 
-    void add_item(String barcode, String ino, String iname, double prate, double mrp, double rrate, double wrate, double disp, int taxp, double quan) {
+    void add_item(String barcode, String ino, String iname, double prate, double mrp, double rrate, double wrate,
+            double disp, int taxp, double quan) {
         try {
             String cat = ".", manu = ".", hsn = ".";
             boolean selva = false;
             Connection conn = util.getConnection();
-            PreparedStatement ps = conn.prepareStatement("select distinct cat,manu,hsn from item where ino=?");
+            PreparedStatement ps = conn
+                    .prepareStatement("select distinct cat,manu,hsn from item where ino=? AND company_id=?");
             ps.setString(1, ino);
+            ps.setString(2, UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "");
             ResultSet r = ps.executeQuery();
             while (r.next()) {
                 cat = r.getString(1);
@@ -292,7 +319,7 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
             }
             if (selva == false) {
                 JOptionPane.showMessageDialog(this, "Invalid Product Details!", "Invalid", JOptionPane.ERROR_MESSAGE);
-                //fields_clear();
+                // fields_clear();
                 return;
             }
 
@@ -321,12 +348,13 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
                 total = sub;
             }
             prate = Double.parseDouble(df4.format(prate));
-            s2.addRow(new Object[]{barcode, ino, iname, mrp, rrate, wrate, prate, quan, amount, disp, disamt, sub, taxp, taxamt, total, hsn, ttype, cat, manu});
-            //row selected
+            s2.addRow(new Object[] { barcode, ino, iname, mrp, rrate, wrate, prate, quan, amount, disp, disamt, sub,
+                    taxp, taxamt, total, hsn, ttype, cat, manu });
+            // row selected
             Rectangle rect = jTable1.getCellRect(jTable1.getRowCount() - 1, 0, true);
             jTable1.scrollRectToVisible(rect);
             jTable1.setRowSelectionInterval(jTable1.getRowCount() - 1, jTable1.getRowCount() - 1);
-            //row selected ends
+            // row selected ends
             ttypel.setEnabled(false);
             apply_all_changes();
             fields_clear();
@@ -381,7 +409,7 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
                 ngross = ngross + sub;
                 ntax = ntax + taxamt;
                 items = items + 1;
-            }//table row counts ends
+            } // table row counts ends
 
             nsub = Double.parseDouble(df4.format(nsub));
             ndis = Double.parseDouble(df4.format(ndis));
@@ -423,7 +451,7 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
             h25.setText("" + gt);
 
             String grant = gt + "";
-            //round off starts
+            // round off starts
             String[] grant1 = grant.split("\\.");
             String grant2 = grant1[0];
             String grant3 = grant1[1];
@@ -455,7 +483,7 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
             }
 
             round = Double.parseDouble(df4.format(round));
-            //round off ends
+            // round off ends
             h26.setText("" + round);
             netl.setText(rup + ".00");
             h27.setText(rup + ".00");
@@ -488,11 +516,13 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
         try {
             Connection conn = null;
             if (s2.getRowCount() <= 0) {
-                JOptionPane.showMessageDialog(this, "No Records Were Found to Save!", "No Records", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "No Records Were Found to Save!", "No Records",
+                        JOptionPane.ERROR_MESSAGE);
                 return;
             }
             if (h3.getText().equals("")) {
-                JOptionPane.showMessageDialog(this, "Enter Supplier Name ?", "Supplier Name", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Enter Supplier Name ?", "Supplier Name",
+                        JOptionPane.ERROR_MESSAGE);
                 h3.requestFocus();
                 return;
             }
@@ -511,7 +541,8 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
             double billamount = Double.parseDouble(h6.getText());
             double net = Double.parseDouble(h27.getText());
             if (billamount != net) {
-                JOptionPane.showMessageDialog(this, "Bill Amount & Net Amount Not Matching!", "Amount Not Matching", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Bill Amount & Net Amount Not Matching!", "Amount Not Matching",
+                        JOptionPane.ERROR_MESSAGE);
                 h6.requestFocus();
                 return;
             }
@@ -527,14 +558,16 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
                 selva = true;
             }
             if (selva == true) {
-                JOptionPane.showMessageDialog(this, "Purchase Entry Already Exist!\nUse 'Alter' Option to Alter...", "Already Exist", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Purchase Entry Already Exist!\nUse 'Alter' Option to Alter...",
+                        "Already Exist", JOptionPane.ERROR_MESSAGE);
                 h3.requestFocus();
                 return;
             }
 
             selva = false;
 
-            PreparedStatement psCheckBill = conn.prepareStatement("select billno from preturn where cname=? and billno=?");
+            PreparedStatement psCheckBill = conn
+                    .prepareStatement("select billno from preturn where cname=? and billno=?");
             psCheckBill.setString(1, h3.getText());
             psCheckBill.setString(2, h4.getText());
             r = psCheckBill.executeQuery();
@@ -542,7 +575,9 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
                 selva = true;
             }
             if (selva == true) {
-                JOptionPane.showMessageDialog(this, "This Bill No: '" + h4.getText() + "' is Already Exist for '" + h3.getText() + "'", "Already Exist", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this,
+                        "This Bill No: '" + h4.getText() + "' is Already Exist for '" + h3.getText() + "'",
+                        "Already Exist", JOptionPane.ERROR_MESSAGE);
                 h4.requestFocus();
                 return;
             }
@@ -553,7 +588,8 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
             while (r.next()) {
                 due_days = r.getInt(1);
             }
-            int aa = JOptionPane.showConfirmDialog(this, "<html><h1>Want to Save ?</h1></html>", "Are You Sure", JOptionPane.YES_NO_OPTION);
+            int aa = JOptionPane.showConfirmDialog(this, "<html><h1>Want to Save ?</h1></html>", "Are You Sure",
+                    JOptionPane.YES_NO_OPTION);
             if (aa == JOptionPane.NO_OPTION) {
                 return;
             }
@@ -587,10 +623,14 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
             String ttype1 = ttypel.getSelectedItem().toString();
             ArrayList query_batch = new ArrayList();
 
+            String cid = UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : null;
             conn = util.getConnection();
             conn.setAutoCommit(false);
-            PreparedStatement psItems = conn.prepareStatement("insert into preturn_items values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-            PreparedStatement psStock = conn.prepareStatement("update stock set quan=quan-? where barcode=? and ino=? and iname=? and entry=?");
+            PreparedStatement psItems = conn.prepareStatement(
+                    "insert into preturn_items values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+            PreparedStatement psStock = conn
+                    .prepareStatement(
+                            "update stock set quan=quan-? where barcode=? and ino=? and iname=? and entry=? and company_id=?");
 
             for (int i = 0; i < jTable1.getRowCount(); i++) {
                 String barcode = jTable1.getValueAt(i, 0).toString();
@@ -645,12 +685,15 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
                 psStock.setString(3, ino);
                 psStock.setString(4, iname);
                 psStock.setString(5, entry);
+                psStock.setString(6, cid != null ? cid : "");
                 psStock.addBatch();
             }
             psItems.executeBatch();
             psStock.executeBatch();
 
-            PreparedStatement psPreturn = conn.prepareStatement("insert into preturn values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+            PreparedStatement psPreturn = conn
+                    .prepareStatement(
+                            "insert into preturn (grn, dat, cname, billno, bdate, bamount, items, quans, sub, dis, gross, tax, fright, other, gt, round, net, pby, user, last, ttype, company_id) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             psPreturn.setString(1, grn);
             psPreturn.setString(2, date);
             psPreturn.setString(3, cname);
@@ -672,19 +715,23 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
             psPreturn.setString(19, username);
             psPreturn.setString(20, last);
             psPreturn.setString(21, ttype1);
+            psPreturn.setString(22, cid);
             psPreturn.executeUpdate();
 
             conn.commit();
             int count = 1;
             if (count > 0) {
-                JOptionPane.showMessageDialog(this, "<html><h1>Reference No: " + h1.getText() + "</h1></html>", "Saved Successfully", JOptionPane.PLAIN_MESSAGE);
-                int bb = JOptionPane.showConfirmDialog(this, "<html><h1>You Want to Print ?</h1></html>", "Print", JOptionPane.YES_NO_OPTION);
+                JOptionPane.showMessageDialog(this, "<html><h1>Reference No: " + h1.getText() + "</h1></html>",
+                        "Saved Successfully", JOptionPane.PLAIN_MESSAGE);
+                int bb = JOptionPane.showConfirmDialog(this, "<html><h1>You Want to Print ?</h1></html>", "Print",
+                        JOptionPane.YES_NO_OPTION);
                 if (bb == JOptionPane.YES_OPTION) {
                     print();
                 }
                 form_clear();
             } else {
-                JOptionPane.showMessageDialog(this, "Check Product Entries and then Try Again!", "Invalid Products", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Check Product Entries and then Try Again!", "Invalid Products",
+                        JOptionPane.ERROR_MESSAGE);
             }
         } catch (HeadlessException | NumberFormatException | SQLException | ParseException e) {
             System.out.println(e.getMessage());
@@ -758,7 +805,8 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
                     s2.fireTableDataChanged();
                 }
 
-                PreparedStatement psView = conn.prepareStatement("select distinct grn,date_format(dat,'%d/%m/%Y'),cname,billno,date_format(bdate,'%d/%m/%Y'),bamount,items,quans,sub,dis,gross,tax,fright,other,gt,round,net,pby,ttype from preturn where grn=?");
+                PreparedStatement psView = conn.prepareStatement(
+                        "select distinct grn,date_format(dat,'%d/%m/%Y'),cname,billno,date_format(bdate,'%d/%m/%Y'),bamount,items,quans,sub,dis,gross,tax,fright,other,gt,round,net,pby,ttype from preturn where grn=?");
                 psView.setString(1, grn);
                 set1 = psView.executeQuery();
                 while (set1.next()) {
@@ -787,14 +835,19 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
                     netl.setText(net + "0");
                     ttypel.setSelectedItem(set1.getString(19));
                 }
-                PreparedStatement psItems = conn.prepareStatement("select barcode,ino,iname,mrp,rprice,wprice,price,quan,amount,disp,disamt,sub,taxp,taxamt,total,hsn,ttype,cat,manu from preturn_items where grn=?");
+                PreparedStatement psItems = conn.prepareStatement(
+                        "select barcode,ino,iname,mrp,rprice,wprice,price,quan,amount,disp,disamt,sub,taxp,taxamt,total,hsn,ttype,cat,manu from preturn_items where grn=?");
                 psItems.setString(1, grn);
                 set1 = psItems.executeQuery();
                 while (set1.next()) {
-                    s2.addRow(new Object[]{set1.getString(1), set1.getString(2), set1.getString(3), set1.getString(4), set1.getString(5), set1.getString(6), set1.getString(7), set1.getString(8), set1.getString(9),
-                        set1.getString(10), set1.getString(11), set1.getString(12), set1.getString(13), set1.getString(14), set1.getString(15), set1.getString(16), set1.getString(17), set1.getString(18), set1.getString(19)});
+                    s2.addRow(new Object[] { set1.getString(1), set1.getString(2), set1.getString(3), set1.getString(4),
+                            set1.getString(5), set1.getString(6), set1.getString(7), set1.getString(8),
+                            set1.getString(9),
+                            set1.getString(10), set1.getString(11), set1.getString(12), set1.getString(13),
+                            set1.getString(14), set1.getString(15), set1.getString(16), set1.getString(17),
+                            set1.getString(18), set1.getString(19) });
                 }
-            }//if selva true ends
+            } // if selva true ends
         } catch (HeadlessException | NumberFormatException | SQLException e) {
             System.out.println(e.getMessage());
         }
@@ -840,8 +893,9 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
                     String quan = jTable1.getValueAt(i, 7).toString();
                     String disp1 = jTable1.getValueAt(i, 9).toString();
                     String taxp1 = jTable1.getValueAt(i, 12).toString();
-                    f.write("" + barcode + "$" + ino + "$" + iname + "$" + prate + "$" + mrp + "$" + rprice + "$" + wprice + "$" + disp1 + "$" + taxp1 + "$" + quan + "\r\n");
-                }//row counts ends here
+                    f.write("" + barcode + "$" + ino + "$" + iname + "$" + prate + "$" + mrp + "$" + rprice + "$"
+                            + wprice + "$" + disp1 + "$" + taxp1 + "$" + quan + "\r\n");
+                } // row counts ends here
             }
 
             String file_name1 = "Bill_Details_Preturn";
@@ -867,9 +921,12 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
                 String pby = h28.getSelectedItem().toString();
                 String diff = diffl.getText();
                 String ttype1 = ttypel.getSelectedItem().toString();
-                f1.write("" + grn + "$" + date + "$" + cname + "$" + billno + "$" + bdate + "$" + bamount + "" + "$" + items + "" + "$" + quans + "$" + sub + "$" + dis + "$" + gross + "$" + taxamt + "$" + fright + "$" + other + "$" + grant + "$" + round + "$" + net + "$" + pby + "$" + diff + "$" + ttype1);
+                f1.write("" + grn + "$" + date + "$" + cname + "$" + billno + "$" + bdate + "$" + bamount + "" + "$"
+                        + items + "" + "$" + quans + "$" + sub + "$" + dis + "$" + gross + "$" + taxamt + "$" + fright
+                        + "$" + other + "$" + grant + "$" + round + "$" + net + "$" + pby + "$" + diff + "$" + ttype1);
             }
-            JOptionPane.showMessageDialog(this, "<html><h1>Draft Saved Successfully</h1></html>", "Saved", JOptionPane.PLAIN_MESSAGE);
+            JOptionPane.showMessageDialog(this, "<html><h1>Draft Saved Successfully</h1></html>", "Saved",
+                    JOptionPane.PLAIN_MESSAGE);
             form_clear();
         } catch (IOException e) {
             System.out.print(e.getMessage());
@@ -913,8 +970,9 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
                     String quan = jTable1.getValueAt(i, 7).toString();
                     String disp1 = jTable1.getValueAt(i, 9).toString();
                     String taxp1 = jTable1.getValueAt(i, 12).toString();
-                    f.write("" + barcode + "$" + ino + "$" + iname + "$" + prate + "$" + mrp + "$" + rprice + "$" + wprice + "$" + disp1 + "$" + taxp1 + "$" + quan + "\r\n");
-                }//row counts ends here
+                    f.write("" + barcode + "$" + ino + "$" + iname + "$" + prate + "$" + mrp + "$" + rprice + "$"
+                            + wprice + "$" + disp1 + "$" + taxp1 + "$" + quan + "\r\n");
+                } // row counts ends here
             }
 
             String file_name1 = "Bill_Details_Preturn";
@@ -940,7 +998,9 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
                 String pby = h28.getSelectedItem().toString();
                 String diff = diffl.getText();
                 String ttype1 = ttypel.getSelectedItem().toString();
-                f1.write("" + grn + "$" + date + "$" + cname + "$" + billno + "$" + bdate + "$" + bamount + "" + "$" + items + "" + "$" + quans + "$" + sub + "$" + dis + "$" + gross + "$" + taxamt + "$" + fright + "$" + other + "$" + grant + "$" + round + "$" + net + "$" + pby + "$" + diff + "$" + ttype1);
+                f1.write("" + grn + "$" + date + "$" + cname + "$" + billno + "$" + bdate + "$" + bamount + "" + "$"
+                        + items + "" + "$" + quans + "$" + sub + "$" + dis + "$" + gross + "$" + taxamt + "$" + fright
+                        + "$" + other + "$" + grant + "$" + round + "$" + net + "$" + pby + "$" + diff + "$" + ttype1);
             }
         } catch (IOException e) {
             System.out.print(e.getMessage());
@@ -976,10 +1036,11 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
                     quan = Double.parseDouble(token.nextToken());
                 }
                 add_item(barcode, ino, iname, prate, mrp, rprice, wprice, disp, taxp, quan);
-            }//while loop reading lines one by one ends he
+            } // while loop reading lines one by one ends he
 
             String file_name1 = "Bill_Details_Preturn";
-            BufferedReader br1 = new BufferedReader(new FileReader(new File(folder + "/Drafts/" + file_name1 + ".txt")));
+            BufferedReader br1 = new BufferedReader(
+                    new FileReader(new File(folder + "/Drafts/" + file_name1 + ".txt")));
             String sCurrentLine1;
             while ((sCurrentLine1 = br1.readLine()) != null) {
                 String what = sCurrentLine1;
@@ -1008,7 +1069,7 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
                     netl.setText(h27.getText());
                     ttypel.setSelectedItem(token.nextToken());
                 }
-            }//while line loop ends
+            } // while line loop ends
 
         } catch (HeadlessException | IOException | NumberFormatException e) {
             System.out.println(e.getMessage());
@@ -1018,18 +1079,22 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
     void delete() {
         try {
             if (s2.getRowCount() <= 0) {
-                JOptionPane.showMessageDialog(this, "No Records Were Found to Delete!", "No Records", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "No Records Were Found to Delete!", "No Records",
+                        JOptionPane.ERROR_MESSAGE);
                 return;
             }
             if (selvagates == false) {
-                JOptionPane.showMessageDialog(this, "User 'View' Option Before Delete!", "User 'View' Option", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "User 'View' Option Before Delete!", "User 'View' Option",
+                        JOptionPane.ERROR_MESSAGE);
                 return;
             }
             if (user_type.equalsIgnoreCase("User")) {
-                JOptionPane.showMessageDialog(this, "Login as 'Administrator' to Delete!", "Permission Restricted", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Login as 'Administrator' to Delete!", "Permission Restricted",
+                        JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            int as = JOptionPane.showConfirmDialog(this, "<html><h1>Want to Delete ?</h1></html>", "Are You Sure", JOptionPane.YES_NO_OPTION);
+            int as = JOptionPane.showConfirmDialog(this, "<html><h1>Want to Delete ?</h1></html>", "Are You Sure",
+                    JOptionPane.YES_NO_OPTION);
             if (as == JOptionPane.NO_OPTION) {
                 return;
             }
@@ -1038,7 +1103,9 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
 
             Connection conn = util.getConnection();
             conn.setAutoCommit(false);
-            PreparedStatement psUpdateStock = conn.prepareStatement("update stock set quan=quan+? where barcode=? and ino=? and iname=? and entry=?");
+            PreparedStatement psUpdateStock = conn
+                    .prepareStatement(
+                            "update stock set quan=quan+? where barcode=? and ino=? and iname=? and entry=? and company_id=?");
 
             for (int i = 0; i < jTable1.getRowCount(); i++) {
                 String barcode = jTable1.getValueAt(i, 0).toString();
@@ -1051,8 +1118,9 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
                 psUpdateStock.setString(3, ino);
                 psUpdateStock.setString(4, iname);
                 psUpdateStock.setString(5, entry);
+                psUpdateStock.setString(6, UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "");
                 psUpdateStock.addBatch();
-            }//jtable row counts ends
+            } // jtable row counts ends
             psUpdateStock.executeBatch();
 
             PreparedStatement psDeletePreturn = conn.prepareStatement("delete from preturn where grn=?");
@@ -1064,7 +1132,11 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
             psDeletePreturnItems.executeUpdate();
 
             if (h28.getSelectedItem().equals("Credit")) {
-                PreparedStatement psDeleteVenBal = conn.prepareStatement("delete from ven_bal where billno=? and cname=?");
+                PreparedStatement psDeleteVenBal = conn
+                        .prepareStatement("delete from ven_bal where billno=? and cname=?"
+                                + (UserSession.hasSelectedCompany()
+                                        ? " and company_id='" + UserSession.getSelectedCompanyID() + "'"
+                                        : ""));
                 psDeleteVenBal.setString(1, h4.getText());
                 psDeleteVenBal.setString(2, h3.getText());
                 psDeleteVenBal.executeUpdate();
@@ -1072,10 +1144,12 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
             conn.commit();
             int count = 1;
             if (count > 0) {
-                JOptionPane.showMessageDialog(this, "<html><h1>Deleted Successfully</h1></html>", "Deleted", JOptionPane.PLAIN_MESSAGE);
+                JOptionPane.showMessageDialog(this, "<html><h1>Deleted Successfully</h1></html>", "Deleted",
+                        JOptionPane.PLAIN_MESSAGE);
                 form_clear();
             } else {
-                JOptionPane.showMessageDialog(this, "Check Entries and then Try Again!", "Invalid", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Check Entries and then Try Again!", "Invalid",
+                        JOptionPane.ERROR_MESSAGE);
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -1085,19 +1159,23 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
     void alter_preturn() {
         try {
             if (s2.getRowCount() <= 0) {
-                JOptionPane.showMessageDialog(this, "No Records Were Found to Alter!", "No Records", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "No Records Were Found to Alter!", "No Records",
+                        JOptionPane.ERROR_MESSAGE);
                 return;
             }
             if (selvagates == false) {
-                JOptionPane.showMessageDialog(this, "User 'View' Option Before Alter!", "User 'View' Option", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "User 'View' Option Before Alter!", "User 'View' Option",
+                        JOptionPane.ERROR_MESSAGE);
                 return;
             }
             if (user_type.equalsIgnoreCase("User")) {
-                JOptionPane.showMessageDialog(this, "Login as 'Administrator' to Alter!", "Permission Restricted", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Login as 'Administrator' to Alter!", "Permission Restricted",
+                        JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            int as = JOptionPane.showConfirmDialog(this, "<html><h1>Want to Alter ?</h1></html>", "Are You Sure", JOptionPane.YES_NO_OPTION);
+            int as = JOptionPane.showConfirmDialog(this, "<html><h1>Want to Alter ?</h1></html>", "Are You Sure",
+                    JOptionPane.YES_NO_OPTION);
             if (as == JOptionPane.NO_OPTION) {
                 return;
             }
@@ -1112,7 +1190,8 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
             Connection conn = util.getConnection();
             conn.setAutoCommit(false);
 
-            PreparedStatement ps = conn.prepareStatement("select barcode,ino,iname,quan from preturn_items where grn=?");
+            PreparedStatement ps = conn
+                    .prepareStatement("select barcode,ino,iname,quan from preturn_items where grn=?");
             ps.setString(1, grn);
             ResultSet set1 = ps.executeQuery();
             boolean selva = false;
@@ -1125,7 +1204,8 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
             }
 
             if (selva == true) {
-                PreparedStatement psUpdateStock = conn.prepareStatement("update stock set quan=quan+? where barcode=? and ino=? and iname=? and entry=?");
+                PreparedStatement psUpdateStock = conn.prepareStatement(
+                        "update stock set quan=quan+? where barcode=? and ino=? and iname=? and entry=?");
                 for (int i = 0; i < barcode.size(); i++) {
                     psUpdateStock.setDouble(1, Double.parseDouble(quan.get(i)));
                     psUpdateStock.setString(2, barcode.get(i));
@@ -1135,7 +1215,7 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
                     psUpdateStock.addBatch();
                 }
                 psUpdateStock.executeBatch();
-            }//selva true ends
+            } // selva true ends
 
             PreparedStatement psDeletePreturn = conn.prepareStatement("delete from preturn where grn=?");
             psDeletePreturn.setString(1, grn);
@@ -1146,7 +1226,11 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
             psDeletePreturnItems.executeUpdate();
 
             if (h28.getSelectedItem().equals("Credit")) {
-                PreparedStatement psDeleteVenBal = conn.prepareStatement("delete from ven_bal where billno=? and cname=?");
+                PreparedStatement psDeleteVenBal = conn
+                        .prepareStatement("delete from ven_bal where billno=? and cname=?"
+                                + (UserSession.hasSelectedCompany()
+                                        ? " and company_id='" + UserSession.getSelectedCompanyID() + "'"
+                                        : ""));
                 psDeleteVenBal.setString(1, h4.getText());
                 psDeleteVenBal.setString(2, h3.getText());
                 psDeleteVenBal.executeUpdate();
@@ -1156,7 +1240,8 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
             if (count > 0) {
                 save();
             } else {
-                JOptionPane.showMessageDialog(this, "Check Entries and then Try Again!", "Invalid", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Check Entries and then Try Again!", "Invalid",
+                        JOptionPane.ERROR_MESSAGE);
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -1204,12 +1289,15 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
         try {
             int count = 0;
             Connection conn = util.getConnection();
-            PreparedStatement ps = conn.prepareStatement("select count(iname) from item");
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            PreparedStatement ps = conn.prepareStatement("select count(iname) from item" + companyFilter);
             ResultSet set = ps.executeQuery();
             while (set.next()) {
                 count = set.getInt(1);
             }
-            ps = conn.prepareStatement("select iname from item");
+            ps = conn.prepareStatement("select iname from item" + companyFilter);
             set = ps.executeQuery();
             Object f[] = new Object[count];
             int index = 0;
@@ -1248,7 +1336,8 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
     }
 
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated
+    // Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         cname_list = new javax.swing.JDialog();
@@ -1355,16 +1444,15 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
 
         jTable2.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jTable2.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
-        ));
+                new Object[][] {
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null }
+                },
+                new String[] {
+                        "Title 1", "Title 2", "Title 3", "Title 4"
+                }));
         jTable2.setRowHeight(25);
         jTable2.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -1403,16 +1491,15 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
 
         jTable3.setFont(new java.awt.Font("Arial Unicode MS", 0, 14)); // NOI18N
         jTable3.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
-        ));
+                new Object[][] {
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null }
+                },
+                new String[] {
+                        "Title 1", "Title 2", "Title 3", "Title 4"
+                }));
         jTable3.setRowHeight(25);
         jTable3.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -1588,16 +1675,15 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
 
         jTable1.setFont(new java.awt.Font("Arial Unicode MS", 0, 14)); // NOI18N
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
-        ));
+                new Object[][] {
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null }
+                },
+                new String[] {
+                        "Title 1", "Title 2", "Title 3", "Title 4"
+                }));
         jTable1.setRowHeight(25);
         jScrollPane1.setViewportView(jTable1);
 
@@ -1984,7 +2070,7 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
         netl.setBounds(680, 10, 300, 50);
 
         h28.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        h28.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Cash", "Bank", "Others" }));
+        h28.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Cash", "Bank", "Others", "Multi Pay" }));
         h28.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
                 h28KeyPressed(evt);
@@ -2023,7 +2109,8 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
         jLabel7.setBounds(490, 100, 80, 30);
 
         ttypel.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        ttypel.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Exclusive of Tax", "Inclusive of Tax", "No Tax" }));
+        ttypel.setModel(new javax.swing.DefaultComboBoxModel<>(
+                new String[] { "Exclusive of Tax", "Inclusive of Tax", "No Tax" }));
         getContentPane().add(ttypel);
         ttypel.setBounds(570, 70, 150, 30);
 
@@ -2066,17 +2153,17 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closebuttonActionPerformed
+    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_closebuttonActionPerformed
         this.dispose();
         // TODO add your handling code here:
-    }//GEN-LAST:event_closebuttonActionPerformed
+    }// GEN-LAST:event_closebuttonActionPerformed
 
-    private void savebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_savebuttonActionPerformed
+    private void savebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_savebuttonActionPerformed
         save();
 
-    }//GEN-LAST:event_savebuttonActionPerformed
+    }// GEN-LAST:event_savebuttonActionPerformed
 
-    private void viewbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_viewbuttonActionPerformed
+    private void viewbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_viewbuttonActionPerformed
         String grn = JOptionPane.showInputDialog(this, "Enter GRN No ?", "GRN No", JOptionPane.PLAIN_MESSAGE);
         if ("".equals(grn) || grn == null) {
             JOptionPane.showMessageDialog(this, "Invalid GRN No!", "Invalid", JOptionPane.ERROR_MESSAGE);
@@ -2084,17 +2171,17 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
         }
         view(grn);
 
-    }//GEN-LAST:event_viewbuttonActionPerformed
+    }// GEN-LAST:event_viewbuttonActionPerformed
 
-    private void alterbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_alterbuttonActionPerformed
+    private void alterbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_alterbuttonActionPerformed
         alter_preturn();
-    }//GEN-LAST:event_alterbuttonActionPerformed
+    }// GEN-LAST:event_alterbuttonActionPerformed
 
-    private void draftbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_draftbuttonActionPerformed
+    private void draftbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_draftbuttonActionPerformed
         save_draft();
-    }//GEN-LAST:event_draftbuttonActionPerformed
+    }// GEN-LAST:event_draftbuttonActionPerformed
 
-    private void jCalendarButton1PropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jCalendarButton1PropertyChange
+    private void jCalendarButton1PropertyChange(java.beans.PropertyChangeEvent evt) {// GEN-FIRST:event_jCalendarButton1PropertyChange
         try {
             if (evt.getNewValue() instanceof Date) {
                 String ses = evt.getNewValue().toString();
@@ -2106,14 +2193,14 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
             System.out.println(e.getMessage());
         }
         // TODO add your handling code here:
-    }//GEN-LAST:event_jCalendarButton1PropertyChange
+    }// GEN-LAST:event_jCalendarButton1PropertyChange
 
-    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearbuttonActionPerformed
+    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_clearbuttonActionPerformed
         form_clear();
 
-    }//GEN-LAST:event_clearbuttonActionPerformed
+    }// GEN-LAST:event_clearbuttonActionPerformed
 
-    private void nextbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nextbuttonActionPerformed
+    private void nextbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_nextbuttonActionPerformed
         try {
 
             String grn = h1.getText();
@@ -2122,7 +2209,8 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
                 return;
             }
             Connection conn = util.getConnection();
-            PreparedStatement ps = conn.prepareStatement("select grn from preturn where grn > ? order by grn limit 1");
+            String companyFilter = UserSession.hasSelectedCompany() ? " and company_id='" + UserSession.getSelectedCompanyID() + "'" : "";
+            PreparedStatement ps = conn.prepareStatement("select grn from preturn where grn > ?" + companyFilter + " order by grn limit 1");
             ps.setString(1, grn);
             ResultSet set1 = ps.executeQuery();
             boolean selva = false;
@@ -2139,19 +2227,22 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
         } catch (HeadlessException | SQLException e) {
             System.out.println(e.getMessage());
         }
-    }//GEN-LAST:event_nextbuttonActionPerformed
+    }// GEN-LAST:event_nextbuttonActionPerformed
 
-    private void prebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_prebuttonActionPerformed
+    private void prebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_prebuttonActionPerformed
 
         try {
             String grn = h1.getText();
             Connection conn = util.getConnection();
+            String companyFilter = UserSession.hasSelectedCompany() ? " and company_id='" + UserSession.getSelectedCompanyID() + "'" : "";
+            String companyFilterWhere = UserSession.hasSelectedCompany() ? " where company_id='" + UserSession.getSelectedCompanyID() + "'" : "";
             ResultSet set1;
             if (grn.equalsIgnoreCase("--")) {
-                PreparedStatement ps = conn.prepareStatement("select max(grn) from preturn");
+                PreparedStatement ps = conn.prepareStatement("select max(grn) from preturn" + companyFilterWhere);
                 set1 = ps.executeQuery();
             } else {
-                PreparedStatement ps = conn.prepareStatement("select grn from preturn where grn < ? order by grn desc limit 1");
+                PreparedStatement ps = conn
+                        .prepareStatement("select grn from preturn where grn < ?" + companyFilter + " order by grn desc limit 1");
                 ps.setString(1, grn);
                 set1 = ps.executeQuery();
             }
@@ -2170,9 +2261,9 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
         } catch (HeadlessException | SQLException e) {
             System.out.println(e.toString());
         }
-    }//GEN-LAST:event_prebuttonActionPerformed
+    }// GEN-LAST:event_prebuttonActionPerformed
 
-    private void removebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removebuttonActionPerformed
+    private void removebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_removebuttonActionPerformed
         if (s2.getRowCount() <= 0) {
             JOptionPane.showMessageDialog(this, "No Records Were Found!", "No Records", JOptionPane.ERROR_MESSAGE);
             return;
@@ -2184,25 +2275,25 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
         }
         apply_all_changes();
 
-    }//GEN-LAST:event_removebuttonActionPerformed
+    }// GEN-LAST:event_removebuttonActionPerformed
 
-    private void applybuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_applybuttonActionPerformed
+    private void applybuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_applybuttonActionPerformed
         if (s2.getRowCount() <= 0) {
             JOptionPane.showMessageDialog(this, "No Records Were Found!", "No Records", JOptionPane.ERROR_MESSAGE);
             return;
         }
         apply_all_changes();
-    }//GEN-LAST:event_applybuttonActionPerformed
+    }// GEN-LAST:event_applybuttonActionPerformed
 
-    private void loadbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadbuttonActionPerformed
+    private void loadbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_loadbuttonActionPerformed
         load_draft();
-    }//GEN-LAST:event_loadbuttonActionPerformed
+    }// GEN-LAST:event_loadbuttonActionPerformed
 
-    private void deletebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deletebuttonActionPerformed
+    private void deletebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_deletebuttonActionPerformed
         delete();
-    }//GEN-LAST:event_deletebuttonActionPerformed
+    }// GEN-LAST:event_deletebuttonActionPerformed
 
-    private void h7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_h7ActionPerformed
+    private void h7ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h7ActionPerformed
         if (h7.getText().equals("")) {
             h20.requestFocus();
         } else {
@@ -2214,9 +2305,9 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
             }
         }
 
-    }//GEN-LAST:event_h7ActionPerformed
+    }// GEN-LAST:event_h7ActionPerformed
 
-    private void h8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_h8ActionPerformed
+    private void h8ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h8ActionPerformed
         if (h8.getText().equals("")) {
             h7.requestFocus();
         } else {
@@ -2225,9 +2316,9 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
             }
             h14.requestFocus();
         }
-    }//GEN-LAST:event_h8ActionPerformed
+    }// GEN-LAST:event_h8ActionPerformed
 
-    private void h16ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_h16ActionPerformed
+    private void h16ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h16ActionPerformed
         try {
             if (h8.getText().equals("") || h9.getText().equals("")) {
                 JOptionPane.showMessageDialog(this, "Enter Item Details ?", "Item Details", JOptionPane.ERROR_MESSAGE);
@@ -2238,7 +2329,8 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
                 h7.setText(h8.getText());
             }
             if (h10.getText().equals("")) {
-                JOptionPane.showMessageDialog(this, "Enter Purchase Price ?", "Purchase Price", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Enter Purchase Price ?", "Purchase Price",
+                        JOptionPane.ERROR_MESSAGE);
                 h10.requestFocus();
                 return;
             }
@@ -2275,7 +2367,8 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
             double quan = Double.parseDouble(h16.getText());
 
             if (taxp != 0 && taxp != 5 && taxp != 12 && taxp != 18 && taxp != 28) {
-                JOptionPane.showMessageDialog(this, "<html><h4>Allowed: 0%, 5%, 12%, 18%, 28%</h4></html>", "Invalid GST", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "<html><h4>Allowed: 0%, 5%, 12%, 18%, 28%</h4></html>",
+                        "Invalid GST", JOptionPane.ERROR_MESSAGE);
                 h18.requestFocus();
                 return;
             }
@@ -2284,13 +2377,13 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
             System.out.println(e.getMessage());
         }
 
-    }//GEN-LAST:event_h16ActionPerformed
+    }// GEN-LAST:event_h16ActionPerformed
 
-    private void h10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_h10ActionPerformed
+    private void h10ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h10ActionPerformed
         h11.requestFocus();
-    }//GEN-LAST:event_h10ActionPerformed
+    }// GEN-LAST:event_h10ActionPerformed
 
-    private void h11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_h11ActionPerformed
+    private void h11ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h11ActionPerformed
         if (h11.getText().equals("")) {
             h11.setText("" + 0);
         }
@@ -2333,37 +2426,37 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
             h14.requestFocus();
         }
 
-    }//GEN-LAST:event_h11ActionPerformed
+    }// GEN-LAST:event_h11ActionPerformed
 
-    private void h12ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_h12ActionPerformed
+    private void h12ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h12ActionPerformed
         h13.requestFocus();
-    }//GEN-LAST:event_h12ActionPerformed
+    }// GEN-LAST:event_h12ActionPerformed
 
-    private void h13ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_h13ActionPerformed
+    private void h13ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h13ActionPerformed
         h14.requestFocus();
-    }//GEN-LAST:event_h13ActionPerformed
+    }// GEN-LAST:event_h13ActionPerformed
 
-    private void h14ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_h14ActionPerformed
+    private void h14ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h14ActionPerformed
         h16.requestFocus();
-    }//GEN-LAST:event_h14ActionPerformed
+    }// GEN-LAST:event_h14ActionPerformed
 
-    private void h4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_h4ActionPerformed
+    private void h4ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h4ActionPerformed
         if (h4.getText().equals("")) {
             JOptionPane.showMessageDialog(this, "Enter Bill No ?", "Bill No", JOptionPane.ERROR_MESSAGE);
             h4.requestFocus();
             return;
         }
         h5.requestFocus();
-    }//GEN-LAST:event_h4ActionPerformed
+    }// GEN-LAST:event_h4ActionPerformed
 
-    private void h5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_h5ActionPerformed
+    private void h5ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h5ActionPerformed
         if (h5.getText().equals("")) {
             h5.setText(h2.getText());
         }
         h6.requestFocus();
-    }//GEN-LAST:event_h5ActionPerformed
+    }// GEN-LAST:event_h5ActionPerformed
 
-    private void h6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_h6ActionPerformed
+    private void h6ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h6ActionPerformed
         if (h6.getText().equals("")) {
             JOptionPane.showMessageDialog(this, "Enter Bill Amount ?", "Bill Amount", JOptionPane.ERROR_MESSAGE);
             h6.requestFocus();
@@ -2371,9 +2464,9 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
         }
         h8.requestFocus();
 
-    }//GEN-LAST:event_h6ActionPerformed
+    }// GEN-LAST:event_h6ActionPerformed
 
-    private void h20ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_h20ActionPerformed
+    private void h20ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h20ActionPerformed
         if (h20.getText().equals("")) {
             h20.setText("" + 0);
         }
@@ -2381,9 +2474,9 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
             apply_all_changes();
         }
         h23.requestFocus();
-    }//GEN-LAST:event_h20ActionPerformed
+    }// GEN-LAST:event_h20ActionPerformed
 
-    private void h23ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_h23ActionPerformed
+    private void h23ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h23ActionPerformed
 
         if (h23.getText().equals("")) {
             h23.setText("" + 0);
@@ -2392,9 +2485,9 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
             apply_all_changes();
         }
         h24.requestFocus();
-    }//GEN-LAST:event_h23ActionPerformed
+    }// GEN-LAST:event_h23ActionPerformed
 
-    private void h24ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_h24ActionPerformed
+    private void h24ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h24ActionPerformed
         if (h24.getText().equals("")) {
             h24.setText("" + 0);
         }
@@ -2403,23 +2496,23 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
         }
         h28.requestFocus();
 
-    }//GEN-LAST:event_h24ActionPerformed
+    }// GEN-LAST:event_h24ActionPerformed
 
-    private void h28KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_h28KeyPressed
+    private void h28KeyPressed(java.awt.event.KeyEvent evt) {// GEN-FIRST:event_h28KeyPressed
         if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
             save();
         }
-    }//GEN-LAST:event_h28KeyPressed
+    }// GEN-LAST:event_h28KeyPressed
 
-    private void h1FocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_h1FocusGained
+    private void h1FocusGained(java.awt.event.FocusEvent evt) {// GEN-FIRST:event_h1FocusGained
         h3.requestFocus();
-    }//GEN-LAST:event_h1FocusGained
+    }// GEN-LAST:event_h1FocusGained
 
-    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
+    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton3ActionPerformed
         cname_list.dispose();
-    }//GEN-LAST:event_jButton3ActionPerformed
+    }// GEN-LAST:event_jButton3ActionPerformed
 
-    private void h3KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_h3KeyPressed
+    private void h3KeyPressed(java.awt.event.KeyEvent evt) {// GEN-FIRST:event_h3KeyPressed
         cname_list.requestFocus();
         jTable2.requestFocus();
         switch (evt.getKeyCode()) {
@@ -2442,11 +2535,13 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
                     cname_list.setSize(857, 438);
                     cname_list.setVisible(true);
                     Connection conn = util.getConnection();
-                    PreparedStatement ps = conn.prepareStatement("select cname,city from vendor where cname like ? order by cname limit 300");
+                    String companyFilter = UserSession.hasSelectedCompany() ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'" : "";
+                    PreparedStatement ps = conn.prepareStatement(
+                            "select cname,city from vendor where cname like ?" + companyFilter + " order by cname limit 300");
                     ps.setString(1, h3.getText() + "%");
                     ResultSet r = ps.executeQuery();
                     while (r.next()) {
-                        s3.addRow(new Object[]{r.getString(1), r.getString(2)});
+                        s3.addRow(new Object[] { r.getString(1), r.getString(2) });
                     }
                 } catch (SQLException e) {
                     System.out.println(e.getMessage());
@@ -2456,9 +2551,9 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
                 break;
         }
 
-    }//GEN-LAST:event_h3KeyPressed
+    }// GEN-LAST:event_h3KeyPressed
 
-    private void jTable2KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTable2KeyPressed
+    private void jTable2KeyPressed(java.awt.event.KeyEvent evt) {// GEN-FIRST:event_jTable2KeyPressed
         if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
             if (jTable2.getRowCount() > 0) {
                 h3.setText(jTable2.getValueAt(jTable2.getSelectedRow(), 0).toString());
@@ -2471,9 +2566,9 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
             h3.requestFocus();
         }
 
-    }//GEN-LAST:event_jTable2KeyPressed
+    }// GEN-LAST:event_jTable2KeyPressed
 
-    private void jTable2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable2MouseClicked
+    private void jTable2MouseClicked(java.awt.event.MouseEvent evt) {// GEN-FIRST:event_jTable2MouseClicked
 
         if (jTable2.getRowCount() > 0) {
             h3.setText(jTable2.getValueAt(jTable2.getSelectedRow(), 0).toString());
@@ -2481,26 +2576,26 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
         }
         h4.requestFocus();
         cname_list.dispose();
-    }//GEN-LAST:event_jTable2MouseClicked
+    }// GEN-LAST:event_jTable2MouseClicked
 
-    private void jScrollPane2FocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jScrollPane2FocusLost
+    private void jScrollPane2FocusLost(java.awt.event.FocusEvent evt) {// GEN-FIRST:event_jScrollPane2FocusLost
         cname_list.dispose();
-    }//GEN-LAST:event_jScrollPane2FocusLost
+    }// GEN-LAST:event_jScrollPane2FocusLost
 
-    private void jTable3MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable3MouseClicked
+    private void jTable3MouseClicked(java.awt.event.MouseEvent evt) {// GEN-FIRST:event_jTable3MouseClicked
         if (jTable3.getRowCount() > 0) {
-            h8.setText(jTable3.getValueAt(jTable3.getSelectedRow(), 0).toString());
+            selectItemFromJTable();
         }
         get_item_details_using_item_no();
         h14.requestFocus();
         iname_list.dispose();
-    }//GEN-LAST:event_jTable3MouseClicked
+    }// GEN-LAST:event_jTable3MouseClicked
 
-    private void jTable3KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTable3KeyPressed
+    private void jTable3KeyPressed(java.awt.event.KeyEvent evt) {// GEN-FIRST:event_jTable3KeyPressed
 
         if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
             if (jTable3.getRowCount() > 0) {
-                h8.setText(jTable3.getValueAt(jTable3.getSelectedRow(), 0).toString());
+                selectItemFromJTable();
             }
             get_item_details_using_item_no();
             h14.requestFocus();
@@ -2509,17 +2604,17 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
             iname_list.dispose();
             h8.requestFocus();
         }
-    }//GEN-LAST:event_jTable3KeyPressed
+    }// GEN-LAST:event_jTable3KeyPressed
 
-    private void jScrollPane3FocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jScrollPane3FocusLost
+    private void jScrollPane3FocusLost(java.awt.event.FocusEvent evt) {// GEN-FIRST:event_jScrollPane3FocusLost
         iname_list.dispose();
-    }//GEN-LAST:event_jScrollPane3FocusLost
+    }// GEN-LAST:event_jScrollPane3FocusLost
 
-    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
+    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton4ActionPerformed
         iname_list.dispose();
-    }//GEN-LAST:event_jButton4ActionPerformed
+    }// GEN-LAST:event_jButton4ActionPerformed
 
-    private void h8KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_h8KeyPressed
+    private void h8KeyPressed(java.awt.event.KeyEvent evt) {// GEN-FIRST:event_h8KeyPressed
 
         iname_list.requestFocus();
         jTable3.requestFocus();
@@ -2540,11 +2635,17 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
                     iname_list.setSize(1100, 382);
                     iname_list.setVisible(true);
                     Connection conn = util.getConnection();
-                    PreparedStatement ps = conn.prepareStatement("select ino,barcode,iname,cat,manu from item where iname like ? order by ino limit 500");
+                    String companyFilter = UserSession.hasSelectedCompany()
+                            ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                            : "";
+                    PreparedStatement ps = conn.prepareStatement(
+                            "select ino,barcode,iname,cat,manu from item where iname like ?" + companyFilter
+                                    + " order by ino limit 500");
                     ps.setString(1, h8.getText() + "%");
                     ResultSet r = ps.executeQuery();
                     while (r.next()) {
-                        s4.addRow(new Object[]{r.getString(1), r.getString(2), r.getString(3), r.getString(4), r.getString(5)});
+                        s4.addRow(new Object[] { r.getString(1), r.getString(2), r.getString(3), r.getString(4),
+                                r.getString(5) });
                     }
                 } catch (SQLException e) {
                     System.out.println(e.getMessage());
@@ -2554,15 +2655,15 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
                 break;
         }
 
-    }//GEN-LAST:event_h8KeyPressed
+    }// GEN-LAST:event_h8KeyPressed
 
-    private void searchbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_searchbuttonActionPerformed
+    private void searchbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_searchbuttonActionPerformed
         jPanel1.setVisible(true);
         hh.requestFocus();
 
-    }//GEN-LAST:event_searchbuttonActionPerformed
+    }// GEN-LAST:event_searchbuttonActionPerformed
 
-    private void itembuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itembuttonActionPerformed
+    private void itembuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_itembuttonActionPerformed
 
         itempack.item_master oe = new item_master(util);
         JDesktopPane desktop_pane = getDesktopPane();
@@ -2573,13 +2674,13 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
         Dimension jInternalFrameSize = oe.getSize();
         oe.setLocation((desktopSize.width - jInternalFrameSize.width) / 2,
                 (desktopSize.height - jInternalFrameSize.height) / 2);
-    }//GEN-LAST:event_itembuttonActionPerformed
+    }// GEN-LAST:event_itembuttonActionPerformed
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton1ActionPerformed
         jPanel1.setVisible(false);
         h8.requestFocus();
 
-    }//GEN-LAST:event_jButton1ActionPerformed
+    }// GEN-LAST:event_jButton1ActionPerformed
 
     void print() {
         try {
@@ -2587,7 +2688,7 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
                 return;
             }
             String billformat = "A4";
-            String query = "select bformat from setting_bill";
+            String query = "select bformat from company";
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 billformat = r.getString(1);
@@ -2600,6 +2701,139 @@ public final class preturn_entry extends javax.swing.JInternalFrame {
 
     private void printbuttonActionPerformed(java.awt.event.ActionEvent evt) {
         print();
+    }
+
+    private void selectItemFromJTable() {
+        if (jTable3.getRowCount() > 0) {
+            try {
+                String selectedName = jTable3.getValueAt(jTable3.getSelectedRow(), 2).toString();
+                String companyFilter = UserSession.hasSelectedCompany()
+                        ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                        : "";
+                String query = "SELECT ino, iname, barcode, "
+                        + (CompanySettingUtil.getInstance().isDisplayBatch() ? "batch, " : "")
+                        + "IFNULL(size,'') as size, IFNULL(color,'') as color, IFNULL(brand,'') as brand, rprice, wprice FROM item WHERE iname = '"
+                        + selectedName + "'" + companyFilter;
+                ResultSet set = util.doQuery(query);
+
+                List<Object[]> rows = new ArrayList<>();
+                Map<String, String> valueMap = new HashMap<>();
+                while (set.next()) {
+                    List<Object> row = new ArrayList<>();
+                    row.add(set.getString("ino"));
+                    row.add(set.getString("iname"));
+                    row.add(set.getString("barcode"));
+                    if (CompanySettingUtil.getInstance().isDisplayBatch()) {
+                        row.add(set.getString("batch"));
+                    }
+                    row.add(set.getString("size"));
+                    row.add(set.getString("color"));
+                    row.add(set.getString("brand"));
+                    row.add(set.getString("rprice"));
+                    row.add(set.getString("wprice"));
+                    rows.add(row.toArray());
+
+                    valueMap.put("ino", set.getString("ino"));
+                    valueMap.put("iname", set.getString("iname"));
+                }
+                if (rows.size() == 1) {
+                    h8.setText(valueMap.get("ino"));
+                } else if (rows.size() > 1) {
+                    String selectedIno = showSelectionDialog(rows);
+                    if (selectedIno != null) {
+                        h8.setText(selectedIno);
+                    } else {
+                        JOptionPane.showMessageDialog(this, "No item selected.", "Cancelled",
+                                JOptionPane.INFORMATION_MESSAGE);
+                    }
+                }
+            } catch (ClassNotFoundException | SQLException e) {
+                System.out.println(e.getMessage());
+                JOptionPane.showMessageDialog(this, "Error: " + e.getMessage(), "Exception", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private String showSelectionDialog(List<Object[]> data) {
+        List<String> colList = new ArrayList<>();
+        colList.add("Item No");
+        colList.add("Item Name");
+        colList.add("Barcode");
+        if (CompanySettingUtil.getInstance().isDisplayBatch()) {
+            colList.add("Batch");
+        }
+        colList.add("Size");
+        colList.add("Color");
+        colList.add("Brand");
+        colList.add("RPrice");
+        colList.add("WPrice");
+
+        String[] columns = colList.toArray(new String[0]);
+
+        Object[][] tableData = new Object[data.size()][columns.length];
+        for (int i = 0; i < data.size(); i++) {
+            Object[] row = data.get(i);
+            for (int j = 0; j < columns.length; j++) {
+                tableData[i][j] = row[j];
+            }
+        }
+
+        JTable table = new JTable(tableData, columns);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setPreferredSize(new Dimension(700, 300));
+
+        JButton okButton = new JButton("Select");
+        JButton cancelButton = new JButton("Cancel");
+
+        final String[] selectedIno = { null };
+
+        okButton.addActionListener(e -> {
+            int selectedRow = table.getSelectedRow();
+            if (selectedRow >= 0) {
+                selectedIno[0] = table.getValueAt(selectedRow, 0).toString();
+            }
+            SwingUtilities.getWindowAncestor(okButton).dispose();
+        });
+
+        table.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
+                    int selectedRow = table.getSelectedRow();
+                    if (selectedRow >= 0) {
+                        selectedIno[0] = table.getValueAt(selectedRow, 0).toString();
+                        SwingUtilities.invokeLater(() -> {
+                            Window window = SwingUtilities.getWindowAncestor(table);
+                            if (window != null) {
+                                window.dispose();
+                            }
+                        });
+                        evt.consume();
+                    }
+                }
+            }
+        });
+
+        cancelButton.addActionListener(e -> {
+            SwingUtilities.getWindowAncestor(cancelButton).dispose();
+        });
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(okButton);
+        buttonPanel.add(cancelButton);
+
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(scrollPane, BorderLayout.CENTER);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+
+        JDialog dialog = new JDialog((Frame) null, "Select Item", true);
+        dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        dialog.setContentPane(panel);
+        dialog.pack();
+        dialog.setLocationRelativeTo(null);
+        dialog.setVisible(true);
+
+        return selectedIno[0];
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

@@ -20,6 +20,7 @@ import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import menupack.menu_form;
 import menupack.sample2;
+import menupack.UserSession;
 
 /**
  *
@@ -79,11 +80,19 @@ public final class manual_sms extends javax.swing.JInternalFrame {
 
     void generate_list() {
         try {
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             String query;
             if (all.isSelected()) {
-                query = "select cid,cname,mobile from cust order by cid";
+                if (companyFilter.isEmpty()) {
+                    query = "select cid,cname,mobile from cust order by cid";
+                } else {
+                    query = "select cid,cname,mobile from cust where" + companyFilter + " order by cid";
+                }
             } else {
-                query = "select cid,cname,mobile from cust where ctype='" + h1.getSelectedItem() + "' order by cid";
+                query = "select cid,cname,mobile from cust where ctype='" + h1.getSelectedItem() + "'"
+                        + (companyFilter.isEmpty() ? "" : " and" + companyFilter) + " order by cid";
             }
             ResultSet r = util.doQuery(query);
             while (r.next()) {

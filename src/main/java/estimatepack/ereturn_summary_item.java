@@ -1,5 +1,6 @@
 package estimatepack;
 
+import Utils.ColorConstants;
 import com.selrom.db.DataUtil;
 import java.awt.Font;
 import java.io.File;
@@ -15,13 +16,14 @@ import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
+import menupack.UserSession;
 import menupack.menu_form;
 import menupack.sample2;
 
 /**
  *
  * @author K.SELVAKUMAR, copyrights K.SELVAKUMAR, +91 99427 32229,
- * mysoft.java@gmail.com
+ *         mysoft.java@gmail.com
  */
 public final class ereturn_summary_item extends javax.swing.JInternalFrame {
 
@@ -39,10 +41,10 @@ public final class ereturn_summary_item extends javax.swing.JInternalFrame {
         titlelablel.setText("<html><u>Item Wise Estimate Return Summary</u></html>");
         setTitle("Item Wise Estimate Return Summary");
         this.setSize(1017, 650);
-        ImageIcon icon = new ImageIcon(ClassLoader.getSystemResource("images/icon.png"));
-        this.setFrameIcon(icon);
-        menu_form me = new menu_form();
-        hmany = me.getHmany();
+        javax.swing.ImageIcon icon = ColorConstants.loadIcon("/images/icon.png");
+        if (icon != null) {
+            this.setFrameIcon(icon);
+        }
     }
 
     public final void load_list_table() {
@@ -75,16 +77,28 @@ public final class ereturn_summary_item extends javax.swing.JInternalFrame {
             double sub;
 
             String query;
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " and e.company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             if (all.isSelected()) {
-                query = "select ino,iname,sum(quan),sum(amount) from ereturn_items where dat between '" + lk + "' and '" + lk1 + "' group by ino order by ino";
+                query = "select a.ino,a.iname,sum(a.quan),sum(a.amount) from ereturn_items a"
+                        + " join ereturn e on a.billno=e.billno"
+                        + " where a.dat between '" + lk + "' and '" + lk1 + "'" + companyFilter
+                        + " group by a.ino, a.iname order by a.ino";
             } else {
-                query = "select distinct a.ino,a.iname,sum(quan),sum(amount) from ereturn_items a,item b where dat between '" + lk + "' and '" + lk1 + "' and cat='" + h3.getSelectedItem() + "' and a.ino=b.ino group by a.ino order by a.ino";
+                query = "select a.ino,a.iname,sum(a.quan),sum(a.amount) from ereturn_items a"
+                        + " join ereturn e on a.billno=e.billno"
+                        + " join item b on a.ino=b.ino"
+                        + " where a.dat between '" + lk + "' and '" + lk1 + "'"
+                        + " and b.cat='" + h3.getSelectedItem() + "'" + companyFilter
+                        + " group by a.ino, a.iname order by a.ino";
             }
             r = util.doQuery(query);
+            if (r == null) return;
             while (r.next()) {
                 sub = r.getDouble(4);
                 String sub1 = String.format("%." + hmany + "f", sub);
-                s2.addRow(new Object[]{r.getString(1), r.getString(2), r.getString(3), sub1});
+                s2.addRow(new Object[] { r.getString(1), r.getString(2), r.getString(3), sub1 });
                 selva = true;
             }
             sub = 0;
@@ -93,8 +107,8 @@ public final class ereturn_summary_item extends javax.swing.JInternalFrame {
             }
             String sub1 = String.format("%." + hmany + "f", sub);
             if (selva == true) {
-                s2.addRow(new Object[]{"", "", "", ""});
-                s2.addRow(new Object[]{"", "TOTAL:" + (jTable1.getRowCount() - 1), "", "" + sub1});
+                s2.addRow(new Object[] { "", "", "", "" });
+                s2.addRow(new Object[] { "", "TOTAL:" + (jTable1.getRowCount() - 1), "", "" + sub1 });
 
                 h1.setEnabled(false);
                 h2.setEnabled(false);
@@ -113,7 +127,10 @@ public final class ereturn_summary_item extends javax.swing.JInternalFrame {
     void get_category() {
         try {
             h3.removeAllItems();
-            String query = "select distinct cat from item";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select distinct cat from item" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 h3.addItem(r.getString(1));
@@ -134,7 +151,8 @@ public final class ereturn_summary_item extends javax.swing.JInternalFrame {
     }
 
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated
+    // Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         titlelablel = new javax.swing.JLabel();
@@ -243,16 +261,15 @@ public final class ereturn_summary_item extends javax.swing.JInternalFrame {
 
         jTable1.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
-        ));
+                new Object[][] {
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null }
+                },
+                new String[] {
+                        "Title 1", "Title 2", "Title 3", "Title 4"
+                }));
         jTable1.setRowHeight(25);
         jScrollPane1.setViewportView(jTable1);
 
@@ -287,12 +304,12 @@ public final class ereturn_summary_item extends javax.swing.JInternalFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closebuttonActionPerformed
+    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_closebuttonActionPerformed
         this.dispose();
         // TODO add your handling code here:
-    }//GEN-LAST:event_closebuttonActionPerformed
+    }// GEN-LAST:event_closebuttonActionPerformed
 
-    private void generatebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_generatebuttonActionPerformed
+    private void generatebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_generatebuttonActionPerformed
         Date d = new Date();
         SimpleDateFormat g = new SimpleDateFormat("dd/MM/yyyy");
 
@@ -304,9 +321,9 @@ public final class ereturn_summary_item extends javax.swing.JInternalFrame {
         }
         load_report(h1.getText(), h2.getText());
 
-    }//GEN-LAST:event_generatebuttonActionPerformed
+    }// GEN-LAST:event_generatebuttonActionPerformed
 
-    private void excelbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_excelbuttonActionPerformed
+    private void excelbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_excelbuttonActionPerformed
         if (s2.getRowCount() <= 0) {
             JOptionPane.showMessageDialog(this, "Sorry, No Records Were Found!", "Oops", JOptionPane.ERROR_MESSAGE);
             return;
@@ -340,9 +357,9 @@ public final class ereturn_summary_item extends javax.swing.JInternalFrame {
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
-    }//GEN-LAST:event_excelbuttonActionPerformed
+    }// GEN-LAST:event_excelbuttonActionPerformed
 
-    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearbuttonActionPerformed
+    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_clearbuttonActionPerformed
         if (s2.getRowCount() > 0) {
             s2.getDataVector().removeAllElements();
             s2.fireTableDataChanged();
@@ -359,9 +376,9 @@ public final class ereturn_summary_item extends javax.swing.JInternalFrame {
         h2.setText("");
         h3.setSelectedIndex(0);
         generatebutton.setEnabled(true);
-    }//GEN-LAST:event_clearbuttonActionPerformed
+    }// GEN-LAST:event_clearbuttonActionPerformed
 
-    private void jCalendarButton1PropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jCalendarButton1PropertyChange
+    private void jCalendarButton1PropertyChange(java.beans.PropertyChangeEvent evt) {// GEN-FIRST:event_jCalendarButton1PropertyChange
         try {
             if (evt.getNewValue() instanceof Date) {
                 String ses = evt.getNewValue().toString();
@@ -372,9 +389,9 @@ public final class ereturn_summary_item extends javax.swing.JInternalFrame {
         } catch (ParseException e) {
             System.out.println(e.getMessage());
         }
-    }//GEN-LAST:event_jCalendarButton1PropertyChange
+    }// GEN-LAST:event_jCalendarButton1PropertyChange
 
-    private void jCalendarButton2PropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jCalendarButton2PropertyChange
+    private void jCalendarButton2PropertyChange(java.beans.PropertyChangeEvent evt) {// GEN-FIRST:event_jCalendarButton2PropertyChange
         try {
             if (evt.getNewValue() instanceof Date) {
                 String ses = evt.getNewValue().toString();
@@ -385,9 +402,9 @@ public final class ereturn_summary_item extends javax.swing.JInternalFrame {
         } catch (ParseException e) {
             System.out.println(e.getMessage());
         }
-    }//GEN-LAST:event_jCalendarButton2PropertyChange
+    }// GEN-LAST:event_jCalendarButton2PropertyChange
 
-    private void allActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_allActionPerformed
+    private void allActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_allActionPerformed
 
         if (all.isSelected()) {
             h3.setEnabled(false);
@@ -395,7 +412,7 @@ public final class ereturn_summary_item extends javax.swing.JInternalFrame {
             h3.setEnabled(true);
             h3.setSelectedIndex(0);
         }
-    }//GEN-LAST:event_allActionPerformed
+    }// GEN-LAST:event_allActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JCheckBox all;

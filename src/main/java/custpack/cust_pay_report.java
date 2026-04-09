@@ -103,7 +103,7 @@ public class cust_pay_report extends javax.swing.JInternalFrame {
             double sub, dis, net;
             double nsub = 0, ndis = 0, nnet = 0;
             String query;
-            query = "select distinct sno,date_format(dat,'%d/%m/%Y'),tim,cid,cname,net,pby,remarks,user,last,dis,tot from cust_pay where dat between ? and ? order by dat,sno";
+            query = "select distinct sno,date_format(dat,'%d/%m/%Y'),tim,cid,cname,net,pby,remarks,user,last,dis,tot,dat from cust_pay where dat between ? and ? order by dat,sno";
 
             Connection conn = util.getConnection();
             PreparedStatement ps = conn.prepareStatement(query);

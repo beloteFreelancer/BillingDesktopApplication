@@ -22,11 +22,13 @@ import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import menupack.menu_form;
 import menupack.sample2;
+import menupack.UserSession;
+import Utils.ColorConstants;
 
 /**
  *
  * @author K.SELVAKUMAR, copyrights K.SELVAKUMAR, +91 99427 32229,
- * mysoft.java@gmail.com
+ *         mysoft.java@gmail.com
  */
 public class estimate_report extends javax.swing.JInternalFrame {
 
@@ -45,10 +47,11 @@ public class estimate_report extends javax.swing.JInternalFrame {
         titlelablel.setText("<html><u>Estimate Report</u></html>");
         setTitle("Estimate Report");
         this.setSize(1017, 650);
-        ImageIcon icon = new ImageIcon(ClassLoader.getSystemResource("images/icon.png"));
-        this.setFrameIcon(icon);
-        menu_form me = new menu_form();
-        hmany = me.getHmany();
+
+        javax.swing.ImageIcon icon = ColorConstants.loadIcon("/images/icon.png");
+        if (icon != null) {
+            this.setFrameIcon(icon);
+        }
     }
 
     public final void load_list_table() {
@@ -133,13 +136,19 @@ public class estimate_report extends javax.swing.JInternalFrame {
             PreparedStatement ps;
             Connection conn = util.getConnection();
 
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " and company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+
             if (all.isSelected()) {
-                query = "select billno,date_format(dat,'%d/%m/%Y'),tim,location,terminal,cashier,items,quans,sub,disp,disamt,gross,taxamt,addamt,net,pby,paid,bal,price_type,cid,cname,mobile,last from estimate where dat between ? and ? order by dat,billno";
+                query = "select billno,date_format(dat,'%d/%m/%Y'),tim,location,terminal,cashier,items,quans,sub,disp,disamt,gross,taxamt,addamt,net,pby,paid,bal,price_type,cid,cname,mobile,last from estimate where dat between ? and ?"
+                        + companyFilter + " order by dat,billno";
                 ps = conn.prepareStatement(query);
                 ps.setString(1, lk);
                 ps.setString(2, lk1);
             } else {
-                query = "select billno,date_format(dat,'%d/%m/%Y'),tim,location,terminal,cashier,items,quans,sub,disp,disamt,gross,taxamt,addamt,net,pby,paid,bal,price_type,cid,cname,mobile,last from estimate where dat between ? and ? and pby=? order by dat,billno";
+                query = "select billno,date_format(dat,'%d/%m/%Y'),tim,location,terminal,cashier,items,quans,sub,disp,disamt,gross,taxamt,addamt,net,pby,paid,bal,price_type,cid,cname,mobile,last from estimate where dat between ? and ? and pby=?"
+                        + companyFilter + " order by dat,billno";
                 ps = conn.prepareStatement(query);
                 ps.setString(1, lk);
                 ps.setString(2, lk1);
@@ -155,7 +164,10 @@ public class estimate_report extends javax.swing.JInternalFrame {
                 String net = String.format("%." + hmany + "f", r.getDouble(15));
                 String paid = String.format("%." + hmany + "f", r.getDouble(17));
                 String bal = String.format("%." + hmany + "f", r.getDouble(18));
-                s2.addRow(new Object[]{r.getString(1), r.getString(2), r.getString(3), r.getString(4), r.getString(5), r.getString(6), r.getString(7), r.getString(8), sub, r.getString(10), disamt, gross, taxamt, other, net, r.getString(16), paid, bal, r.getString(19), "  " + r.getString(20), r.getString(21), r.getString(22), r.getString(23)});
+                s2.addRow(new Object[] { r.getString(1), r.getString(2), r.getString(3), r.getString(4), r.getString(5),
+                        r.getString(6), r.getString(7), r.getString(8), sub, r.getString(10), disamt, gross, taxamt,
+                        other, net, r.getString(16), paid, bal, r.getString(19), "  " + r.getString(20),
+                        r.getString(21), r.getString(22), r.getString(23) });
                 selva = true;
             }
             double sub = 0, disamt = 0, net = 0, gross = 0, taxamt = 0, other = 0, paid = 0, bal = 0;
@@ -180,8 +192,10 @@ public class estimate_report extends javax.swing.JInternalFrame {
             String bal1 = String.format("%." + hmany + "f", bal);
 
             if (selva == true) {
-                s2.addRow(new Object[]{"", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""});
-                s2.addRow(new Object[]{"", "", "TOTAL:" + (jTable1.getRowCount() - 1), "", "", "", "", "", "" + sub1, "", disamt1, gross1, taxamt1, other1, net1, "", paid1, bal1, "", "", "", "", ""});
+                s2.addRow(new Object[] { "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
+                        "", "", "", "", "", "" });
+                s2.addRow(new Object[] { "", "", "TOTAL:" + (jTable1.getRowCount() - 1), "", "", "", "", "", "" + sub1,
+                        "", disamt1, gross1, taxamt1, other1, net1, "", paid1, bal1, "", "", "", "", "" });
 
                 h1.setEnabled(false);
                 h2.setEnabled(false);
@@ -205,7 +219,8 @@ public class estimate_report extends javax.swing.JInternalFrame {
     }
 
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated
+    // Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         titlelablel = new javax.swing.JLabel();
@@ -292,7 +307,8 @@ public class estimate_report extends javax.swing.JInternalFrame {
         h1.setBounds(80, 40, 110, 30);
 
         h3.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        h3.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Cash", "Card", "Credit", "UPI", "Others", "Multi Pay" }));
+        h3.setModel(new javax.swing.DefaultComboBoxModel<>(
+                new String[] { "Cash", "Card", "Credit", "UPI", "Others", "Multi Pay" }));
         getContentPane().add(h3);
         h3.setBounds(470, 40, 220, 30);
 
@@ -340,16 +356,15 @@ public class estimate_report extends javax.swing.JInternalFrame {
 
         jTable1.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
-        ));
+                new Object[][] {
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null }
+                },
+                new String[] {
+                        "Title 1", "Title 2", "Title 3", "Title 4"
+                }));
         jTable1.setRowHeight(25);
         jScrollPane1.setViewportView(jTable1);
 
@@ -371,12 +386,12 @@ public class estimate_report extends javax.swing.JInternalFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closebuttonActionPerformed
+    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_closebuttonActionPerformed
         this.dispose();
         // TODO add your handling code here:
-    }//GEN-LAST:event_closebuttonActionPerformed
+    }// GEN-LAST:event_closebuttonActionPerformed
 
-    private void generatebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_generatebuttonActionPerformed
+    private void generatebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_generatebuttonActionPerformed
         Date d = new Date();
         SimpleDateFormat g = new SimpleDateFormat("dd/MM/yyyy");
 
@@ -388,9 +403,9 @@ public class estimate_report extends javax.swing.JInternalFrame {
         }
         load_report(h1.getText(), h2.getText());
 
-    }//GEN-LAST:event_generatebuttonActionPerformed
+    }// GEN-LAST:event_generatebuttonActionPerformed
 
-    private void excelbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_excelbuttonActionPerformed
+    private void excelbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_excelbuttonActionPerformed
         if (s2.getRowCount() <= 0) {
             JOptionPane.showMessageDialog(this, "Sorry, No Records Were Found!", "Oops", JOptionPane.ERROR_MESSAGE);
             return;
@@ -410,9 +425,9 @@ public class estimate_report extends javax.swing.JInternalFrame {
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
-    }//GEN-LAST:event_excelbuttonActionPerformed
+    }// GEN-LAST:event_excelbuttonActionPerformed
 
-    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearbuttonActionPerformed
+    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_clearbuttonActionPerformed
         if (s2.getRowCount() > 0) {
             s2.getDataVector().removeAllElements();
             s2.fireTableDataChanged();
@@ -428,9 +443,9 @@ public class estimate_report extends javax.swing.JInternalFrame {
         h3.setSelectedIndex(0);
         all.setSelected(false);
         generatebutton.setEnabled(true);
-    }//GEN-LAST:event_clearbuttonActionPerformed
+    }// GEN-LAST:event_clearbuttonActionPerformed
 
-    private void jCalendarButton1PropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jCalendarButton1PropertyChange
+    private void jCalendarButton1PropertyChange(java.beans.PropertyChangeEvent evt) {// GEN-FIRST:event_jCalendarButton1PropertyChange
         try {
             if (evt.getNewValue() instanceof Date) {
                 String ses = evt.getNewValue().toString();
@@ -441,9 +456,9 @@ public class estimate_report extends javax.swing.JInternalFrame {
         } catch (ParseException e) {
             System.out.println(e.getMessage());
         }
-    }//GEN-LAST:event_jCalendarButton1PropertyChange
+    }// GEN-LAST:event_jCalendarButton1PropertyChange
 
-    private void jCalendarButton2PropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jCalendarButton2PropertyChange
+    private void jCalendarButton2PropertyChange(java.beans.PropertyChangeEvent evt) {// GEN-FIRST:event_jCalendarButton2PropertyChange
         try {
             if (evt.getNewValue() instanceof Date) {
                 String ses = evt.getNewValue().toString();
@@ -454,9 +469,9 @@ public class estimate_report extends javax.swing.JInternalFrame {
         } catch (ParseException e) {
             System.out.println(e.getMessage());
         }
-    }//GEN-LAST:event_jCalendarButton2PropertyChange
+    }// GEN-LAST:event_jCalendarButton2PropertyChange
 
-    private void allActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_allActionPerformed
+    private void allActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_allActionPerformed
 
         if (all.isSelected()) {
             h3.setEnabled(false);
@@ -464,9 +479,9 @@ public class estimate_report extends javax.swing.JInternalFrame {
             h3.setEnabled(true);
             h3.setSelectedIndex(0);
         }
-    }//GEN-LAST:event_allActionPerformed
+    }// GEN-LAST:event_allActionPerformed
 
-    private void viewbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_viewbuttonActionPerformed
+    private void viewbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_viewbuttonActionPerformed
         estimate oe = new estimate(util);
         JDesktopPane desktop_pane = getDesktopPane();
         desktop_pane.add(oe);
@@ -478,7 +493,7 @@ public class estimate_report extends javax.swing.JInternalFrame {
         Dimension jInternalFrameSize = oe.getSize();
         oe.setLocation((desktopSize.width - jInternalFrameSize.width) / 2,
                 (desktopSize.height - jInternalFrameSize.height) / 2);
-    }//GEN-LAST:event_viewbuttonActionPerformed
+    }// GEN-LAST:event_viewbuttonActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JCheckBox all;

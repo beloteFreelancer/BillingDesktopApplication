@@ -1,6 +1,7 @@
 package userpack;
 
 import com.selrom.db.DataUtil;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -26,8 +27,8 @@ public class PermissionManager {
             "Supplier",
             "Customer",
             "HR",
-            "Payroll",      // New
-            "Attendance",   // New
+            "Payroll", // New
+            "Attendance", // New
             "Tax Reports",
             "SMS",
             "Email",
@@ -35,8 +36,8 @@ public class PermissionManager {
             "Loyalty",
             "Backup",
             "Home Page Display",
-            "MIS",          // New
-            "Setting"       // New
+            "MIS", // New
+            "Setting" // New
     };
 
     public PermissionManager(DataUtil util) {
@@ -48,8 +49,10 @@ public class PermissionManager {
         this.currentUser = username;
         this.permissionsCache.clear();
         try {
-            String query = "select fname, option1 from users_permissions where user='" + username + "'";
-            ResultSet rs = util.doQuery(query);
+            String query = "SELECT fname, option1 FROM users_permissions WHERE `user` = ?";
+            PreparedStatement ps = util.getPreparedStatement(query);
+            ps.setString(1, username);
+            ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 String feature = rs.getString(1);
                 String allowed = rs.getString(2);

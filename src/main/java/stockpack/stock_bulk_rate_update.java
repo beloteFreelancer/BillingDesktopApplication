@@ -19,6 +19,7 @@ import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import menupack.menu_form;
 import menupack.sample2;
+import menupack.UserSession;
 
 /**
  *
@@ -86,11 +87,15 @@ public class stock_bulk_rate_update extends javax.swing.JInternalFrame {
 
             boolean selva = false;
             String query;
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             if (all.isSelected()) {
-                query = "select barcode,ino,iname,prate,mrp,rprice,wprice from item order by ino";
+                query = "select barcode,ino,iname,prate,mrp,rprice,wprice from item where 1=1" + companyFilter
+                        + " order by ino";
             } else {
                 query = "select barcode,ino,iname,prate,mrp,rprice,wprice from item where cat='" + h3.getSelectedItem()
-                        + "' order by ino";
+                        + "'" + companyFilter + " order by ino";
             }
             r = util.doQuery(query);
             while (r.next()) {
@@ -111,13 +116,16 @@ public class stock_bulk_rate_update extends javax.swing.JInternalFrame {
 
     final void get_cid() {
         try {
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             int count = 0;
-            String query = "select distinct cat from item";
+            String query = "select distinct cat from item" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 count = count + 1;
             }
-            query = "select distinct cat from item";
+            query = "select distinct cat from item" + companyFilter;
             r = util.doQuery(query);
             Object f[] = new Object[count];
             int index = 0;
@@ -145,6 +153,7 @@ public class stock_bulk_rate_update extends javax.swing.JInternalFrame {
                 return;
             }
             ArrayList query_list = new ArrayList();
+            String cid = UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "";
 
             for (int i = 0; i < jTable1.getRowCount(); i++) {
                 String barcode = jTable1.getValueAt(i, 0).toString();
@@ -156,10 +165,10 @@ public class stock_bulk_rate_update extends javax.swing.JInternalFrame {
                 String wprice = jTable1.getValueAt(i, 6).toString();
                 query_list.add("update item set prate='" + prate + "',mrp='" + mrp + "',rprice='" + rprice
                         + "',wprice='" + wprice + "' where ino='" + ino + "' and barcode='" + barcode + "' and iname='"
-                        + iname + "' ");
+                        + iname + "' and company_id='" + cid + "' ");
                 query_list.add("update stock set prate='" + prate + "',mrp='" + mrp + "',rprice='" + rprice
                         + "',wprice='" + wprice + "' where ino='" + ino + "' and barcode='" + barcode + "' and iname='"
-                        + iname + "' ");
+                        + iname + "' and company_id='" + cid + "' ");
             }
             int a = util.doManipulation_Batch(query_list);
             if (a > 0) {

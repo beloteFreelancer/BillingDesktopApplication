@@ -19,19 +19,18 @@ import javax.print.attribute.standard.MediaPrintableArea;
 import javax.print.attribute.standard.MediaSize;
 import javax.print.attribute.standard.MediaSizeName;
 import menupack.SelRomJasper;
+import menupack.UserSession;
 import net.sf.jasperreports.engine.JRException;
-import net.sf.jasperreports.engine.JRExporterParameter;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.export.JRPrintServiceExporter;
-import net.sf.jasperreports.engine.export.JRPrintServiceExporterParameter;
 
 /**
  *
  * @author K.SELVAKUMAR, copyrights K.SELVAKUMAR, +91 99427 32229,
- * mysoft.java@gmail.com
+ *         mysoft.java@gmail.com
  */
 public class print_thermal_return {
 
@@ -41,7 +40,8 @@ public class print_thermal_return {
     public void Report(DataUtil util, String billno, String drive, String folder, String billformat) {
         try {
             this.util = util;
-            Map<String, Object> parameters = new HashMap<>();            parameters.put("parameter1", "");
+            Map<String, Object> parameters = new HashMap<>();
+            parameters.put("parameter1", "");
             parameters.put("parameter2", "");
             parameters.put("parameter3", "");
             parameters.put("parameter4", "");
@@ -59,8 +59,13 @@ public class print_thermal_return {
             parameters.put("parameter24", "");
             parameters.put("parameter25", "");
 
-            String add1 = "", add2 = "", add3 = "", add4 = "", head = "", sms1 = "", sms2 = "", sms3 = "", letter = "", logoPath = "";
-            String query = "select cname,add1,add2,add3,bhead,sms1,sms2,sms3,hmany,letter,logo_path from setting_bill";
+            String add1 = "", add2 = "", add3 = "", add4 = "", head = "", sms1 = "", sms2 = "", sms3 = "", letter = "",
+                    logoPath = "";
+            String companyWhere = UserSession.hasSelectedCompany()
+                    ? " WHERE companyID='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select cname,add1,add2,add3,bhead,sms1,sms2,sms3,hmany,letter,logo_path from company"
+                    + companyWhere;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 logoPath = r.getString("logo_path");
@@ -91,9 +96,12 @@ public class print_thermal_return {
 
             parameters.put("parameter5", head);
 
-            String date = "", location = "", terminal = "", cashier = "", items = "", quans = "", pby = "", cname = "", mobile = "", time = "", cid = "";
-            double sub = 0, disamt = 0, addamt = 0, net = 0, paid = 0, bal = 0, taxamt = 0, today_points = 0, total_points = 0;
-            query = "select date_format(dat,'%d/%m/%Y'),tim,location,terminal,cashier,items,quans,sub,disamt,addamt,net,pby,paid,bal,cname,mobile,cid,taxamt from sreturn where billno='" + billno + "'";
+            String date = "", location = "", terminal = "", cashier = "", items = "", quans = "", pby = "", cname = "",
+                    mobile = "", time = "", cid = "";
+            double sub = 0, disamt = 0, addamt = 0, net = 0, paid = 0, bal = 0, taxamt = 0, today_points = 0,
+                    total_points = 0;
+            query = "select date_format(dat,'%d/%m/%Y'),tim,location,terminal,cashier,items,quans,sub,disamt,addamt,net,pby,paid,bal,cname,mobile,cid,taxamt from sreturn where billno='"
+                    + billno + "'";
             r = util.doQuery(query);
             while (r.next()) {
                 date = r.getString(1);
@@ -224,7 +232,7 @@ public class print_thermal_return {
                 selRomJasper.setField7("" + serial);
                 k.add(selRomJasper);
                 serial = serial + 1;
-            }//while loop ends//adding items ends
+            } // while loop ends//adding items ends
 
             double savings = mrptot - net;
             if (savings > 0) {

@@ -16,6 +16,7 @@ import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import menupack.menu_form;
 import menupack.sample2;
+import menupack.UserSession;
 
 /**
  *
@@ -79,7 +80,11 @@ public class stock_summary extends javax.swing.JInternalFrame {
             boolean selva = false;
             double prate, mrp, srate, wrate;
             String query;
-            query = "select cat,sum(quan),sum(quan*prate),sum(quan*mrp),sum(quan*rprice),sum(quan*wprice) from stock where quan>0 group by cat order by cat";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            query = "select cat,sum(quan),sum(quan*prate),sum(quan*mrp),sum(quan*rprice),sum(quan*wprice) from stock where quan>0"
+                    + companyFilter + " group by cat order by cat";
             r = util.doQuery(query);
             while (r.next()) {
                 prate = r.getDouble(3);

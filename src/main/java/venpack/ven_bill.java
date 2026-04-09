@@ -8,6 +8,7 @@ import java.awt.HeadlessException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.ParseException;
+import menupack.UserSession;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -65,7 +66,10 @@ public final class ven_bill extends javax.swing.JInternalFrame {
     void get_billno() {
         try {
             int sno = 1;
-            String query = "select max(sno) from ven_bill";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select max(sno) from ven_bill" + companyFilter;
             r = util.doQuery(query);
             boolean selva = false;
             while (r.next()) {
@@ -84,12 +88,15 @@ public final class ven_bill extends javax.swing.JInternalFrame {
     void get_sug() {
         try {
             int count = 0;
-            String query = "select distinct billno from ven_bal";
+            String companyFilterWhere = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select distinct billno from ven_bal" + companyFilterWhere;
             ResultSet set = util.doQuery(query);
             while (set.next()) {
                 count = count + 1;
             }
-            query = "select distinct billno from ven_bal";
+            query = "select distinct billno from ven_bal" + companyFilterWhere;
             set = util.doQuery(query);
             Object f[] = new Object[count];
             int index = 0;
@@ -106,12 +113,13 @@ public final class ven_bill extends javax.swing.JInternalFrame {
     void get_sug1() {
         try {
             int count = 0;
-            String query = "select distinct cname from vendor";
+            String companyFilter = UserSession.hasSelectedCompany() ? " where company_id='" + UserSession.getSelectedCompanyID() + "'" : "";
+            String query = "select distinct cname from vendor" + companyFilter;
             ResultSet set = util.doQuery(query);
             while (set.next()) {
                 count = count + 1;
             }
-            query = "select distinct cname from vendor";
+            query = "select distinct cname from vendor" + companyFilter;
             set = util.doQuery(query);
             Object f[] = new Object[count];
             int index = 0;
@@ -206,9 +214,11 @@ public final class ven_bill extends javax.swing.JInternalFrame {
             ArrayList query_list = new ArrayList();
             double paid = 0;
             query_list.add("insert into ven_bill values ('" + sno + "','" + cname + "','" + billno + "','" + date
-                    + "','" + ddate + "','" + amount + "','" + remarks + "','" + username + "','" + last + "') ");
+                    + "','" + ddate + "','" + amount + "','" + remarks + "','" + username + "','" + last + "','"
+                    + (UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "") + "') ");
             query_list.add("insert into ven_bal values ('" + billno + "','" + date + "','" + ddate + "','" + cname
-                    + "','" + amount + "','" + paid + "','" + last + "') ");
+                    + "','" + amount + "','" + paid + "','" + last + "','"
+                    + (UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "") + "') ");
             int a = util.doManipulation_Batch(query_list);
             if (a > 0) {
                 JOptionPane.showMessageDialog(this, "<html><h1>Saved Successfully</h1></html>", "Saved",
@@ -304,7 +314,9 @@ public final class ven_bill extends javax.swing.JInternalFrame {
             String cname = h2.getSelectedItem().toString();
             String billno = h3.getSelectedItem().toString();
             query_batch.add("delete from ven_bill where sno='" + sno + "' and cname='" + cname + "'");
-            query_batch.add("delete from ven_bal where billno='" + billno + "' and cname='" + cname + "'");
+            query_batch.add("delete from ven_bal where billno='" + billno + "' and cname='" + cname + "'"
+                    + (UserSession.hasSelectedCompany() ? " and company_id='" + UserSession.getSelectedCompanyID() + "'"
+                            : ""));
             int count = util.doManipulation_Batch(query_batch);
             if (count > 0) {
                 JOptionPane.showMessageDialog(this, "Deleted Successfully", "Deleted", JOptionPane.PLAIN_MESSAGE);
@@ -332,7 +344,10 @@ public final class ven_bill extends javax.swing.JInternalFrame {
             }
 
             double bal = 0;
-            query = "select sum(tot-paid) from ven_bal where cname='" + cname + "'";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            query = "select sum(tot-paid) from ven_bal where cname='" + cname + "'" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 bal = r.getDouble(1);
@@ -342,7 +357,7 @@ public final class ven_bill extends javax.swing.JInternalFrame {
             hh.append("\n Net Balance : " + bal2);
 
             boolean selva = false;
-            query = "select distinct cname from ven_bal where cname='" + cname + "'";
+            query = "select distinct cname from ven_bal where cname='" + cname + "'" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 selva = true;
@@ -357,7 +372,7 @@ public final class ven_bill extends javax.swing.JInternalFrame {
 
             double total = 0;
             query = "select date_format(dat,'%d/%m/%Y'),billno,tot-paid from ven_bal where cname='" + cname
-                    + "' and tot-paid >0 ";
+                    + "' and tot-paid >0" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 String date = r.getString(1);
@@ -695,10 +710,17 @@ public final class ven_bill extends javax.swing.JInternalFrame {
         try {
             String query;
             String billno = h1.getText();
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String companyAnd = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             if (billno.equalsIgnoreCase("--")) {
-                query = "select max(sno) from ven_bill";
+                query = "select max(sno) from ven_bill" + companyFilter;
             } else {
-                query = "select sno from ven_bill where sno < '" + billno + "' order by sno desc limit 1";
+                query = "select sno from ven_bill where sno < '" + billno + "'" + companyAnd
+                        + " order by sno desc limit 1";
             }
             r = util.doQuery(query);
             boolean selva = false;
@@ -728,7 +750,10 @@ public final class ven_bill extends javax.swing.JInternalFrame {
                 JOptionPane.showMessageDialog(this, "No Records Were Found!", "No Records", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            query = "select sno from ven_bill where sno > '" + billno + "' order by sno limit 1";
+            String companyAnd = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            query = "select sno from ven_bill where sno > '" + billno + "'" + companyAnd + " order by sno limit 1";
             r = util.doQuery(query);
             boolean selva = false;
             String search_billno = "";

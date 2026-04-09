@@ -3,6 +3,7 @@
 
 # Log file
 *.log
+*.class
 
 # BlueJ files
 *.ctxt
@@ -82,6 +83,26 @@ pom.xml.backup
 
 # VS Code
 .vscode/
+
+db_main.properties
+
+# Maven Shade Plugin generated file
+dependency-reduced-pom.xml
+
+# Backup files
+*.backup
+pom.xml.backup
+
+# VS Code
+.vscode/
+
+# JVM crash dumps
+hs_err_pid*.log
+replay_pid*.log
+
+# Windows shortcuts / thumbnails
+desktop.ini
+ehthumbs.db
 
 # JVM crash dumps
 hs_err_pid*.log

@@ -40,7 +40,7 @@ public class balance_sheet_summary {
             Map<String, Object> parameters = new HashMap<>();
             String cname = "";
             int hmany = 2;
-            String query = "select cname,hmany from setting_bill";
+            String query = "select cname,hmany from company";
             r = util.doQuery(query);
             while (r.next()) {
                 cname = r.getString(1);
@@ -56,7 +56,7 @@ public class balance_sheet_summary {
             ArrayList asset_amt = new ArrayList();
             double ca_debit = 0, ca_credit = 0;
             double damt = 0, camt = 0, open_debit = 0, open_credit = 0;
-//Capital Accounts Starts
+            // Capital Accounts Starts
             query = "select sum(case when t.entry = 'Credit' then t.amount else null end) as Credit, sum(case when t.entry = 'Debit' then t.amount else null end) as Debit from account_voucher t where under='Capital Account' ";
             r = util.doQuery(query);
             while (r.next()) {
@@ -87,9 +87,9 @@ public class balance_sheet_summary {
                 asset.add(".");
                 asset_amt.add(0);
             }
-//Capital Accounts Ends Here
+            // Capital Accounts Ends Here
 
-//Loans Starting
+            // Loans Starting
             damt = 0;
             camt = 0;
             query = "select sum(case when t.entry = 'Credit' then t.amount else null end) as Credit, sum(case when t.entry = 'Debit' then t.amount else null end) as Debit from account_voucher t where under='Loans (Liability)' ";
@@ -121,9 +121,9 @@ public class balance_sheet_summary {
                 asset.add("Loans (Liability)");
                 asset_amt.add(bal);
             }
-//Loans ends here
+            // Loans ends here
 
-//Current Liabilities Starts
+            // Current Liabilities Starts
             damt = 0;
             camt = 0;
             query = "select sum(case when t.entry = 'Credit' then t.amount else null end) as Credit, sum(case when t.entry = 'Debit' then t.amount else null end) as Debit from account_voucher t where under='Current Liabilities' ";
@@ -155,9 +155,9 @@ public class balance_sheet_summary {
                 asset.add(".");
                 asset_amt.add(0);
             }
-//Current Liabilities Ends Here
+            // Current Liabilities Ends Here
 
-//suspense account
+            // suspense account
             damt = 0;
             camt = 0;
             query = "select sum(case when t.entry = 'Credit' then t.amount else null end) as Credit, sum(case when t.entry = 'Debit' then t.amount else null end) as Debit from account_voucher t where under='Suspense Account' ";
@@ -191,10 +191,10 @@ public class balance_sheet_summary {
                     asset.add(".");
                     asset_amt.add(0);
                 }
-            }//balances is grearthen zero
-//suspense account ends
+            } // balances is grearthen zero
+            // suspense account ends
 
-//fixed assets starts
+            // fixed assets starts
             damt = 0;
             camt = 0;
             query = "select sum(case when t.entry = 'Credit' then t.amount else null end) as Credit, sum(case when t.entry = 'Debit' then t.amount else null end) as Debit from account_voucher t where under='Fixed Assets' ";
@@ -228,8 +228,8 @@ public class balance_sheet_summary {
                     asset.add("Fixed Assets");
                     asset_amt.add(bal);
                 }
-            }//balances is grearthen zero
-//fixed assets ends here
+            } // balances is grearthen zero
+            // fixed assets ends here
 
             double cstock1 = 0;
             query = "select sum(quan*prate) from stock";
@@ -245,7 +245,7 @@ public class balance_sheet_summary {
                 asset_amt.add(cstock1);
             }
 
-            //Profit & Loss Account
+            // Profit & Loss Account
             double sales = 0, preturn = 0, cust_pay = 0, other_income = 0;
             query = "select sum(cash+card+others) from sales";
             r = util.doQuery(query);
@@ -311,11 +311,11 @@ public class balance_sheet_summary {
                 asset.add(".");
                 asset_amt.add(0);
             }
-            //profit & loss account ends
+            // profit & loss account ends
             ca_debit = ca_debit + expense;
             ca_credit = ca_credit + income - cstock;
 
-            //Bank Accounts Starts
+            // Bank Accounts Starts
             query = "select sum(case when t.entry = 'Credit' then t.amount else null end) as Credit, sum(case when t.entry = 'Debit' then t.amount else null end) as Debit from account_voucher t where under='Bank Accounts' ";
             r = util.doQuery(query);
             while (r.next()) {
@@ -331,9 +331,9 @@ public class balance_sheet_summary {
                 ca_debit = ca_debit + r.getDouble(2);
                 ca_credit = ca_credit + r.getDouble(1);
             }
-            //Bank Accounts Ends Here
+            // Bank Accounts Ends Here
 
-            //Current Assets Opening Balance
+            // Current Assets Opening Balance
             query = "select sum(debit),sum(credit) from account_master  where under='Current Assets' ";
             r = util.doQuery(query);
             while (r.next()) {
@@ -343,7 +343,7 @@ public class balance_sheet_summary {
                 open_debit = open_debit + r.getDouble(1);
                 open_credit = open_credit + r.getDouble(2);
             }
-            //Current Assets Opening Balance Ends
+            // Current Assets Opening Balance Ends
 
             if (ca_credit > ca_debit) {
                 double diff = ca_credit - ca_debit;
@@ -359,7 +359,7 @@ public class balance_sheet_summary {
                 asset_amt.add(0);
             }
 
-            //Opening Balance
+            // Opening Balance
             if (open_credit > 0 || open_debit > 0) {
                 if (open_credit > open_debit) {
                     double diff = open_credit - open_debit;
@@ -375,7 +375,7 @@ public class balance_sheet_summary {
                     asset_amt.add(0);
                 }
             }
-            //Opening Balance Ends Here
+            // Opening Balance Ends Here
 
             double tlamt = 0, taamt = 0;
             ArrayList k = new ArrayList();
@@ -411,7 +411,7 @@ public class balance_sheet_summary {
                 selRomJasper.setField3(asset1);
                 selRomJasper.setField4(aamt2);
                 k.add(selRomJasper);
-            }//array size
+            } // array size
 
             String tlamt2 = String.format("%." + hmany + "f", tlamt);
             String taamt2 = String.format("%." + hmany + "f", taamt);
@@ -423,8 +423,7 @@ public class balance_sheet_summary {
 
             disable_warnigs.disableAccessWarnings();
             jasperReport = JasperReportCompiler.compileReport("/JasperFiles/Accounts/Balance_Sheet.jrxml");
-            JRBeanCollectionDataSource beanColDataSource
-                    = new JRBeanCollectionDataSource(k);
+            JRBeanCollectionDataSource beanColDataSource = new JRBeanCollectionDataSource(k);
             jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, beanColDataSource);
             jasperViewer = new JasperViewer(jasperPrint);
             jasperViewer.setVisible(true);

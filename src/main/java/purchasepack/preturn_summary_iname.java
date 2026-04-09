@@ -23,11 +23,12 @@ import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import menupack.menu_form;
 import menupack.sample2;
+import menupack.UserSession;
 
 /**
  *
  * @author K.SELVAKUMAR, copyrights K.SELVAKUMAR, +91 99427 32229,
- * mysoft.java@gmail.com
+ *         mysoft.java@gmail.com
  */
 public class preturn_summary_iname extends javax.swing.JInternalFrame {
 
@@ -79,14 +80,15 @@ public class preturn_summary_iname extends javax.swing.JInternalFrame {
             String query;
             PreparedStatement ps;
             Connection conn = util.getConnection();
+            String companyFilter = UserSession.hasSelectedCompany() ? " and grn in (select grn from preturn where company_id='" + UserSession.getSelectedCompanyID() + "')" : "";
 
             if (all.isSelected()) {
-                query = "select ino,iname,sum(quan),sum(amount) from preturn_items where bdate between ? and ? group by ino order by iname";
+                query = "select ino,iname,sum(quan),sum(amount) from preturn_items where bdate between ? and ?" + companyFilter + " group by ino,iname order by iname";
                 ps = conn.prepareStatement(query);
                 ps.setString(1, lk);
                 ps.setString(2, lk1);
             } else {
-                query = "select ino,iname,sum(quan),sum(amount) from preturn_items where bdate between ? and ? and iname=? group by ino order by iname";
+                query = "select ino,iname,sum(quan),sum(amount) from preturn_items where bdate between ? and ? and iname=?" + companyFilter + " group by ino,iname order by iname";
                 ps = conn.prepareStatement(query);
                 ps.setString(1, lk);
                 ps.setString(2, lk1);
@@ -103,7 +105,7 @@ public class preturn_summary_iname extends javax.swing.JInternalFrame {
                 if (what < 2) {
                     amount1 = amount1 + "0";
                 }
-                s2.addRow(new Object[]{r.getString(1), r.getString(2), r.getString(3), amount1});
+                s2.addRow(new Object[] { r.getString(1), r.getString(2), r.getString(3), amount1 });
                 selva = true;
             }
             amount = 0;
@@ -122,8 +124,8 @@ public class preturn_summary_iname extends javax.swing.JInternalFrame {
             }
 
             if (selva == true) {
-                s2.addRow(new Object[]{"", "", "", ""});
-                s2.addRow(new Object[]{"", "TOTAL:" + (jTable1.getRowCount() - 1), bills, amount1});
+                s2.addRow(new Object[] { "", "", "", "" });
+                s2.addRow(new Object[] { "", "TOTAL:" + (jTable1.getRowCount() - 1), bills, amount1 });
 
                 h1.setEnabled(false);
                 h2.setEnabled(false);
@@ -141,12 +143,13 @@ public class preturn_summary_iname extends javax.swing.JInternalFrame {
     final void get_cid() {
         try {
             int count = 0;
-            String query = "select distinct iname from preturn_items";
+            String companyFilter = UserSession.hasSelectedCompany() ? " where grn in (select grn from preturn where company_id='" + UserSession.getSelectedCompanyID() + "')" : "";
+            String query = "select distinct iname from preturn_items" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 count = count + 1;
             }
-            query = "select distinct iname from preturn_items";
+            query = "select distinct iname from preturn_items" + companyFilter;
             r = util.doQuery(query);
             Object f[] = new Object[count];
             int index = 0;
@@ -164,7 +167,8 @@ public class preturn_summary_iname extends javax.swing.JInternalFrame {
     void get_cname() {
         try {
             cnamel.setText("");
-            String query = "select distinct ino from preturn_items where iname='" + h3.getSelectedItem() + "' ";
+            String companyFilter = UserSession.hasSelectedCompany() ? " and grn in (select grn from preturn where company_id='" + UserSession.getSelectedCompanyID() + "')" : "";
+            String query = "select distinct ino from preturn_items where iname='" + h3.getSelectedItem() + "'" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 cnamel.setText("It.Code: " + r.getString(1));
@@ -190,7 +194,8 @@ public class preturn_summary_iname extends javax.swing.JInternalFrame {
     }
 
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated
+    // Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         titlelablel = new javax.swing.JLabel();
@@ -221,16 +226,15 @@ public class preturn_summary_iname extends javax.swing.JInternalFrame {
 
         jTable1.setFont(new java.awt.Font("Arial Unicode MS", 0, 14)); // NOI18N
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
-        ));
+                new Object[][] {
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null }
+                },
+                new String[] {
+                        "Title 1", "Title 2", "Title 3", "Title 4"
+                }));
         jTable1.setRowHeight(25);
         jTable1.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -364,11 +368,11 @@ public class preturn_summary_iname extends javax.swing.JInternalFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MouseClicked
+    private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {// GEN-FIRST:event_jTable1MouseClicked
 
-    }//GEN-LAST:event_jTable1MouseClicked
+    }// GEN-LAST:event_jTable1MouseClicked
 
-    private void generatebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_generatebuttonActionPerformed
+    private void generatebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_generatebuttonActionPerformed
         Date d = new Date();
         SimpleDateFormat g = new SimpleDateFormat("dd/MM/yyyy");
 
@@ -380,9 +384,9 @@ public class preturn_summary_iname extends javax.swing.JInternalFrame {
         }
         load_report(h1.getText(), h2.getText());
 
-    }//GEN-LAST:event_generatebuttonActionPerformed
+    }// GEN-LAST:event_generatebuttonActionPerformed
 
-    private void excelbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_excelbuttonActionPerformed
+    private void excelbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_excelbuttonActionPerformed
         if (s2.getRowCount() <= 0) {
             JOptionPane.showMessageDialog(this, "Sorry, No Records Were Found!", "Oops", JOptionPane.ERROR_MESSAGE);
             return;
@@ -404,9 +408,9 @@ public class preturn_summary_iname extends javax.swing.JInternalFrame {
             System.out.println(e.getMessage());
         }
 
-    }//GEN-LAST:event_excelbuttonActionPerformed
+    }// GEN-LAST:event_excelbuttonActionPerformed
 
-    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearbuttonActionPerformed
+    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_clearbuttonActionPerformed
         if (s2.getRowCount() > 0) {
             s2.getDataVector().removeAllElements();
             s2.fireTableDataChanged();
@@ -424,17 +428,17 @@ public class preturn_summary_iname extends javax.swing.JInternalFrame {
         h3.setSelectedItem("");
         cnamel.setText("");
 
-    }//GEN-LAST:event_clearbuttonActionPerformed
+    }// GEN-LAST:event_clearbuttonActionPerformed
 
-    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closebuttonActionPerformed
+    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_closebuttonActionPerformed
         this.dispose();
-    }//GEN-LAST:event_closebuttonActionPerformed
+    }// GEN-LAST:event_closebuttonActionPerformed
 
-    private void jTable1FocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jTable1FocusGained
+    private void jTable1FocusGained(java.awt.event.FocusEvent evt) {// GEN-FIRST:event_jTable1FocusGained
 
-    }//GEN-LAST:event_jTable1FocusGained
+    }// GEN-LAST:event_jTable1FocusGained
 
-    private void jCalendarButton2PropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jCalendarButton2PropertyChange
+    private void jCalendarButton2PropertyChange(java.beans.PropertyChangeEvent evt) {// GEN-FIRST:event_jCalendarButton2PropertyChange
         try {
             if (evt.getNewValue() instanceof Date) {
                 String ses = evt.getNewValue().toString();
@@ -446,9 +450,9 @@ public class preturn_summary_iname extends javax.swing.JInternalFrame {
             System.out.println(e.getMessage());
         }
 
-    }//GEN-LAST:event_jCalendarButton2PropertyChange
+    }// GEN-LAST:event_jCalendarButton2PropertyChange
 
-    private void jCalendarButton1PropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jCalendarButton1PropertyChange
+    private void jCalendarButton1PropertyChange(java.beans.PropertyChangeEvent evt) {// GEN-FIRST:event_jCalendarButton1PropertyChange
         try {
             if (evt.getNewValue() instanceof Date) {
                 String ses = evt.getNewValue().toString();
@@ -461,22 +465,22 @@ public class preturn_summary_iname extends javax.swing.JInternalFrame {
         }
 
         // TODO add your handling code here:
-    }//GEN-LAST:event_jCalendarButton1PropertyChange
+    }// GEN-LAST:event_jCalendarButton1PropertyChange
 
-    private void h3ItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_h3ItemStateChanged
+    private void h3ItemStateChanged(java.awt.event.ItemEvent evt) {// GEN-FIRST:event_h3ItemStateChanged
         get_cname();
         // TODO add your handling code here:
-    }//GEN-LAST:event_h3ItemStateChanged
+    }// GEN-LAST:event_h3ItemStateChanged
 
-    private void allActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_allActionPerformed
+    private void allActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_allActionPerformed
         if (all.isSelected()) {
             h3.setEnabled(false);
         } else {
             h3.setEnabled(true);
         }
 
-// TODO add your handling code here:
-    }//GEN-LAST:event_allActionPerformed
+        // TODO add your handling code here:
+    }// GEN-LAST:event_allActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JCheckBox all;

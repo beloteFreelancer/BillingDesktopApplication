@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Thermal_Unicode_Without_GST" language="groovy" pageWidth="216" pageHeight="842" columnWidth="216" leftMargin="0" rightMargin="0" topMargin="2" bottomMargin="20" uuid="b6af8ed7-efd7-4ae4-a964-63c71476369a">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Thermal_Unicode_Without_GST" language="java" pageWidth="216" pageHeight="842" columnWidth="216" leftMargin="0" rightMargin="0" topMargin="2" bottomMargin="20" uuid="b6af8ed7-efd7-4ae4-a964-63c71476369a">
 	<property name="ireport.zoom" value="4.0"/>
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="1684"/>
@@ -59,6 +59,8 @@
 	<parameter name="parameter54" class="java.lang.String"/>
 	<parameter name="parameter55" class="java.lang.String"/>
 	<parameter name="parameter56" class="java.lang.String"/>
+	<parameter name="QRCodeImage" class="java.awt.image.BufferedImage"/>
+	<parameter name="CompanyGSTNo" class="java.lang.String"/>
 	<field name="field1" class="java.lang.String"/>
 	<field name="field2" class="java.lang.String"/>
 	<field name="field3" class="java.lang.String"/>
@@ -98,7 +100,14 @@
 				<textFieldExpression><![CDATA[$P{parameter4}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement x="0" y="74" width="216" height="14" uuid="6d27bb6a-e175-452d-9e9d-e0adae7d0294"/>
+				<reportElement x="0" y="56" width="216" height="13" uuid="c9d0e1f2-a3b4-4578-c9d0-e1f2a3b45689"/>
+				<textElement textAlignment="Center">
+					<font fontName="DejaVu Sans" size="9" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{CompanyGSTNo}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="0" y="69" width="216" height="14" uuid="6d27bb6a-e175-452d-9e9d-e0adae7d0294"/>
 				<textElement textAlignment="Center">
 					<font fontName="DejaVu Sans" size="9" isBold="false"/>
 				</textElement>
@@ -255,7 +264,7 @@
 		</band>
 	</detail>
 	<summary>
-		<band height="286" splitType="Stretch">
+		<band height="490" splitType="Stretch">
 			<textField isBlankWhenNull="true">
 				<reportElement x="0" y="15" width="121" height="13" uuid="a725727c-91d9-41c8-89f0-f3749ef58be1"/>
 				<textElement>
@@ -683,6 +692,21 @@
 				</textElement>
 				<textFieldExpression><![CDATA[$P{parameter56}]]></textFieldExpression>
 			</textField>
+			<image isUsingCache="true" onErrorType="Blank">
+				<reportElement x="33" y="295" width="150" height="150">
+					<printWhenExpression><![CDATA[$P{QRCodeImage} != null]]></printWhenExpression>
+				</reportElement>
+				<imageExpression><![CDATA[$P{QRCodeImage}]]></imageExpression>
+			</image>
+			<staticText>
+				<reportElement x="0" y="447" width="216" height="16">
+					<printWhenExpression><![CDATA[$P{QRCodeImage} != null]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="DejaVu Sans" size="9"/>
+				</textElement>
+				<text><![CDATA[Scan to Pay via UPI]]></text>
+			</staticText>
 		</band>
 	</summary>
 </jasperReport>

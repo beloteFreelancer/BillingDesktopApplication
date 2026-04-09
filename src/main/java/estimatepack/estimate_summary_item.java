@@ -6,6 +6,8 @@ import java.awt.Font;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.ParseException;
@@ -17,6 +19,7 @@ import javax.swing.JTable;
 import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import menupack.menu_form;
+import menupack.UserSession;
 import menupack.sample2;
 
 /**
@@ -40,10 +43,10 @@ public final class estimate_summary_item extends javax.swing.JInternalFrame {
         titlelablel.setText("<html><u>Item Wise Estimate Summary</u></html>");
         setTitle("Item Wise Estimate Summary");
         this.setSize(1017, 650);
-        ImageIcon icon = new ImageIcon(ClassLoader.getSystemResource("images/icon.png"));
-        this.setFrameIcon(icon);
-        menu_form me = new menu_form();
-        hmany = me.getHmany();
+        javax.swing.ImageIcon icon = ColorConstants.loadIcon("/images/icon.png");
+        if (icon != null) {
+            this.setFrameIcon(icon);
+        }
     }
 
     public final void load_list_table() {
@@ -69,22 +72,35 @@ public final class estimate_summary_item extends javax.swing.JInternalFrame {
     void load_report(String dfrom, String dto) {
         try {
             Date nm = new SimpleDateFormat("dd/MM/yyyy").parse(dfrom);
-            String lk = (new SimpleDateFormat("yyyy/MM/dd").format(nm));
+            String lk = (new SimpleDateFormat("yyyy-MM-dd").format(nm));
             Date nm1 = new SimpleDateFormat("dd/MM/yyyy").parse(dto);
-            String lk1 = (new SimpleDateFormat("yyyy/MM/dd").format(nm1));
+            String lk1 = (new SimpleDateFormat("yyyy-MM-dd").format(nm1));
             boolean selva = false;
             double sub;
 
             String query;
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " and company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+
+            Connection conn = util.getConnection();
+            PreparedStatement ps;
+
             if (all.isSelected()) {
-                query = "select ino,iname,sum(quan),sum(amount) from estimate_items where dat between '" + lk
-                        + "' and '" + lk1 + "' group by ino order by ino";
+                query = "select ino,iname,sum(quan),sum(amount) from estimate_items where dat between ? and ?" + companyFilter + " group by ino, iname order by ino";
+                ps = conn.prepareStatement(query);
+                ps.setString(1, lk);
+                ps.setString(2, lk1);
             } else {
-                query = "select distinct a.ino,a.iname,sum(quan),sum(amount) from estimate_items a,item b where dat between '"
-                        + lk + "' and '" + lk1 + "' and cat='" + h3.getSelectedItem()
-                        + "' and a.ino=b.ino group by a.ino order by a.ino";
+                query = "select a.ino,a.iname,sum(quan),sum(amount) from estimate_items a,item b where dat between ? and ? and cat=? and a.ino=b.ino" + companyFilter + " group by a.ino, a.iname order by a.ino";
+                ps = conn.prepareStatement(query);
+                ps.setString(1, lk);
+                ps.setString(2, lk1);
+                Object selectedItem = h3.getSelectedItem();
+                ps.setString(3, selectedItem != null ? selectedItem.toString() : "");
             }
-            r = util.doQuery(query);
+
+            r = ps.executeQuery();
             while (r.next()) {
                 sub = r.getDouble(4);
                 String sub1 = String.format("%." + hmany + "f", sub);
@@ -109,7 +125,7 @@ public final class estimate_summary_item extends javax.swing.JInternalFrame {
                 all.setEnabled(false);
 
             }
-        } catch (ClassNotFoundException | NumberFormatException | SQLException | ParseException e) {
+        } catch (NumberFormatException | SQLException | ParseException e) {
             System.out.println(e.getMessage());
         }
     }
@@ -117,7 +133,10 @@ public final class estimate_summary_item extends javax.swing.JInternalFrame {
     void get_category() {
         try {
             h3.removeAllItems();
-            String query = "select distinct cat from item";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select distinct cat from item" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 h3.addItem(r.getString(1));

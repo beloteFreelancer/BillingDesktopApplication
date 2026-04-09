@@ -5,6 +5,8 @@ import com.selrom.db.disable_warnigs;
 import com.selrom.utils.JasperReportCompiler;
 import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
+import java.awt.image.BufferedImage;
+import Utils.UpiQrGenerator;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -19,20 +21,19 @@ import javax.print.attribute.standard.MediaPrintableArea;
 import javax.print.attribute.standard.MediaSize;
 import javax.print.attribute.standard.MediaSizeName;
 import menupack.SelRomJasper;
+import menupack.UserSession;
 import net.sf.jasperreports.engine.JRException;
-import net.sf.jasperreports.engine.JRExporterParameter;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.export.JRPrintServiceExporter;
-import net.sf.jasperreports.engine.export.JRPrintServiceExporterParameter;
 import net.sf.jasperreports.engine.util.JRLoader;
 
 /**
  *
  * @author K.SELVAKUMAR, copyrights K.SELVAKUMAR, +91 99427 32229,
- * mysoft.java@gmail.com
+ *         mysoft.java@gmail.com
  */
 public class print_thermal_summary {
 
@@ -42,7 +43,8 @@ public class print_thermal_summary {
     public void Report(DataUtil util, String billno, String drive, String folder, String billformat) {
         try {
             this.util = util;
-            Map<String, Object> parameters = new <String, Object>HashMap();            parameters.put("parameter1", "");
+            Map<String, Object> parameters = new <String, Object>HashMap();
+            parameters.put("parameter1", "");
             parameters.put("parameter2", "");
             parameters.put("parameter3", "");
             parameters.put("parameter4", "");
@@ -60,11 +62,17 @@ public class print_thermal_summary {
             parameters.put("parameter24", "");
             parameters.put("parameter25", "");
 
-            String add1 = "", add2 = "", add3 = "", add4 = "", head = "", sms1 = "", sms2 = "", sms3 = "", letter = "", add5 = "", sms4 = "", logoPath = "";
-            String query = "select cname,add1,add2,add3,bhead,sms1,sms2,sms3,hmany,letter,add4,sms4,logo_path from setting_bill";
+            String add1 = "", add2 = "", add3 = "", add4 = "", head = "", sms1 = "", sms2 = "", sms3 = "", letter = "",
+                    add5 = "", sms4 = "", logoPath = "", upiId = "";
+            String companyWhere = UserSession.hasSelectedCompany()
+                    ? " WHERE companyID='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select cname,add1,add2,add3,bhead,sms1,sms2,sms3,hmany,letter,add4,sms4,logo_path,upi_id from company"
+                    + companyWhere;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 logoPath = r.getString("logo_path");
+                upiId = r.getString("upi_id");
                 add1 = r.getString(1);
                 add2 = r.getString(2);
                 add3 = r.getString(3);
@@ -95,10 +103,14 @@ public class print_thermal_summary {
                 parameters.put("parameter55", "GSTIN: " + add5);
             }
             parameters.put("parameter5", head);
+            parameters.put("CompanyGSTNo", add5 != null && add5.length() > 1 ? "GSTIN: " + add5 : "");
 
-            String date = "", location = "", terminal = "", cashier = "", items = "", quans = "", pby = "", cname = "", mobile = "", time = "", cid = "";
-            double sub = 0, disamt = 0, addamt = 0, net = 0, paid = 0, bal = 0, taxamt = 0, today_points = 0, total_points = 0;
-            query = "select date_format(dat,'%d/%m/%Y'),tim,location,terminal,cashier,items,quans,sub,disamt,addamt,net,pby,paid,bal,cname,mobile,cid,taxamt,today_points,total_points from sales where billno='" + billno + "'";
+            String date = "", location = "", terminal = "", cashier = "", items = "", quans = "", pby = "", cname = "",
+                    mobile = "", time = "", cid = "";
+            double sub = 0, disamt = 0, addamt = 0, net = 0, paid = 0, bal = 0, taxamt = 0, today_points = 0,
+                    total_points = 0;
+            query = "select date_format(dat,'%d/%m/%Y'),tim,location,terminal,cashier,items,quans,sub,disamt,addamt,net,pby,paid,bal,cname,mobile,cid,taxamt,today_points,total_points from sales where billno='"
+                    + billno + "'";
             r = util.doQuery(query);
             while (r.next()) {
                 date = r.getString(1);
@@ -194,6 +206,13 @@ public class print_thermal_summary {
                 parameters.put("parameter33", taxamt2);
             }
             parameters.put("parameter22", "Paymode: " + pby);
+            // ==================== UPI QR CODE ====================
+            BufferedImage qrImage = null;
+            if ("UPI".equalsIgnoreCase(pby) && upiId != null && !upiId.trim().isEmpty()) {
+                String upiUrl = "upi://pay?pa=" + upiId.trim() + "&am=" + String.format("%.2f", net) + "&cu=INR";
+                qrImage = UpiQrGenerator.generateQRImage(upiUrl, 150, 150);
+            }
+            parameters.put("QRCodeImage", qrImage);
             parameters.put("parameter23", "Received Amt: " + paid2);
             parameters.put("parameter24", "Balance: " + bal2);
 
@@ -221,7 +240,11 @@ public class print_thermal_summary {
             ArrayList udes3 = new ArrayList();
             ArrayList amount3 = new ArrayList();
             int count = 0;
-            query = "select iname1,quan,mrp,price,amount,udes from sales_items where billno='" + billno + "'";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            query = "select iname1,quan,mrp,price,amount,udes from sales_items where billno='" + billno + "'"
+                    + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 iname3.add(r.getString(1));
@@ -278,7 +301,7 @@ public class print_thermal_summary {
                 k.add(selRomJasper);
                 serial = serial + 1;
                 j++;
-            }//while loop ends//adding items ends
+            } // while loop ends//adding items ends
 
             double savings = mrptot - net;
             if (savings > 0) {
@@ -313,31 +336,36 @@ public class print_thermal_summary {
             parameters.put("parameter53", "");
             parameters.put("parameter54", "");
 
-            double value0 = 0, gst5 = 0, value5 = 0, gst12 = 0, value12 = 0, gst18 = 0, value18 = 0, gst28 = 0, value28 = 0;
-            query = "select sum(sub) from sales_items where billno='" + billno + "' and taxp='0' ";
+            double value0 = 0, gst5 = 0, value5 = 0, gst12 = 0, value12 = 0, gst18 = 0, value18 = 0, gst28 = 0,
+                    value28 = 0;
+            query = "select sum(sub) from sales_items where billno='" + billno + "'" + companyFilter + " and taxp='0' ";
             r = util.doQuery(query);
             while (r.next()) {
                 value0 = r.getDouble(1);
             }
-            query = "select sum(sub),sum(taxamt) from sales_items where billno='" + billno + "' and taxp='5' ";
+            query = "select sum(sub),sum(taxamt) from sales_items where billno='" + billno + "'" + companyFilter
+                    + " and taxp='5' ";
             r = util.doQuery(query);
             while (r.next()) {
                 value5 = r.getDouble(1);
                 gst5 = r.getDouble(2);
             }
-            query = "select sum(sub),sum(taxamt) from sales_items where billno='" + billno + "' and taxp='12' ";
+            query = "select sum(sub),sum(taxamt) from sales_items where billno='" + billno + "'" + companyFilter
+                    + " and taxp='12' ";
             r = util.doQuery(query);
             while (r.next()) {
                 value12 = r.getDouble(1);
                 gst12 = r.getDouble(2);
             }
-            query = "select sum(sub),sum(taxamt) from sales_items where billno='" + billno + "' and taxp='18' ";
+            query = "select sum(sub),sum(taxamt) from sales_items where billno='" + billno + "'" + companyFilter
+                    + " and taxp='18' ";
             r = util.doQuery(query);
             while (r.next()) {
                 value18 = r.getDouble(1);
                 gst18 = r.getDouble(2);
             }
-            query = "select sum(sub),sum(taxamt) from sales_items where billno='" + billno + "' and taxp='28' ";
+            query = "select sum(sub),sum(taxamt) from sales_items where billno='" + billno + "'" + companyFilter
+                    + " and taxp='28' ";
             r = util.doQuery(query);
             while (r.next()) {
                 value28 = r.getDouble(1);
@@ -405,7 +433,8 @@ public class print_thermal_summary {
             parameters.put("parameter54", "" + tcgst2);
 
             disable_warnigs.disableAccessWarnings();
-            JasperReport jasperReport = JasperReportCompiler.compileReport("/JasperFiles/Thermal_Unicode/Thermal_GST_Summary.jrxml");
+            JasperReport jasperReport = JasperReportCompiler
+                    .compileReport("/JasperFiles/Thermal_Unicode/Thermal_GST_Summary.jrxml");
             JRBeanCollectionDataSource beanColDataSource = new JRBeanCollectionDataSource(k);
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, beanColDataSource);
 

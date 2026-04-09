@@ -1,6 +1,8 @@
 package Utils;
 
 import com.selrom.db.DataUtil;
+import menupack.UserSession;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -35,10 +37,18 @@ public class CompanySettingUtil {
 
     // Reusable method to fetch String setting
     private String getStringSetting(String column) {
-        String query = "SELECT " + column + " FROM setting_bill;";
         ResultSet resultSet = null;
         try {
-            resultSet = dataUtil.doQuery(query);
+            String companyID = UserSession.getSelectedCompanyID();
+            if (companyID != null && !companyID.isEmpty()) {
+                String query = "SELECT " + column + " FROM company WHERE companyID = ?";
+                PreparedStatement ps = dataUtil.getConnection().prepareStatement(query);
+                ps.setString(1, companyID);
+                resultSet = ps.executeQuery();
+            } else {
+                String query = "SELECT " + column + " FROM company";
+                resultSet = dataUtil.doQuery(query);
+            }
             if (resultSet != null && resultSet.next()) {
                 return resultSet.getString(1);
             }
@@ -52,10 +62,18 @@ public class CompanySettingUtil {
 
     // Reusable method to fetch boolean setting
     private boolean getBooleanSetting(String column) {
-        String query = "SELECT " + column + " FROM setting_bill;";
         ResultSet resultSet = null;
         try {
-            resultSet = dataUtil.doQuery(query);
+            String companyID = UserSession.getSelectedCompanyID();
+            if (companyID != null && !companyID.isEmpty()) {
+                String query = "SELECT " + column + " FROM company WHERE companyID = ?";
+                PreparedStatement ps = dataUtil.getConnection().prepareStatement(query);
+                ps.setString(1, companyID);
+                resultSet = ps.executeQuery();
+            } else {
+                String query = "SELECT " + column + " FROM company";
+                resultSet = dataUtil.doQuery(query);
+            }
             if (resultSet != null && resultSet.next()) {
                 return resultSet.getBoolean(1);
             }

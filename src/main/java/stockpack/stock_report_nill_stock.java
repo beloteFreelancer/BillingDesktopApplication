@@ -16,6 +16,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import menupack.menu_form;
 import menupack.sample2;
+import menupack.UserSession;
 
 /**
  *
@@ -64,7 +65,11 @@ public class stock_report_nill_stock extends javax.swing.JInternalFrame {
             Date d = new Date();
             SimpleDateFormat g = new SimpleDateFormat("yyyy/MM/dd");
             String today = g.format(d);
-            query = "select distinct ino,iname,cat from stock group by ino having sum(quan)<=0 ";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            query = "select distinct ino,iname,cat from stock where 1=1" + companyFilter
+                    + " group by ino having sum(quan)<=0 ";
             r = util.doQuery(query);
             while (r.next()) {
                 s2.addRow(new Object[] { r.getString(1), r.getString(2), r.getString(3) });

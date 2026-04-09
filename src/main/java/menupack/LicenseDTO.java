@@ -23,6 +23,8 @@ public class LicenseDTO {
     private String encHard;
     private String encMother;
     private String encPass;
+    private String encUserValidDate;
+    private String encCreateDate;
 
     public LicenseDTO() {
     }
@@ -82,4 +84,10 @@ public class LicenseDTO {
 
     public String getEncPass() { return encPass; }
     public void setEncPass(String encPass) { this.encPass = encPass; }
+
+    public String getEncUserValidDate() { return encUserValidDate; }
+    public void setEncUserValidDate(String encUserValidDate) { this.encUserValidDate = encUserValidDate; }
+
+    public String getEncCreateDate() { return encCreateDate; }
+    public void setEncCreateDate(String encCreateDate) { this.encCreateDate = encCreateDate; }
 }

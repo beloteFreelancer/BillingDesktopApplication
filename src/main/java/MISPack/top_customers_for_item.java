@@ -22,12 +22,13 @@ import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import menupack.menu_form;
 import menupack.sample2;
+import menupack.UserSession;
 import smspack.manual_sms;
 
 /**
  *
  * @author K.SELVAKUMAR, copyrights K.SELVAKUMAR, +91 99427 32229,
- * mysoft.java@gmail.com
+ *         mysoft.java@gmail.com
  */
 public final class top_customers_for_item extends javax.swing.JInternalFrame {
 
@@ -113,7 +114,7 @@ public final class top_customers_for_item extends javax.swing.JInternalFrame {
                 if (what3 <= 0) {
                     quan2 = split3[0];
                 }
-                s2.addRow(new Object[]{r.getString(1), r.getString(2), r.getString(3), quan2});
+                s2.addRow(new Object[] { r.getString(1), r.getString(2), r.getString(3), quan2 });
                 selva = true;
             }
             if (selva == true) {
@@ -135,10 +136,14 @@ public final class top_customers_for_item extends javax.swing.JInternalFrame {
     void get_customer_name() {
         try {
             h4.setText("");
-            String query = "select iname from item where ino=?";
+            String companyFilter = UserSession.hasSelectedCompany() ? " AND company_id=?" : "";
+            String query = "select iname from item where ino=?" + companyFilter;
             Connection conn = util.getConnection();
             PreparedStatement ps = conn.prepareStatement(query);
             ps.setString(1, h3.getText());
+            if (UserSession.hasSelectedCompany()) {
+                ps.setString(2, UserSession.getSelectedCompanyID());
+            }
 
             r = ps.executeQuery();
             while (r.next()) {
@@ -177,7 +182,8 @@ public final class top_customers_for_item extends javax.swing.JInternalFrame {
     }
 
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated
+    // Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         iname_list = new javax.swing.JDialog();
@@ -218,16 +224,15 @@ public final class top_customers_for_item extends javax.swing.JInternalFrame {
 
         jTable3.setFont(new java.awt.Font("Arial Unicode MS", 0, 14)); // NOI18N
         jTable3.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
-        ));
+                new Object[][] {
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null }
+                },
+                new String[] {
+                        "Title 1", "Title 2", "Title 3", "Title 4"
+                }));
         jTable3.setRowHeight(25);
         jTable3.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -354,16 +359,15 @@ public final class top_customers_for_item extends javax.swing.JInternalFrame {
 
         jTable1.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
-        ));
+                new Object[][] {
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null }
+                },
+                new String[] {
+                        "Title 1", "Title 2", "Title 3", "Title 4"
+                }));
         jTable1.setRowHeight(25);
         jScrollPane1.setViewportView(jTable1);
 
@@ -461,11 +465,11 @@ public final class top_customers_for_item extends javax.swing.JInternalFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closebuttonActionPerformed
+    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_closebuttonActionPerformed
         this.dispose();
-    }//GEN-LAST:event_closebuttonActionPerformed
+    }// GEN-LAST:event_closebuttonActionPerformed
 
-    private void generatebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_generatebuttonActionPerformed
+    private void generatebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_generatebuttonActionPerformed
         Date d = new Date();
         SimpleDateFormat g = new SimpleDateFormat("dd/MM/yyyy");
 
@@ -477,9 +481,9 @@ public final class top_customers_for_item extends javax.swing.JInternalFrame {
         }
         load_report(h1.getText(), h2.getText());
 
-    }//GEN-LAST:event_generatebuttonActionPerformed
+    }// GEN-LAST:event_generatebuttonActionPerformed
 
-    private void excelbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_excelbuttonActionPerformed
+    private void excelbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_excelbuttonActionPerformed
         if (s2.getRowCount() <= 0) {
             JOptionPane.showMessageDialog(this, "Sorry, No Records Were Found!", "Oops", JOptionPane.ERROR_MESSAGE);
             return;
@@ -498,9 +502,9 @@ public final class top_customers_for_item extends javax.swing.JInternalFrame {
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
-    }//GEN-LAST:event_excelbuttonActionPerformed
+    }// GEN-LAST:event_excelbuttonActionPerformed
 
-    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearbuttonActionPerformed
+    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_clearbuttonActionPerformed
         if (s2.getRowCount() > 0) {
             s2.getDataVector().removeAllElements();
             s2.fireTableDataChanged();
@@ -519,9 +523,9 @@ public final class top_customers_for_item extends javax.swing.JInternalFrame {
         h5.setEnabled(true);
         all.setEnabled(true);
         all.setSelected(false);
-    }//GEN-LAST:event_clearbuttonActionPerformed
+    }// GEN-LAST:event_clearbuttonActionPerformed
 
-    private void jCalendarButton1PropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jCalendarButton1PropertyChange
+    private void jCalendarButton1PropertyChange(java.beans.PropertyChangeEvent evt) {// GEN-FIRST:event_jCalendarButton1PropertyChange
         try {
             if (evt.getNewValue() instanceof Date) {
                 String ses = evt.getNewValue().toString();
@@ -532,9 +536,9 @@ public final class top_customers_for_item extends javax.swing.JInternalFrame {
         } catch (ParseException e) {
             System.out.println(e.getMessage());
         }
-    }//GEN-LAST:event_jCalendarButton1PropertyChange
+    }// GEN-LAST:event_jCalendarButton1PropertyChange
 
-    private void jCalendarButton2PropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jCalendarButton2PropertyChange
+    private void jCalendarButton2PropertyChange(java.beans.PropertyChangeEvent evt) {// GEN-FIRST:event_jCalendarButton2PropertyChange
         try {
             if (evt.getNewValue() instanceof Date) {
                 String ses = evt.getNewValue().toString();
@@ -545,14 +549,14 @@ public final class top_customers_for_item extends javax.swing.JInternalFrame {
         } catch (ParseException e) {
             System.out.println(e.getMessage());
         }
-    }//GEN-LAST:event_jCalendarButton2PropertyChange
+    }// GEN-LAST:event_jCalendarButton2PropertyChange
 
-    private void h3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_h3ActionPerformed
+    private void h3ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h3ActionPerformed
 
         get_customer_name();
-    }//GEN-LAST:event_h3ActionPerformed
+    }// GEN-LAST:event_h3ActionPerformed
 
-    private void h3KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_h3KeyPressed
+    private void h3KeyPressed(java.awt.event.KeyEvent evt) {// GEN-FIRST:event_h3KeyPressed
 
         iname_list.requestFocus();
         jTable3.requestFocus();
@@ -573,13 +577,18 @@ public final class top_customers_for_item extends javax.swing.JInternalFrame {
                     iname_list.setLocation(l.x, l.y + jLabel12.getHeight());
                     iname_list.setSize(800, 528);
                     iname_list.setVisible(true);
-                    String query = "select ino,iname,cat from item where iname like ? order by ino limit 500";
+                    String companyFilter = UserSession.hasSelectedCompany() ? " AND company_id=?" : "";
+                    String query = "select ino,iname,cat from item where iname like ?" + companyFilter
+                            + " order by ino limit 500";
                     Connection conn = util.getConnection();
                     PreparedStatement ps = conn.prepareStatement(query);
                     ps.setString(1, h3.getText() + "%");
+                    if (UserSession.hasSelectedCompany()) {
+                        ps.setString(2, UserSession.getSelectedCompanyID());
+                    }
                     r = ps.executeQuery();
                     while (r.next()) {
-                        s3.addRow(new Object[]{r.getString(1), r.getString(2), r.getString(3)});
+                        s3.addRow(new Object[] { r.getString(1), r.getString(2), r.getString(3) });
                     }
                 } catch (SQLException e) {
                     System.out.println(e.getMessage());
@@ -588,9 +597,9 @@ public final class top_customers_for_item extends javax.swing.JInternalFrame {
             default:
                 break;
         }
-    }//GEN-LAST:event_h3KeyPressed
+    }// GEN-LAST:event_h3KeyPressed
 
-    private void jTable3MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable3MouseClicked
+    private void jTable3MouseClicked(java.awt.event.MouseEvent evt) {// GEN-FIRST:event_jTable3MouseClicked
         if (jTable3.getRowCount() > 0) {
             h3.setText(jTable3.getValueAt(jTable3.getSelectedRow(), 0).toString());
             h4.setText(jTable3.getValueAt(jTable3.getSelectedRow(), 1).toString());
@@ -598,9 +607,9 @@ public final class top_customers_for_item extends javax.swing.JInternalFrame {
         }
         h3.requestFocus();
         iname_list.dispose();
-    }//GEN-LAST:event_jTable3MouseClicked
+    }// GEN-LAST:event_jTable3MouseClicked
 
-    private void jTable3KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTable3KeyPressed
+    private void jTable3KeyPressed(java.awt.event.KeyEvent evt) {// GEN-FIRST:event_jTable3KeyPressed
 
         if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
             if (jTable3.getRowCount() > 0) {
@@ -614,33 +623,33 @@ public final class top_customers_for_item extends javax.swing.JInternalFrame {
             iname_list.dispose();
             h3.requestFocus();
         }
-    }//GEN-LAST:event_jTable3KeyPressed
+    }// GEN-LAST:event_jTable3KeyPressed
 
-    private void jScrollPane3FocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jScrollPane3FocusLost
+    private void jScrollPane3FocusLost(java.awt.event.FocusEvent evt) {// GEN-FIRST:event_jScrollPane3FocusLost
         iname_list.dispose();
-    }//GEN-LAST:event_jScrollPane3FocusLost
+    }// GEN-LAST:event_jScrollPane3FocusLost
 
-    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
+    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton4ActionPerformed
         iname_list.dispose();
-    }//GEN-LAST:event_jButton4ActionPerformed
+    }// GEN-LAST:event_jButton4ActionPerformed
 
-    private void h5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_h5ActionPerformed
+    private void h5ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h5ActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_h5ActionPerformed
+    }// GEN-LAST:event_h5ActionPerformed
 
-    private void h5KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_h5KeyPressed
+    private void h5KeyPressed(java.awt.event.KeyEvent evt) {// GEN-FIRST:event_h5KeyPressed
         // TODO add your handling code here:
-    }//GEN-LAST:event_h5KeyPressed
+    }// GEN-LAST:event_h5KeyPressed
 
-    private void allActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_allActionPerformed
+    private void allActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_allActionPerformed
         if (all.isSelected()) {
             h5.setEnabled(false);
         } else {
             h5.setEnabled(true);
         }
-    }//GEN-LAST:event_allActionPerformed
+    }// GEN-LAST:event_allActionPerformed
 
-    private void smsbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_smsbuttonActionPerformed
+    private void smsbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_smsbuttonActionPerformed
         if (s2.getRowCount() <= 0) {
             JOptionPane.showMessageDialog(this, "Sorry, No Records Were Found!", "Oops", JOptionPane.ERROR_MESSAGE);
             return;
@@ -666,17 +675,17 @@ public final class top_customers_for_item extends javax.swing.JInternalFrame {
         oe.setLocation((desktopSize.width - jInternalFrameSize.width) / 2,
                 (desktopSize.height - jInternalFrameSize.height) / 2);
 
-    }//GEN-LAST:event_smsbuttonActionPerformed
+    }// GEN-LAST:event_smsbuttonActionPerformed
 
-    private void removebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removebuttonActionPerformed
+    private void removebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_removebuttonActionPerformed
 
         int[] rows = jTable1.getSelectedRows();
         for (int i = 0; i < rows.length; i++) {
             s2.removeRow(rows[i] - i);
         }
-    }//GEN-LAST:event_removebuttonActionPerformed
+    }// GEN-LAST:event_removebuttonActionPerformed
 
-    private void downloadbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_downloadbuttonActionPerformed
+    private void downloadbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_downloadbuttonActionPerformed
         try {
             menupack.menu_form me = new menu_form();
             String drive = "";
@@ -689,7 +698,7 @@ public final class top_customers_for_item extends javax.swing.JInternalFrame {
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
-    }//GEN-LAST:event_downloadbuttonActionPerformed
+    }// GEN-LAST:event_downloadbuttonActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JCheckBox all;

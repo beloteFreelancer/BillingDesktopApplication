@@ -16,11 +16,12 @@ import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import menupack.menu_form;
 import menupack.sample2;
+import menupack.UserSession;
 
 /**
  *
  * @author K.SELVAKUMAR, copyrights K.SELVAKUMAR, +91 99427 32229,
- * mysoft.java@gmail.com
+ *         mysoft.java@gmail.com
  */
 public final class cust_dues_report extends javax.swing.JInternalFrame {
 
@@ -83,7 +84,8 @@ public final class cust_dues_report extends javax.swing.JInternalFrame {
             if (all.isSelected()) {
                 query = "select billno,date_format(dat,'%d/%m/%Y'),date_format(ddate,'%d/%m/%Y'),cid,cname,tot,paid from cust_bal where tot-paid>0 order by dat,billno";
             } else {
-                query = "select billno,date_format(dat,'%d/%m/%Y'),date_format(ddate,'%d/%m/%Y'),cid,cname,tot,paid from cust_bal where cid='" + h4.getText() + "' and tot-paid>0 order by dat,billno";
+                query = "select billno,date_format(dat,'%d/%m/%Y'),date_format(ddate,'%d/%m/%Y'),cid,cname,tot,paid from cust_bal where cid='"
+                        + h4.getText() + "' and tot-paid>0 order by dat,billno";
             }
             r = util.doQuery(query);
             while (r.next()) {
@@ -95,7 +97,8 @@ public final class cust_dues_report extends javax.swing.JInternalFrame {
                 String paid2 = String.format("%." + hmany + "f", paid);
                 String bal2 = String.format("%." + hmany + "f", bal);
 
-                s2.addRow(new Object[]{r.getString(1), r.getString(2), r.getString(3), r.getString(4), r.getString(5), tot2, paid2, bal2});
+                s2.addRow(new Object[] { r.getString(1), r.getString(2), r.getString(3), r.getString(4), r.getString(5),
+                        tot2, paid2, bal2 });
                 selva = true;
             }
 
@@ -109,8 +112,9 @@ public final class cust_dues_report extends javax.swing.JInternalFrame {
             String paid2 = String.format("%." + hmany + "f", paid);
             String bal2 = String.format("%." + hmany + "f", bal);
 
-            s2.addRow(new Object[]{"", "", "", "", "", "", "", ""});
-            s2.addRow(new Object[]{"", "", "", "", "Total Records: " + (jTable1.getRowCount() - 1), tot2, paid2, bal2});
+            s2.addRow(new Object[] { "", "", "", "", "", "", "", "" });
+            s2.addRow(new Object[] { "", "", "", "", "Total Records: " + (jTable1.getRowCount() - 1), tot2, paid2,
+                    bal2 });
             if (selva == true) {
                 generatebutton.setEnabled(false);
                 h3.setEnabled(false);
@@ -147,7 +151,10 @@ public final class cust_dues_report extends javax.swing.JInternalFrame {
 
     void get_cname() {
         try {
-            String query = "select cid from cust where cname='" + h3.getSelectedItem() + "' ";
+            String custCompanyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select cid from cust where cname='" + h3.getSelectedItem() + "'" + custCompanyFilter + " ";
             r = util.doQuery(query);
             while (r.next()) {
                 h4.setText(r.getString(1));
@@ -167,7 +174,8 @@ public final class cust_dues_report extends javax.swing.JInternalFrame {
     }
 
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated
+    // Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         titlelablel = new javax.swing.JLabel();
@@ -192,16 +200,15 @@ public final class cust_dues_report extends javax.swing.JInternalFrame {
 
         jTable1.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
-        ));
+                new Object[][] {
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null }
+                },
+                new String[] {
+                        "Title 1", "Title 2", "Title 3", "Title 4"
+                }));
         jTable1.setRowHeight(24);
         jTable1.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -299,16 +306,16 @@ public final class cust_dues_report extends javax.swing.JInternalFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MouseClicked
+    private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {// GEN-FIRST:event_jTable1MouseClicked
 
-    }//GEN-LAST:event_jTable1MouseClicked
+    }// GEN-LAST:event_jTable1MouseClicked
 
-    private void generatebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_generatebuttonActionPerformed
+    private void generatebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_generatebuttonActionPerformed
         load_report();
 
-    }//GEN-LAST:event_generatebuttonActionPerformed
+    }// GEN-LAST:event_generatebuttonActionPerformed
 
-    private void excelbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_excelbuttonActionPerformed
+    private void excelbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_excelbuttonActionPerformed
         if (s2.getRowCount() <= 0) {
             JOptionPane.showMessageDialog(this, "Sorry, No Records Were Found!", "Oops", JOptionPane.ERROR_MESSAGE);
             return;
@@ -329,9 +336,9 @@ public final class cust_dues_report extends javax.swing.JInternalFrame {
             System.out.println(e.getMessage());
         }
 
-    }//GEN-LAST:event_excelbuttonActionPerformed
+    }// GEN-LAST:event_excelbuttonActionPerformed
 
-    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearbuttonActionPerformed
+    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_clearbuttonActionPerformed
         if (s2.getRowCount() > 0) {
             s2.getDataVector().removeAllElements();
             s2.fireTableDataChanged();
@@ -344,21 +351,21 @@ public final class cust_dues_report extends javax.swing.JInternalFrame {
         h3.setSelectedItem("");
         h4.setText("");
 
-    }//GEN-LAST:event_clearbuttonActionPerformed
+    }// GEN-LAST:event_clearbuttonActionPerformed
 
-    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closebuttonActionPerformed
+    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_closebuttonActionPerformed
         this.dispose();
-    }//GEN-LAST:event_closebuttonActionPerformed
+    }// GEN-LAST:event_closebuttonActionPerformed
 
-    private void jTable1FocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jTable1FocusGained
+    private void jTable1FocusGained(java.awt.event.FocusEvent evt) {// GEN-FIRST:event_jTable1FocusGained
 
-    }//GEN-LAST:event_jTable1FocusGained
+    }// GEN-LAST:event_jTable1FocusGained
 
-    private void h3ItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_h3ItemStateChanged
+    private void h3ItemStateChanged(java.awt.event.ItemEvent evt) {// GEN-FIRST:event_h3ItemStateChanged
         get_cname();
-    }//GEN-LAST:event_h3ItemStateChanged
+    }// GEN-LAST:event_h3ItemStateChanged
 
-    private void allActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_allActionPerformed
+    private void allActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_allActionPerformed
         if (all.isSelected()) {
             h3.setEnabled(false);
             h4.setEnabled(false);
@@ -366,7 +373,7 @@ public final class cust_dues_report extends javax.swing.JInternalFrame {
             h3.setEnabled(true);
             h4.setEnabled(true);
         }
-    }//GEN-LAST:event_allActionPerformed
+    }// GEN-LAST:event_allActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JCheckBox all;

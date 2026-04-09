@@ -19,6 +19,7 @@ import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import menupack.menu_form;
 import menupack.sample2;
+import menupack.UserSession;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CreationHelper;
@@ -136,14 +137,15 @@ public class sreturn_report extends javax.swing.JInternalFrame {
             boolean selva = false;
             double sub, disamt, net, gross, taxamt, other, paid, bal;
 
+            String companyFilter = UserSession.hasSelectedCompany() ? " and company_id='" + UserSession.getSelectedCompanyID() + "'" : "";
             String query;
             if (all.isSelected()) {
                 query = "select billno,date_format(dat,'%d/%m/%Y'),tim,location,terminal,cashier,items,quans,sub,disp,disamt,gross,taxamt,addamt,net,pby,paid,bal,price_type,cid,cname,mobile,last from sreturn where dat between '"
-                        + lk + "' and '" + lk1 + "' order by dat,billno";
+                        + lk + "' and '" + lk1 + "'" + companyFilter + " order by dat,billno";
             } else {
                 query = "select billno,date_format(dat,'%d/%m/%Y'),tim,location,terminal,cashier,items,quans,sub,disp,disamt,gross,taxamt,addamt,net,pby,paid,bal,price_type,cid,cname,mobile,last from sreturn where dat between '"
                         + lk + "' and '" + lk1 + "' and pby='" + h3.getSelectedItem().toString()
-                        + "'  order by dat,billno";
+                        + "'" + companyFilter + "  order by dat,billno";
             }
             r = util.doQuery(query);
             while (r.next()) {

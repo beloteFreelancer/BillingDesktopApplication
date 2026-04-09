@@ -1,0 +1,174 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Sales_A4" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="b7e6a2c0-1f2b-4e3a-9c7a-8e2f1a6b3c4d">
+    <!-- Parameters -->
+    <parameter name="CompanyLogo" class="java.io.InputStream"/>
+    <parameter name="CompanyName" class="java.lang.String"/>
+    <parameter name="CompanyAddress" class="java.lang.String"/>
+    <parameter name="CompanyContact" class="java.lang.String"/>
+    <parameter name="CompanyGSTIN" class="java.lang.String"/>
+    <parameter name="CompanyEmail" class="java.lang.String"/>
+    <parameter name="CustomerName" class="java.lang.String"/>
+    <parameter name="CustomerMobile" class="java.lang.String"/>
+    <parameter name="CustomerGSTIN" class="java.lang.String"/>
+    <parameter name="PreviousBalance" class="java.lang.String"/>
+    <parameter name="InvoiceNo" class="java.lang.String"/>
+    <parameter name="InvoiceDate" class="java.lang.String"/>
+    <parameter name="TaxType" class="java.lang.String"/>
+    <parameter name="NetTotalWords" class="java.lang.String"/>
+    <parameter name="Terms" class="java.lang.String"/>
+    <parameter name="PaidAmount" class="java.lang.String"/>
+    <parameter name="PendingAmount" class="java.lang.String"/>
+    <parameter name="TenderedCashAmt" class="java.lang.String"/>
+    <parameter name="RefundCashAmt" class="java.lang.String"/>
+    <parameter name="YouSaved" class="java.lang.String"/>
+    <parameter name="BillDiscount" class="java.lang.String"/>
+    <parameter name="RoundOff" class="java.lang.String"/>
+    <parameter name="NetTotal" class="java.lang.String"/>
+
+    <!-- Fields for table -->
+    <field name="sno" class="java.lang.String"/>
+    <field name="product_name" class="java.lang.String"/>
+    <field name="size" class="java.lang.String"/>
+    <field name="qty" class="java.lang.String"/>
+    <field name="mrp" class="java.lang.String"/>
+    <field name="disc_amt" class="java.lang.String"/>
+    <field name="rate" class="java.lang.String"/>
+    <field name="amount" class="java.lang.String"/>
+
+    <!-- Title (Header) -->
+    <title>
+        <band height="100">
+            <!-- Logo -->
+            <image>
+                <reportElement x="0" y="0" width="80" height="40"/>
+                <imageExpression><![CDATA[$P{CompanyLogo}]]></imageExpression>
+            </image>
+            <!-- Company Name -->
+                    <staticText>
+                        <reportElement x="90" y="0" width="300" height="20"/>
+                        <textElement textAlignment="Left">
+                            <font size="16" isBold="true" pdfFontName="Helvetica-Bold" isPdfEmbedded="false"/>
+                        </textElement>
+                        <text><![CDATA[RAINTECH]]></text>
+                    </staticText>
+                    <!-- Address, Contact, GSTIN, Email -->
+                            <textElement textAlignment="Center"><font isBold="true"/></textElement>
+                        <reportElement x="90" y="20" width="300" height="40"/>
+                        <textElement textAlignment="Left">
+                            <font size="10"/>
+                        </textElement>
+                        <text><![CDATA[Elangkavu, vadayar, vaikom
+        Contact : 8078311945
+        GSTIN : 
+        Email ID : info@raintechpos.com]]></text>
+                    </staticText>
+        </band>
+                            <textElement textAlignment="Center"><font isBold="true"/></textElement>
+
+    <!-- Page Header (Customer Details, Invoice Info) -->
+    <pageHeader>
+        <band height="60">
+                <!-- Customer Details Bar -->
+                <rectangle>
+                    <reportElement x="0" y="0" width="555" height="15" backcolor="#B2DFDB"/>
+                </rectangle>
+                <staticText>
+                    <reportElement x="0" y="0" width="555" height="15"/>
+                    <textElement textAlignment="Left"/>
+                    <text><![CDATA[Customer Details]]></text>
+                </staticText>
+                <staticText>
+                        <textElement textAlignment="Center"><font isBold="true"/></textElement>
+                    <textElement textAlignment="Left"/>
+                    <text><![CDATA[Cash
+    Local
+    Mob : 1234567890
+    GSTIN :
+    Previous Bal : 0.00 Cr]]></text>
+                </staticText>
+                <!-- Tax Invoice Bar -->
+                        <textElement textAlignment="Center"><font isBold="true"/></textElement>
+                    <reportElement x="0" y="30" width="555" height="15" backcolor="#4FC3F7"/>
+                </rectangle>
+                <staticText>
+                    <reportElement x="0" y="30" width="555" height="15"/>
+                    <textElement textAlignment="Left"/>
+                    <text><![CDATA[TAX INVOICE]]></text>
+                </staticText>
+                <staticText>
+                        <textElement textAlignment="Center"><font isBold="true"/></textElement>
+                    <textElement textAlignment="Left"/>
+                    <text><![CDATA[Invoice No : GST-0011-2024/25   Date : 06-04-2024   Tax Type : GST]]></text>
+                </staticText>
+        </band>
+                        <textElement textAlignment="Center"><font isBold="true"/></textElement>
+
+    <!-- Column Header (Table Headings) -->
+    <columnHeader>
+        <band height="20">
+            <rectangle>
+                <reportElement x="0" y="0" width="555" height="20" backcolor="#B2DFDB"/>
+            </rectangle>
+            <staticText><reportElement x="0" y="0" width="30" height="20"/><textElement textAlignment="Center" isBold="true"/><text><![CDATA[S.No]]></text></staticText>
+            <staticText><reportElement x="30" y="0" width="120" height="20"/><textElement textAlignment="Center" isBold="true"/><text><![CDATA[Product Name]]></text></staticText>
+            <staticText><reportElement x="150" y="0" width="50" height="20"/><textElement textAlignment="Center" isBold="true"/><text><![CDATA[Size]]></text></staticText>
+            <staticText><reportElement x="200" y="0" width="50" height="20"/><textElement textAlignment="Center" isBold="true"/><text><![CDATA[Qty]]></text></staticText>
+            <staticText><reportElement x="250" y="0" width="50" height="20"/><textElement textAlignment="Center" isBold="true"/><text><![CDATA[MRP]]></text></staticText>
+            <staticText><reportElement x="300" y="0" width="60" height="20"/><textElement textAlignment="Center" isBold="true"/><text><![CDATA[Disc Amt]]></text></staticText>
+            <staticText><reportElement x="360" y="0" width="60" height="20"/><textElement textAlignment="Center" isBold="true"/><text><![CDATA[Rate]]></text></staticText>
+            <staticText><reportElement x="420" y="0" width="70" height="20"/><textElement textAlignment="Center" isBold="true"/><text><![CDATA[Amount]]></text></staticText>
+        </band>
+    </columnHeader>
+
+    <!-- Detail (Table Rows) -->
+    <detail>
+        <band height="20">
+            <textField><reportElement x="0" y="0" width="30" height="20"/><textElement textAlignment="Center"/><textFieldExpression><![CDATA[$F{sno}]]></textFieldExpression></textField>
+            <textField><reportElement x="30" y="0" width="120" height="20"/><textElement textAlignment="Left"/><textFieldExpression><![CDATA[$F{product_name}]]></textFieldExpression></textField>
+            <textField><reportElement x="150" y="0" width="50" height="20"/><textElement textAlignment="Center"/><textFieldExpression><![CDATA[$F{size}]]></textFieldExpression></textField>
+            <textField><reportElement x="200" y="0" width="50" height="20"/><textElement textAlignment="Center"/><textFieldExpression><![CDATA[$F{qty}]]></textFieldExpression></textField>
+            <textField><reportElement x="250" y="0" width="50" height="20"/><textElement textAlignment="Right"/><textFieldExpression><![CDATA[$F{mrp}]]></textFieldExpression></textField>
+            <textField><reportElement x="300" y="0" width="60" height="20"/><textElement textAlignment="Right"/><textFieldExpression><![CDATA[$F{disc_amt}]]></textFieldExpression></textField>
+            <textField><reportElement x="360" y="0" width="60" height="20"/><textElement textAlignment="Right"/><textFieldExpression><![CDATA[$F{rate}]]></textFieldExpression></textField>
+            <textField><reportElement x="420" y="0" width="70" height="20"/><textElement textAlignment="Right"/><textFieldExpression><![CDATA[$F{amount}]]></textFieldExpression></textField>
+        </band>
+    </detail>
+
+    <!-- Summary (Footer) -->
+    <summary>
+        <band height="100">
+            <staticText>
+                <reportElement x="0" y="0" width="555" height="15"/>
+                <textElement textAlignment="Left"/>
+                <text><![CDATA[Net Total (In Words): $P{NetTotalWords}]]></text>
+            </staticText>
+            <staticText>
+                    <textElement textAlignment="Center"><font isBold="true"/></textElement>
+                <textElement textAlignment="Left"/>
+                <text><![CDATA[Terms & Conditions: $P{Terms}]]></text>
+            </staticText>
+            <!-- Payment and Savings Section -->
+                    <textElement textAlignment="Center"><font isBold="true"/></textElement>
+                <reportElement x="0" y="30" width="200" height="15"/>
+                <textElement textAlignment="Left"/>
+                <text><![CDATA[Paid Amount: $P{PaidAmount}  Pending Amount: $P{PendingAmount}  Tendered Cash Amt: $P{TenderedCashAmt}  Refund Cash Amt: $P{RefundCashAmt}]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="210" y="30" width="120" height="20"/>
+                <textElement textAlignment="Center"/>
+                <text><![CDATA[You Saved
+â¹ $P{YouSaved}]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="340" y="30" width="100" height="15"/>
+                <textElement textAlignment="Left"/>
+                <text><![CDATA[Bill Discount: $P{BillDiscount}  Round Off: $P{RoundOff}]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="450" y="30" width="105" height="20"/>
+                <textElement textAlignment="Right"/>
+                <text><![CDATA[Net Total: $P{NetTotal}]]></text>
+            </staticText>
+        </band>
+    </summary>
+</jasperReport>

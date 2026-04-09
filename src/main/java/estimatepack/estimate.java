@@ -48,7 +48,7 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
-import menupack.menu_form;
+import menupack.UserSession;
 import smspack.SMS_Sender_Single;
 
 /**
@@ -66,6 +66,7 @@ public final class estimate extends javax.swing.JInternalFrame {
     String scode = "", sname = "", ttype = "", stock_bill, less_prate = "", tax = "Local", entry_mode = "Auto",
             dsales = "Retail", cust_details = "";
     double max_rdis = 0, max_wdis = 0;
+    double nItemTotal = 0;
     int hmany = 2, hmany1 = 3;
     String sms_alert = "", sender = "", smsuser = "", smspass = "", smsfoot1 = "", smsfoot2 = "", alter_sms = "",
             management_no1 = "", management_no2 = "";
@@ -79,7 +80,11 @@ public final class estimate extends javax.swing.JInternalFrame {
 
     final void get_defaults() {
         try {
-            String query = "select scode,ttype,stock_bill,less_prate,maxdis,wdis,entry_mode,state,eformat1,eformat2,dsales,cust_details,hmany,round from setting_bill";
+            String companyWhere = UserSession.hasSelectedCompany()
+                    ? " WHERE companyID='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select scode,ttype,stock_bill,less_prate,maxdis,wdis,entry_mode,state,eformat1,eformat2,dsales,cust_details,hmany,round,estimate_stock_minus from company"
+                    + companyWhere;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 scode = r.getString(1);
@@ -96,13 +101,13 @@ public final class estimate extends javax.swing.JInternalFrame {
                 cust_details = r.getString(12);
                 hmany = r.getInt(13);
                 round_option = r.getString(14);
+                String estStockMinus = r.getString(15);
+                stockMinusCheckbox.setSelected("Yes".equalsIgnoreCase(estStockMinus));
             }
-            menupack.menu_form me = new menu_form();
-            username = me.getUsername();
-            utype = me.getUserType();
+            username = UserSession.getUsername() != null ? UserSession.getUsername() : "";
+            utype = UserSession.getUserType() != null ? UserSession.getUserType() : "";
             drive = "";
             folder = Utils.AppConfig.getAppPath();
-            version = me.getVersion();
             h6.setText(username);
             h17.requestFocusInWindow();
 
@@ -153,7 +158,18 @@ public final class estimate extends javax.swing.JInternalFrame {
 
         @Override
         public boolean isCellEditable(int row, int column) {
-            return column == 3 || column == 5 || column == 7;
+            // col 3=Qty, col 5=NetRate (selling price), col 8=Dis%
+            // col 6=Price (hidden internal column, kept in sync with Net Rate)
+            return column == 3 || column == 5 || column == 6 || column == 8;
+        }
+
+        @Override
+        public void setValueAt(Object value, int row, int column) {
+            super.setValueAt(value, row, column);
+            // Keep hidden Price (m6) in sync with visible Net Rate (m5)
+            if (column == 5) {
+                super.setValueAt(value, row, 6);
+            }
         }
     }
 
@@ -222,8 +238,9 @@ public final class estimate extends javax.swing.JInternalFrame {
         s2.addColumn("Description");
         s2.addColumn("Qty");
         s2.addColumn("MRP");
+        s2.addColumn("Net Rate");
         s2.addColumn("Price");
-        s2.addColumn("Amount");
+        s2.addColumn("Value");
         s2.addColumn("Dis %");
         s2.addColumn("Dis Amt");
         s2.addColumn("Sub Total");
@@ -241,6 +258,14 @@ public final class estimate extends javax.swing.JInternalFrame {
         s2.addColumn("Pur.Rate");
         s2.addColumn("RPrice");
         s2.addColumn("WPrice");
+        s2.addColumn("Remarks");
+        s2.addColumn("Mfg Date");
+        s2.addColumn("Exp Date");
+        s2.addColumn("Size");
+        s2.addColumn("Color");
+        s2.addColumn("Brand");
+        s2.addColumn("Tax Inclusion");
+
         dtcr.setHorizontalAlignment(SwingConstants.CENTER);
         dtcr1.setHorizontalAlignment(SwingConstants.RIGHT);
         jTable1.setModel(s2);
@@ -264,43 +289,153 @@ public final class estimate extends javax.swing.JInternalFrame {
         jTable1.getColumnModel().getColumn(20).setCellRenderer(dtcr1);
         jTable1.getColumnModel().getColumn(21).setCellRenderer(dtcr1);
         jTable1.getColumnModel().getColumn(22).setCellRenderer(dtcr1);
-
-        jTable1.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-        jTable1.getColumnModel().getColumn(0).setPreferredWidth(50);
-        jTable1.getColumnModel().getColumn(1).setPreferredWidth(115);
-        jTable1.getColumnModel().getColumn(2).setPreferredWidth(355);
-        jTable1.getColumnModel().getColumn(3).setPreferredWidth(100);
-        jTable1.getColumnModel().getColumn(4).setPreferredWidth(110);
-        jTable1.getColumnModel().getColumn(5).setPreferredWidth(110);
-        jTable1.getColumnModel().getColumn(6).setPreferredWidth(145);
-        jTable1.getColumnModel().getColumn(7).setPreferredWidth(90);
-        jTable1.getColumnModel().getColumn(8).setPreferredWidth(100);
-        jTable1.getColumnModel().getColumn(9).setPreferredWidth(130);
-        jTable1.getColumnModel().getColumn(10).setPreferredWidth(0);
-        jTable1.getColumnModel().getColumn(11).setPreferredWidth(0);
-        jTable1.getColumnModel().getColumn(12).setPreferredWidth(0);
-        jTable1.getColumnModel().getColumn(13).setPreferredWidth(120);
-        jTable1.getColumnModel().getColumn(14).setPreferredWidth(180);
-        jTable1.getColumnModel().getColumn(15).setPreferredWidth(120);
-        jTable1.getColumnModel().getColumn(16).setPreferredWidth(100);
-        jTable1.getColumnModel().getColumn(17).setPreferredWidth(100);
-        jTable1.getColumnModel().getColumn(18).setPreferredWidth(100);
-        jTable1.getColumnModel().getColumn(19).setPreferredWidth(100);
-        jTable1.getColumnModel().getColumn(20).setPreferredWidth(100);
-        jTable1.getColumnModel().getColumn(21).setPreferredWidth(100);
-        jTable1.getColumnModel().getColumn(22).setPreferredWidth(100);
-        jTable1.getColumnModel().getColumn(23).setPreferredWidth(100);
-        String Ta = "Arial";
-        int Bold = 1, size = 14;
-        jTable1.getTableHeader().setFont(new Font(Ta, Bold, size));
+        jTable1.getColumnModel().getColumn(23).setCellRenderer(dtcr1);
+        jTable1.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        jTable1.getColumnModel().getColumn(0).setPreferredWidth(30); // #
+        jTable1.getColumnModel().getColumn(1).setPreferredWidth(30); // ItemCode (hidden)
+        jTable1.getColumnModel().getColumn(2).setPreferredWidth(200); // Description
+        jTable1.getColumnModel().getColumn(3).setPreferredWidth(50); // Qty
+        jTable1.getColumnModel().getColumn(4).setPreferredWidth(70); // MRP
+        jTable1.getColumnModel().getColumn(5).setPreferredWidth(70); // Net Rate
+        jTable1.getColumnModel().getColumn(6).setPreferredWidth(60); // Price
+        jTable1.getColumnModel().getColumn(7).setPreferredWidth(65); // Value
+        jTable1.getColumnModel().getColumn(8).setPreferredWidth(45); // Dis%
+        jTable1.getColumnModel().getColumn(9).setPreferredWidth(60); // DisAmt
+        jTable1.getColumnModel().getColumn(10).setPreferredWidth(75); // SubTotal
+        jTable1.getColumnModel().getColumn(11).setPreferredWidth(45); // Tax%
+        jTable1.getColumnModel().getColumn(12).setPreferredWidth(65); // TaxAmt
+        jTable1.getColumnModel().getColumn(13).setPreferredWidth(75); // Total
+        jTable1.getColumnModel().getColumn(14).setPreferredWidth(30); // UnitDes (hidden)
+        jTable1.getColumnModel().getColumn(15).setPreferredWidth(30); // BarCode (hidden)
+        jTable1.getColumnModel().getColumn(16).setPreferredWidth(65); // HSN
+        jTable1.getColumnModel().getColumn(17).setPreferredWidth(30); // Tax (hidden)
+        jTable1.getColumnModel().getColumn(18).setPreferredWidth(30); // Entry (hidden)
+        jTable1.getColumnModel().getColumn(19).setPreferredWidth(30); // CostRate (hidden)
+        jTable1.getColumnModel().getColumn(20).setPreferredWidth(30); // Profit (hidden)
+        jTable1.getColumnModel().getColumn(21).setPreferredWidth(30); // PrintName (hidden)
+        jTable1.getColumnModel().getColumn(22).setPreferredWidth(30); // Pur.Rate (hidden)
+        jTable1.getColumnModel().getColumn(23).setPreferredWidth(30); // RPrice (hidden)
+        jTable1.getColumnModel().getColumn(24).setPreferredWidth(30); // WPrice (hidden)
+        jTable1.getColumnModel().getColumn(25).setPreferredWidth(30); // Remarks (hidden)
+        jTable1.getColumnModel().getColumn(26).setPreferredWidth(70); // MfgDate
+        jTable1.getColumnModel().getColumn(27).setPreferredWidth(70); // ExpDate
+        jTable1.getColumnModel().getColumn(28).setPreferredWidth(30); // Size (hidden)
+        jTable1.getColumnModel().getColumn(29).setPreferredWidth(30); // Color (hidden)
+        jTable1.getColumnModel().getColumn(30).setPreferredWidth(30); // Brand/TaxInclusion (hidden)
+        jTable1.getTableHeader().setFont(new Font("Arial", Font.BOLD, 12));
         jTable1.getTableHeader().setResizingAllowed(false);
         jTable1.getTableHeader().setReorderingAllowed(false);
+
+        // Move MfgDate and ExpDate to appear right after Qty
+        jTable1.moveColumn(26, 4); // MfgDate: v26(m26) → v4 (right after Qty at v3)
+        jTable1.moveColumn(27, 5); // ExpDate: v27(m27) → v5 (right after MfgDate at v4)
+        // Move SubTotal after TaxAmt so TaxAmt appears before SubTotal
+        jTable1.moveColumn(12, 14); // SubTotal: v12(m10) → v14 (after TaxAmt)
+        // Move HSN to before Qty (pharmacy shops need it early)
+        jTable1.moveColumn(18, 3); // HSN: v18(m16) → v3 (before Qty)
+        // After 4 moves, view order:
+        // v0=# | v1=ItemCode | v2=Desc | v3=HSN(m16) | v4=Qty(m3) | v5=MfgDate(m26) |
+        // v6=ExpDate(m27)
+        // | v7=MRP(m4) | v8=NetRate(m5) | v9=Price(m6) | v10=Value(m7) | v11=Dis%(m8)
+        // | v12=DisAmt(m9) | v13=Tax%(m11) | v14=TaxAmt(m12) | v15=SubTotal(m10)
+        // | v16=Total(m13) | v17=UnitDes | v18=BarCode | v19=Tax | v20=Entry
+        // | v21-v27=hidden | v28=Size | v29=Color | v30=Brand | v31=TaxInclusion
+
+        // Renderer for Description column: appends (size, color, brand) in brackets
+        jTable1.getColumnModel().getColumn(2).setCellRenderer(new javax.swing.table.DefaultTableCellRenderer() {
+            @Override
+            public java.awt.Component getTableCellRendererComponent(
+                    javax.swing.JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                String base = value != null ? value.toString() : "";
+                Object szO = s2.getValueAt(row, 28);
+                Object clO = s2.getValueAt(row, 29);
+                Object brO = s2.getValueAt(row, 30);
+                String sz = szO != null ? szO.toString() : "";
+                String cl = clO != null ? clO.toString() : "";
+                String brd = brO != null ? brO.toString() : "";
+                java.util.List<String> parts = new java.util.ArrayList<>();
+                if (!sz.isEmpty())
+                    parts.add(sz);
+                if (!cl.isEmpty())
+                    parts.add(cl);
+                if (!brd.isEmpty())
+                    parts.add(brd);
+                String display = parts.isEmpty() ? base : base + " (" + String.join(", ", parts) + ")";
+                return super.getTableCellRendererComponent(table, display, isSelected, hasFocus, row, column);
+            }
+        });
+
+        // Permanently hide internal-only columns (never shown in UI)
+        // Size(28), Color(29), Brand(30) are always hidden — shown inside Description
+        // brackets
+        for (int ci : new int[] { 1, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31 }) {
+            hideCol(jTable1, ci);
+        }
+
+        // DB-managed column visibility per shop type (company-specific)
+        try {
+            // Read shop_type for the selected company to derive correct defaults
+            String shopType = "General";
+            try {
+                String stWhere = UserSession.hasSelectedCompany()
+                        ? " WHERE companyID='" + UserSession.getSelectedCompanyID() + "'"
+                        : "";
+                ResultSet stRs = util.doQuery("SELECT shop_type FROM company" + stWhere + " LIMIT 1");
+                if (stRs != null && stRs.next()) {
+                    String st = stRs.getString("shop_type");
+                    if (st != null && !st.isEmpty())
+                        shopType = st;
+                }
+            } catch (Exception ignored) {
+            }
+            boolean hasMfgExp = shopType.equals("Pharmacy") || shopType.equals("Grocery");
+            boolean hasHsn = !shopType.equals("Clothing");
+
+            String colCompanyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : " AND company_id=''";
+            java.util.Map<String, Boolean> vis = new java.util.HashMap<>();
+            ResultSet icRs = util.doQuery(
+                    "SELECT col_key, col_visible FROM invoice_columns WHERE doc_type='estimate'" + colCompanyFilter);
+            while (icRs != null && icRs.next()) {
+                vis.put(icRs.getString("col_key"), icRs.getInt("col_visible") == 1);
+            }
+
+            // col_key → view index (after moveColumn reordering)
+            // NOTE: Compulsory columns (qty, mrp, net_rate, disc, disc_amt,
+            // tax_amt, sub_total) are NOT listed here — they are always visible.
+            // Only optional/shop-dependent columns are DB-managed.
+            // Defaults are derived from the company's shop_type.
+            String[][] managed = {
+                    // { col_key, view_index, default: "1"=visible, "0"=hidden }
+                    { "mfg_date", "5", hasMfgExp ? "1" : "0" },
+                    { "exp_date", "6", hasMfgExp ? "1" : "0" },
+                    { "price", "9", "0" },
+                    { "amount", "10", "1" },
+                    { "tax_pct", "13", "0" },
+                    { "total", "16", "1" },
+                    { "hsn", "3", hasHsn ? "1" : "0" },
+            };
+            for (String[] mc : managed) {
+                String key = mc[0];
+                int vIdx = Integer.parseInt(mc[1]);
+                boolean defVis = mc[2].equals("1");
+                boolean isVisible = vis.containsKey(key) ? vis.get(key) : defVis;
+                if (!isVisible) {
+                    hideCol(jTable1, vIdx);
+                }
+            }
+        } catch (Exception ignored) {
+        }
     }
 
     void get_billno() {
         try {
             int sno = 1;
-            String query = "select max(billno) from estimate";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select max(billno) from estimate" + companyFilter;
             ResultSet r = util.doQuery(query);
             boolean selva = false;
             while (r.next()) {
@@ -321,7 +456,11 @@ public final class estimate extends javax.swing.JInternalFrame {
             boolean selva = false;
             double rrate = 0, wrate = 0, price = 0;
             String iname = null, ino = null;
-            String query = "select iname,rprice,wprice,ino from item where barcode='" + h17.getText() + "'";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select iname,rprice,wprice,ino from item where barcode='" + h17.getText() + "'"
+                    + companyFilter;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 iname = r.getString(1);
@@ -365,7 +504,10 @@ public final class estimate extends javax.swing.JInternalFrame {
     void get_stock() {
         try {
             double stock = 0;
-            String query = "select sum(quan) from stock where barcode='" + h17.getText() + "'";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select sum(quan) from stock where barcode='" + h17.getText() + "'" + companyFilter;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 stock = r.getDouble(1);
@@ -385,12 +527,20 @@ public final class estimate extends javax.swing.JInternalFrame {
 
     void add_item(String barcode, String ino, String iname, double price, double quan, String unit) {
         try {
+            double netPrice = price;
             String hsn = ".", udes = "", iname1 = "";
+            String itemSize = "", itemColor = "", itemBrand = "";
             double disp = 0, prate = 0, mrp = 0, rprice = 0, wprice = 0;
             int taxp = 0;
+            String itemTtype = ttype;
             boolean selva = false;
-            String query = "select hsn,udes,disp,taxp,iname1,prate,mrp,rprice,wprice from item where ino='" + ino
-                    + "' and barcode='" + barcode + "' and iname='" + iname + "' ";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String itemMfgDate = "", itemExpDate = "";
+            String query = "select hsn,udes,disp,taxp,iname1,prate,mrp,rprice,wprice,size,color,brand,tax_inclusion,DATE_FORMAT(mfg_date,'%d/%m/%Y'),DATE_FORMAT(exp_date,'%d/%m/%Y') from item where ino='"
+                    + ino
+                    + "' and barcode='" + barcode + "' and iname='" + iname + "'" + companyFilter;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 hsn = r.getString(1);
@@ -402,6 +552,15 @@ public final class estimate extends javax.swing.JInternalFrame {
                 mrp = r.getDouble(7);
                 rprice = r.getDouble(8);
                 wprice = r.getDouble(9);
+                itemSize = r.getString(10) != null ? r.getString(10) : "";
+                itemColor = r.getString(11) != null ? r.getString(11) : "";
+                itemBrand = r.getString(12) != null ? r.getString(12) : "";
+                String taxIncVal = r.getString(13);
+                if (taxIncVal != null && !taxIncVal.isBlank()) {
+                    itemTtype = taxIncVal;
+                }
+                itemMfgDate = r.getString(14) != null ? r.getString(14) : "";
+                itemExpDate = r.getString(15) != null ? r.getString(15) : "";
                 selva = true;
             }
             if (unit != null && !unit.isBlank()) {
@@ -415,8 +574,11 @@ public final class estimate extends javax.swing.JInternalFrame {
             }
             double stock = 0;
             String entry = "purchase";
+            String stockCompanyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             query = "select quan,entry from stock where barcode='" + barcode + "' and ino='" + ino + "' and iname='"
-                    + iname + "' ";
+                    + iname + "'" + stockCompanyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 stock = r.getDouble(1);
@@ -424,16 +586,43 @@ public final class estimate extends javax.swing.JInternalFrame {
             }
 
             double amount, disamt, sub, taxamt = 0, total;
-            amount = price * quan;
-            disamt = (disp * amount) / 100;
-            sub = amount - disamt;
-            taxamt = 0;
-            total = sub;
+            if (itemTtype.equalsIgnoreCase("Inclusive of Tax")) {
+                // Market standard: show taxable value (exclusive) in SubTotal
+                amount = price * quan;
+                disamt = (disp * amount) / 100;
+                taxamt = (amount - disamt) * taxp / (100.0 + taxp);
+                sub = (amount - disamt) - taxamt; // taxable value
+                total = sub + taxamt;
+            } else if (itemTtype.equalsIgnoreCase("Inclusive Model-II")) {
+                amount = price * quan;
+                disamt = (disp * amount) / 100;
+                taxamt = (amount - disamt) * taxp / (100.0 + taxp);
+                sub = (amount - disamt) - taxamt;
+                total = sub + taxamt;
+            } else if (itemTtype.equalsIgnoreCase("Exclusive of Tax")) {
+                amount = price * quan;
+                disamt = (disp * amount) / 100;
+                sub = amount - disamt;
+                taxamt = (taxp * sub) / 100;
+                total = sub + taxamt;
+            } else {
+                amount = price * quan;
+                disamt = (disp * amount) / 100;
+                sub = amount - disamt;
+                taxamt = 0;
+                total = sub;
+            }
+
+            // Net Rate = base price per unit (exclusive of tax for inclusive items)
+            if (itemTtype.equalsIgnoreCase("Inclusive of Tax") || itemTtype.equalsIgnoreCase("Inclusive Model-II")) {
+                netPrice = price / (1.0 + taxp / 100.0);
+            }
 
             String price2 = String.format("%." + hmany + "f", price);
             String mrp2 = String.format("%." + hmany + "f", mrp);
-            String amount2 = String.format("%." + hmany + "f", amount);
+            String amount2 = String.format("%.2f", amount);
             String quan2 = String.format("%." + hmany1 + "f", quan);
+            String netRate = String.format("%." + hmany1 + "f", netPrice);
             String[] split3 = quan2.split("\\.");
             int what3 = Integer.parseInt(split3[1]);
             if (what3 <= 0) {
@@ -445,19 +634,19 @@ public final class estimate extends javax.swing.JInternalFrame {
             int old_row = 0;
             for (int i = 0; i < jTable1.getRowCount(); i++) {
                 String old_ino = jTable1.getValueAt(i, 1).toString();
-                String old_barcode = jTable1.getValueAt(i, 14).toString();
-                String old_entry = jTable1.getValueAt(i, 17).toString();
+                String old_barcode = jTable1.getValueAt(i, 18).toString();
+                String old_entry = jTable1.getValueAt(i, 20).toString();
 
                 if (ino.equalsIgnoreCase(old_ino) && barcode.equalsIgnoreCase(old_barcode)
                         && entry.equalsIgnoreCase(old_entry)) {
                     selvakumar = true;
                     old_row = i;
-                    old_quan = Double.parseDouble(jTable1.getValueAt(i, 3).toString());
+                    old_quan = Double.parseDouble(jTable1.getValueAt(i, 4).toString());
                 }
             } // row counts ends for checking
 
             double nquan = quan + old_quan;
-            if (nquan > stock && stock_bill.equalsIgnoreCase("No")) {
+            if (nquan > stock && "No".equalsIgnoreCase(stock_bill)) {
                 JOptionPane.showMessageDialog(this, "Stock-in-Hand: " + stock, "Invalid Stock",
                         JOptionPane.ERROR_MESSAGE);
                 fields_clear();
@@ -466,9 +655,9 @@ public final class estimate extends javax.swing.JInternalFrame {
             }
 
             if (selvakumar == false) {
-                s2.addRow(new Object[] { jTable1.getRowCount() + 1, ino, iname, quan2, mrp2, price2, amount2, disp,
-                        disamt, sub, taxp, taxamt, total, udes, barcode, hsn, tax, entry, 0, 0, iname1, prate, rprice,
-                        wprice });
+                s2.addRow(new Object[] { jTable1.getRowCount() + 1, ino, iname, quan2, mrp2, netRate, price2, amount2,
+                        disp, disamt, sub, taxp, taxamt, total, udes, barcode, hsn, tax, entry, 0, 0, iname1, prate,
+                        rprice, wprice, "", itemMfgDate, itemExpDate, itemSize, itemColor, itemBrand, itemTtype });
                 serial_num();
             } else {
                 double net_quan = old_quan + quan;
@@ -482,7 +671,7 @@ public final class estimate extends javax.swing.JInternalFrame {
             }
 
             infol.setText("<html>" + iname + "&nbsp &nbsp &nbsp &nbsp <b>MRP: " + mrp2 + "</b> &nbsp &nbsp &nbsp "
-                    + quan2 + "x" + price2 + "=" + amount2 + "</html>");
+                    + quan2 + "x" + netRate + "=" + Double.parseDouble(quan2) * netPrice + "</html>");
             // row selected
             Rectangle rect = jTable1.getCellRect(jTable1.getRowCount() - 1, 0, true);
             jTable1.scrollRectToVisible(rect);
@@ -499,26 +688,57 @@ public final class estimate extends javax.swing.JInternalFrame {
     void apply_all_changes() {
         try {
             double nsub = 0, ndis = 0, ngross = 0, ntax = 0, nquan = 0, ncost_rate = 0;
+            nItemTotal = 0;
             int items = 0;
             for (int i = 0; i < jTable1.getRowCount(); i++) {
-                double quan = Double.parseDouble(jTable1.getValueAt(i, 3).toString());
-                double price = Double.parseDouble(jTable1.getValueAt(i, 5).toString());
-                double disp = Double.parseDouble(jTable1.getValueAt(i, 7).toString());
-                double taxp = Double.parseDouble(jTable1.getValueAt(i, 10).toString());
-                double prate = Double.parseDouble(jTable1.getValueAt(i, 21).toString());
+                double quan = Double.parseDouble(s2.getValueAt(i, 3).toString());
+                double price = Double.parseDouble(s2.getValueAt(i, 6).toString());
+                double disp = Double.parseDouble(s2.getValueAt(i, 8).toString());
+                double taxp = Double.parseDouble(s2.getValueAt(i, 11).toString());
+                double prate = Double.parseDouble(s2.getValueAt(i, 22).toString());
 
                 double amount = price * quan;
                 double disamt = (disp * amount) / 100;
                 double sub = amount - disamt;
 
                 double taxamt = 0, total = 0;
-                total = sub;
-                taxamt = 0;
+
+                Object taxInclObj = s2.getValueAt(i, 31);
+                String itemTtype = (taxInclObj != null && !taxInclObj.toString().isBlank())
+                        ? taxInclObj.toString()
+                        : ttype;
+
+                if (itemTtype.equalsIgnoreCase("No Tax")) {
+                    total = sub;
+                    taxamt = 0;
+                } else if (itemTtype.equalsIgnoreCase("Inclusive Model-II")) {
+                    // Market standard: SubTotal = taxable value, Total = SubTotal + Tax
+                    taxamt = sub * taxp / (100.0 + taxp);
+                    sub = sub - taxamt;
+                    total = sub + taxamt;
+                } else if (itemTtype.equalsIgnoreCase("Inclusive of Tax")) {
+                    // Market standard: SubTotal = taxable value, Total = SubTotal + Tax
+                    taxamt = sub * taxp / (100.0 + taxp);
+                    sub = sub - taxamt;
+                    total = sub + taxamt;
+                } else if (itemTtype.equalsIgnoreCase("Exclusive of Tax")) {
+                    taxamt = (taxp * sub) / 100;
+                    total = sub + taxamt;
+                }
+
+                // Net Rate = base price per unit (exclusive of tax for inclusive items)
+                double netRateVal = price;
+                if (itemTtype.equalsIgnoreCase("Inclusive of Tax")
+                        || itemTtype.equalsIgnoreCase("Inclusive Model-II")) {
+                    netRateVal = price / (1.0 + taxp / 100.0);
+                }
+                String netRate2 = String.format("%." + hmany + "f", netRateVal);
+
                 double cost_rate = prate * quan;
                 double profit = sub - cost_rate;
 
                 String price2 = String.format("%." + hmany + "f", price);
-                String amount2 = String.format("%." + hmany + "f", amount);
+                String amount2 = String.format("%.2f", amount);
                 String disamt2 = String.format("%." + hmany + "f", disamt);
                 String sub2 = String.format("%." + hmany + "f", sub);
                 String taxamt2 = String.format("%." + hmany + "f", taxamt);
@@ -527,21 +747,23 @@ public final class estimate extends javax.swing.JInternalFrame {
                 String cost_rate2 = String.format("%." + hmany + "f", cost_rate);
                 String profit2 = String.format("%." + hmany + "f", profit);
 
-                jTable1.setValueAt(price2, i, 5);
-                jTable1.setValueAt(amount2, i, 6);
-                jTable1.setValueAt(disamt2, i, 8);
-                jTable1.setValueAt(sub2, i, 9);
-                jTable1.setValueAt(taxamt2, i, 11);
-                jTable1.setValueAt(total2, i, 12);
+                s2.setValueAt(netRate2, i, 5);
+                s2.setValueAt(price2, i, 6);
+                s2.setValueAt(amount2, i, 7);
+                s2.setValueAt(disamt2, i, 9);
+                s2.setValueAt(sub2, i, 10);
+                s2.setValueAt(taxamt2, i, 12);
+                s2.setValueAt(total2, i, 13);
 
-                jTable1.setValueAt(cost_rate2, i, 18);
-                jTable1.setValueAt(profit2, i, 19);
+                s2.setValueAt(cost_rate2, i, 19);
+                s2.setValueAt(profit2, i, 20);
 
                 nquan = nquan + quan;
                 nsub = nsub + amount;
                 ndis = ndis + disamt;
                 ngross = ngross + sub;
                 ntax = ntax + taxamt;
+                nItemTotal = nItemTotal + total;
                 items = items + 1;
                 ncost_rate = ncost_rate + cost_rate;
             } // table row counts ends
@@ -552,9 +774,13 @@ public final class estimate extends javax.swing.JInternalFrame {
             String ntax2 = String.format("%." + hmany + "f", ntax);
             String ncost_rate2 = String.format("%." + hmany + "f", ncost_rate);
 
+            double ndis_pct = (nsub > 0) ? (ndis / nsub) * 100 : 0;
+            String ndis_pct2 = String.format("%.2f", ndis_pct);
+
             h7.setText("" + items);
             h8.setText("" + nquan);
             h9.setText("" + nsub2);
+            h10.setText("" + ndis_pct2);
             h11.setText("" + ndis2);
             h12.setText("" + ngross2);
             h13.setText("" + ntax2);
@@ -583,7 +809,7 @@ public final class estimate extends javax.swing.JInternalFrame {
 
             double taxamt = Double.parseDouble(h13.getText());
             double other = Double.parseDouble(h14.getText());
-            double gt = gross + taxamt + other;
+            double gt = (nItemTotal > 0 ? nItemTotal : gross + taxamt) + other;
 
             String gross2 = String.format("%." + hmany + "f", gross);
             h12.setText("" + gross2);
@@ -737,7 +963,10 @@ public final class estimate extends javax.swing.JInternalFrame {
             multi_pay_mode.requestFocus();
             Point l = jLabel1.getLocationOnScreen();
             multi_pay_mode.setLocation(l.x, l.y + jLabel1.getHeight());
-            multi_pay_mode.setSize(306, 301);
+            multi_pay_mode.setSize(340, 388);
+            jLabelLoyaltyPts.setText(
+                    "<html><font color='#27ae60'><b>Loyalty Pts</b></font><br><font size='2' color='gray'>Avail: "
+                            + cpointsl.getText() + "</font></html>");
             multi_pay_mode.setVisible(true);
             h25.requestFocus();
         }
@@ -757,8 +986,11 @@ public final class estimate extends javax.swing.JInternalFrame {
             if (selvagates == false) {
                 get_billno();
             }
+            String companyFilterSave = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             boolean selva = false;
-            String query = "select billno from estimate where billno='" + h1.getText() + "'";
+            String query = "select billno from estimate where billno='" + h1.getText() + "'" + companyFilterSave;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 selva = true;
@@ -798,7 +1030,13 @@ public final class estimate extends javax.swing.JInternalFrame {
             double net = Double.parseDouble(netl.getText());
 
             // credit sales checking
-            if (h16.getSelectedItem().equals("Credit")) {
+            double multiPayCredit = 0;
+            if (h16.getSelectedItem().equals("Multi Pay")) {
+                multiPayCredit = Double.parseDouble(h31.getText().isEmpty() ? "0" : h31.getText());
+            }
+            boolean hasCredit = h16.getSelectedItem().equals("Credit") || multiPayCredit > 0;
+
+            if (hasCredit) {
                 String ctype = "Retail";
                 boolean kumar = false;
                 query = "select ctype from cust where cid='" + cid + "'";
@@ -818,7 +1056,7 @@ public final class estimate extends javax.swing.JInternalFrame {
 
             int due_days = 0;
             // payment mode credit starts
-            if (h16.getSelectedItem().equals("Credit")) {
+            if (hasCredit) {
                 double climit = 0, old_bal = 0;
                 query = "select climit,duedays from cust where cid='" + cid + "'";
                 r = util.doQuery(query);
@@ -826,12 +1064,16 @@ public final class estimate extends javax.swing.JInternalFrame {
                     climit = r.getDouble(1);
                     due_days = r.getInt(2);
                 }
-                query = "select sum(tot-paid) from cust_bal where cid='" + cid + "'";
+                String custBalCompanyFilter1 = UserSession.hasSelectedCompany()
+                        ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                        : "";
+                query = "select sum(tot-paid) from cust_bal where cid='" + cid + "'" + custBalCompanyFilter1;
                 r = util.doQuery(query);
                 while (r.next()) {
                     old_bal = r.getDouble(1);
                 }
-                double allowed_credit = net + old_bal;
+                double creditAmount = h16.getSelectedItem().equals("Credit") ? net : multiPayCredit;
+                double allowed_credit = creditAmount + old_bal;
                 if (allowed_credit > climit) {
                     JOptionPane.showMessageDialog(this,
                             "<html><b>Credit Limit: " + climit + "<br>Old Balance: " + old_bal + "</b></html>",
@@ -925,49 +1167,35 @@ public final class estimate extends javax.swing.JInternalFrame {
             String cash = h25.getText();
             String card = h26.getText();
             String others = h27.getText();
-            String credit = "" + 0;
+            String loyalty_points = h30.getText().isEmpty() ? "0" : h30.getText();
+            String credit = h31.getText().isEmpty() ? "0" : h31.getText();
             String upi = "0";
             String today_points = pointsl.getText();
             String total_points = tot_pointsl.getText();
             String ncost_rate = pratel.getText();
 
             if (pby.equalsIgnoreCase("Cash")) {
-                cash = net + "";
-                card = "" + 0;
-                credit = "" + 0;
-                others = "" + 0;
-                upi = "0";
+                cash = "" + net;
+                card = others = credit = upi = loyalty_points = "0";
             } else if (pby.equalsIgnoreCase("Card")) {
-                cash = "" + 0;
                 card = "" + net;
-                credit = "" + 0;
-                others = "" + 0;
-                upi = "0";
+                cash = others = credit = upi = loyalty_points = "0";
             } else if (pby.equalsIgnoreCase("Credit")) {
-                cash = "" + 0;
-                card = "" + 0;
                 credit = "" + net;
-                others = "" + 0;
-                upi = "0";
+                cash = card = others = upi = loyalty_points = "0";
             } else if (pby.equalsIgnoreCase("UPI")) {
-                cash = "" + 0;
-                card = "" + 0;
-                credit = "" + 0;
-                others = "" + 0;
                 upi = "" + net;
+                cash = card = credit = others = loyalty_points = "0";
             } else if (pby.equalsIgnoreCase("Others")) {
-                cash = "" + 0;
-                card = "" + 0;
-                credit = "" + 0;
                 others = "" + net;
-                upi = "0";
+                cash = card = credit = upi = loyalty_points = "0";
             }
             String price_type = pricel.getText();
 
             Connection conn = util.getConnection();
             conn.setAutoCommit(false);
             PreparedStatement psEstimate = conn.prepareStatement(
-                    "INSERT INTO estimate (billno, dat, tim, location, cashier, terminal, items, quans, sub, disp, disamt, gross, taxamt, addamt, round, net, pby, paid, bal, cash, card, credit, others, upi, price_type, tax_type, tax, cid, cardno, cname, mobile, user, last, today_points, total_points, cost_rate) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                    "INSERT INTO estimate (billno, dat, tim, location, cashier, terminal, items, quans, sub, disp, disamt, gross, taxamt, addamt, round, net, pby, paid, bal, cash, card, credit, others, upi, price_type, tax_type, tax, cid, cardno, cname, mobile, user, last, today_points, total_points, cost_rate, company_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             psEstimate.setString(1, billno);
             psEstimate.setString(2, date);
             psEstimate.setString(3, time);
@@ -1004,39 +1232,49 @@ public final class estimate extends javax.swing.JInternalFrame {
             psEstimate.setString(34, today_points);
             psEstimate.setString(35, total_points);
             psEstimate.setString(36, ncost_rate);
+            psEstimate.setString(37, UserSession.getSelectedCompanyID());
             psEstimate.executeUpdate();
 
             PreparedStatement psEstimateItems = conn.prepareStatement(
-                    "INSERT INTO estimate_items (billno, dat, cid, serial, ino, iname, quan, mrp, price, amount, disp, disamt, sub, taxp, taxamt, total, udes, barcode, hsn, tax, entry, cost_rate, profit, iname1, price_type, tax_type, item_type, prate, rprice, wprice, remarks) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                    "INSERT INTO estimate_items (billno, dat, cid, serial, ino, iname, quan, mrp, price, amount, disp, disamt, sub, taxp, taxamt, total, udes, barcode, hsn, tax, entry, cost_rate, profit, iname1, price_type, tax_type, item_type, prate, rprice, wprice, remarks, size, color, brand, company_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             PreparedStatement psUpdateStock = conn
-                    .prepareStatement("UPDATE stock SET quan=quan-? WHERE barcode=? AND ino=? AND iname=? AND entry=?");
+                    .prepareStatement(
+                            "UPDATE stock SET quan=quan-? WHERE barcode=? AND ino=? AND iname=? AND entry=? AND company_id=?");
 
             for (int i = 0; i < jTable1.getRowCount(); i++) {
-                String serial = jTable1.getValueAt(i, 0).toString();
-                String ino = jTable1.getValueAt(i, 1).toString();
-                String iname = jTable1.getValueAt(i, 2).toString();
-                String quan = jTable1.getValueAt(i, 3).toString();
-                String mrp = jTable1.getValueAt(i, 4).toString();
-                String price = jTable1.getValueAt(i, 5).toString();
-                String amount = jTable1.getValueAt(i, 6).toString();
-                String disp1 = jTable1.getValueAt(i, 7).toString();
-                String disamt1 = jTable1.getValueAt(i, 8).toString();
-                String sub1 = jTable1.getValueAt(i, 9).toString();
-                String taxp1 = jTable1.getValueAt(i, 10).toString();
-                String taxamt1 = jTable1.getValueAt(i, 11).toString();
-                String total = jTable1.getValueAt(i, 12).toString();
-                String udes = jTable1.getValueAt(i, 13).toString();
-                String barcode = jTable1.getValueAt(i, 14).toString();
-                String hsn = jTable1.getValueAt(i, 15).toString();
-                String entry = jTable1.getValueAt(i, 17).toString();
-                String cost_rate = jTable1.getValueAt(i, 18).toString();
-                String profit = jTable1.getValueAt(i, 19).toString();
-                String iname1 = jTable1.getValueAt(i, 20).toString();
-                String prate = jTable1.getValueAt(i, 21).toString();
-                String rrate = jTable1.getValueAt(i, 22).toString();
-                String wrate = jTable1.getValueAt(i, 23).toString();
+                String serial = s2.getValueAt(i, 0).toString();
+                String ino = s2.getValueAt(i, 1).toString();
+                String iname = s2.getValueAt(i, 2).toString();
+                String quan = s2.getValueAt(i, 3).toString();
+                String mrp = s2.getValueAt(i, 4).toString();
+                String price = s2.getValueAt(i, 6).toString();
+                String amount = s2.getValueAt(i, 7).toString();
+                String disp1 = s2.getValueAt(i, 8).toString();
+                String disamt1 = s2.getValueAt(i, 9).toString();
+                String sub1 = s2.getValueAt(i, 10).toString();
+                String taxp1 = s2.getValueAt(i, 11).toString();
+                String taxamt1 = s2.getValueAt(i, 12).toString();
+                String total = s2.getValueAt(i, 13).toString();
+                String udes = s2.getValueAt(i, 14).toString();
+                String barcode = s2.getValueAt(i, 15).toString();
+                String hsn = s2.getValueAt(i, 16).toString();
+                String entry = s2.getValueAt(i, 18).toString();
+                String cost_rate = s2.getValueAt(i, 19).toString();
+                String profit = s2.getValueAt(i, 20).toString();
+                String iname1 = s2.getValueAt(i, 21).toString();
+                String prate = s2.getValueAt(i, 22).toString();
+                String rrate = s2.getValueAt(i, 23).toString();
+                String wrate = s2.getValueAt(i, 24).toString();
+                String itemRemarks = s2.getValueAt(i, 25) != null ? s2.getValueAt(i, 25).toString() : "";
+                String itemSize = s2.getValueAt(i, 28) != null ? s2.getValueAt(i, 28).toString() : "";
+                String itemColor = s2.getValueAt(i, 29) != null ? s2.getValueAt(i, 29).toString() : "";
+                String itemBrand = s2.getValueAt(i, 30) != null ? s2.getValueAt(i, 30).toString() : "";
                 String item_type = "Old";
-                ResultSet rs_unit = util.doQuery("SELECT subunit, subconv, udes FROM item WHERE ino='" + ino + "'");
+                String itemCompanyFilter = UserSession.hasSelectedCompany()
+                        ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                        : "";
+                ResultSet rs_unit = util
+                        .doQuery("SELECT subunit, subconv, udes FROM item WHERE ino='" + ino + "'" + itemCompanyFilter);
                 String subunit = "";
                 double subconv = 1;
                 String main_unit = "";
@@ -1079,7 +1317,12 @@ public final class estimate extends javax.swing.JInternalFrame {
                 psEstimateItems.setString(28, prate);
                 psEstimateItems.setString(29, rrate);
                 psEstimateItems.setString(30, wrate);
-                psEstimateItems.setString(31, "");
+                psEstimateItems.setString(31, itemRemarks);
+                psEstimateItems.setString(32, itemSize);
+                psEstimateItems.setString(33, itemColor);
+                psEstimateItems.setString(34, itemBrand);
+                psEstimateItems.setString(35,
+                        UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "");
                 psEstimateItems.addBatch();
 
                 if (stockMinusCheckbox.isSelected()) {
@@ -1088,6 +1331,8 @@ public final class estimate extends javax.swing.JInternalFrame {
                     psUpdateStock.setString(3, ino);
                     psUpdateStock.setString(4, iname);
                     psUpdateStock.setString(5, entry);
+                    psUpdateStock.setString(6,
+                            UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "");
                     psUpdateStock.addBatch();
                 }
             } // jtable row counts ends
@@ -1095,8 +1340,9 @@ public final class estimate extends javax.swing.JInternalFrame {
             psEstimateItems.executeBatch();
             psUpdateStock.executeBatch();
 
-            if (pby.equalsIgnoreCase("Credit")) {
+            if (pby.equalsIgnoreCase("Credit") || (pby.equalsIgnoreCase("Multi Pay") && multiPayCredit > 0)) {
                 int paid1 = 0;
+                double creditTotal = pby.equalsIgnoreCase("Credit") ? net : multiPayCredit;
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
                 Calendar c = Calendar.getInstance();
                 c.setTime(sdf.parse(date));
@@ -1104,15 +1350,16 @@ public final class estimate extends javax.swing.JInternalFrame {
                 String ddate = sdf.format(c.getTime());
 
                 PreparedStatement psCustBal = conn.prepareStatement(
-                        "INSERT INTO cust_bal (billno, dat, ddate, cid, cname, tot, paid, last) VALUES (?,?,?,?,?,?,?,?)");
+                        "INSERT INTO cust_bal (billno, dat, ddate, cid, cname, tot, paid, last, company_id) VALUES (?,?,?,?,?,?,?,?,?)");
                 psCustBal.setString(1, billno);
                 psCustBal.setString(2, date);
                 psCustBal.setString(3, ddate);
                 psCustBal.setString(4, cid);
                 psCustBal.setString(5, cname);
-                psCustBal.setDouble(6, net);
+                psCustBal.setDouble(6, creditTotal);
                 psCustBal.setInt(7, paid1);
                 psCustBal.setString(8, last);
+                psCustBal.setString(9, UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "");
                 psCustBal.executeUpdate();
             } // credit bill ends
 
@@ -1250,7 +1497,10 @@ public final class estimate extends javax.swing.JInternalFrame {
         try {
             pointsl.setText("");
             tot_pointsl.setText("");
-            String query = "select distinct billno from estimate where billno='" + billno + "'";
+            String companyFilterView = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select distinct billno from estimate where billno='" + billno + "'" + companyFilterView;
             ResultSet set1 = util.doQuery(query);
             boolean selva = false;
             while (set1.next()) {
@@ -1272,7 +1522,7 @@ public final class estimate extends javax.swing.JInternalFrame {
                     s2.fireTableDataChanged();
                 }
                 query = "select billno,date_format(dat,'%d/%m/%Y'),tim,location,terminal,cashier,items,quans,sub,disp,disamt,gross,taxamt,addamt,round,pby,net,paid,bal,cash,card,others,price_type,tax_type,tax,cid,cardno,mobile,cname,today_points,total_points,cost_rate from estimate where billno='"
-                        + billno + "'";
+                        + billno + "'" + companyFilterView;
                 set1 = util.doQuery(query);
                 while (set1.next()) {
                     h1.setText(set1.getString(1));
@@ -1331,7 +1581,11 @@ public final class estimate extends javax.swing.JInternalFrame {
                     netl.setText(net2);
 
                     double old_bal = 0;
-                    String query1 = "select sum(tot-paid) from cust_bal where cid='" + h21.getText() + "'";
+                    String custBalCompanyFilter2a = UserSession.hasSelectedCompany()
+                            ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                            : "";
+                    String query1 = "select sum(tot-paid) from cust_bal where cid='" + h21.getText() + "'"
+                            + custBalCompanyFilter2a;
                     ResultSet r1;
                     try {
                         r1 = util.doQuery(query1);
@@ -1344,8 +1598,11 @@ public final class estimate extends javax.swing.JInternalFrame {
                     }
                 }
 
-                query = "select serial,ino,iname,quan,mrp,price,amount,disp,disamt,sub,taxp,taxamt,total,udes,barcode,hsn,tax,entry,cost_rate,profit,iname1,prate,rprice,wprice from estimate_items where billno='"
-                        + billno + "'";
+                String itemsCompanyFilter = UserSession.hasSelectedCompany()
+                        ? " AND s.company_id='" + UserSession.getSelectedCompanyID() + "'"
+                        : "";
+                query = "select s.serial,s.ino,s.iname,s.quan,s.mrp,s.price,s.amount,s.disp,s.disamt,s.sub,s.taxp,s.taxamt,s.total,s.udes,s.barcode,s.hsn,s.tax,s.entry,s.cost_rate,s.profit,s.iname1,s.prate,s.rprice,s.wprice,IFNULL(s.size,''),IFNULL(s.color,''),IFNULL(s.brand,''),IFNULL(DATE_FORMAT(i.mfg_date,'%d/%m/%Y'),''),IFNULL(DATE_FORMAT(i.exp_date,'%d/%m/%Y'),'') from estimate_items s LEFT JOIN item i ON s.ino=i.ino AND s.barcode=i.barcode where s.billno='"
+                        + billno + "'" + itemsCompanyFilter;
                 set1 = util.doQuery(query);
                 while (set1.next()) {
                     String mrp = String.format("%." + hmany + "f", set1.getDouble(5));
@@ -1355,6 +1612,7 @@ public final class estimate extends javax.swing.JInternalFrame {
                     String sub = String.format("%." + hmany + "f", set1.getDouble(10));
                     String taxamt = String.format("%." + hmany + "f", set1.getDouble(12));
                     String total = String.format("%." + hmany + "f", set1.getDouble(13));
+                    String rprice = String.format("%." + hmany + "f", set1.getDouble(23));
 
                     String quan2 = String.format("%." + hmany + "f", set1.getDouble(4));
                     String[] split3 = quan2.split("\\.");
@@ -1363,12 +1621,14 @@ public final class estimate extends javax.swing.JInternalFrame {
                         quan2 = split3[0];
                     }
 
-                    s2.addRow(new Object[] { set1.getString(1), set1.getString(2), set1.getString(3), quan2, mrp, price,
-                            amount, set1.getString(8), disamt,
+                    s2.addRow(new Object[] { set1.getString(1), set1.getString(2), set1.getString(3), quan2, mrp,
+                            rprice, price, amount, set1.getString(8), disamt,
                             sub, set1.getInt(11), taxamt, total, set1.getString(14), set1.getString(15),
                             set1.getString(16), set1.getString(17), set1.getString(18), set1.getString(19),
                             set1.getString(20), set1.getString(21), set1.getString(22), set1.getString(23),
-                            set1.getString(24) });
+                            set1.getString(24), "", set1.getString(28), set1.getString(29), set1.getString(25),
+                            set1.getString(26),
+                            set1.getString(27), ttype });
                 }
                 get_retail_wholesale_color();
                 get_customer_details_using_mobileno();
@@ -1413,13 +1673,13 @@ public final class estimate extends javax.swing.JInternalFrame {
             String file_name = "Items_List";
             try (FileWriter f = new FileWriter(new File(folder + "/Drafts/" + file_name + ".txt"))) {
                 for (int i = 0; i < jTable1.getRowCount(); i++) {
-                    String barcode = jTable1.getValueAt(i, 14).toString();
-                    String iname = jTable1.getValueAt(i, 2).toString();
-                    String price = jTable1.getValueAt(i, 5).toString();
-                    String quan = jTable1.getValueAt(i, 3).toString();
-                    String ino = jTable1.getValueAt(i, 1).toString();
-                    String entry = jTable1.getValueAt(i, 17).toString();
-                    String udes = jTable1.getValueAt(i, 13).toString();
+                    String barcode = s2.getValueAt(i, 15).toString();
+                    String iname = s2.getValueAt(i, 2).toString();
+                    String price = s2.getValueAt(i, 6).toString();
+                    String quan = s2.getValueAt(i, 3).toString();
+                    String ino = s2.getValueAt(i, 1).toString();
+                    String entry = s2.getValueAt(i, 18).toString();
+                    String udes = s2.getValueAt(i, 14).toString();
                     f.write("" + barcode + "$" + iname + "$" + price + "$" + quan + "$" + ino + "$" + entry + "$" + udes
                             + "\r\n");
                 } // row counts ends here
@@ -1540,7 +1800,11 @@ public final class estimate extends javax.swing.JInternalFrame {
                     pricel.setText(token.nextToken());
 
                     double old_bal = 0;
-                    String query1 = "select sum(tot-paid) from cust_bal where cid='" + h21.getText() + "'";
+                    String custBalCompanyFilter3a = UserSession.hasSelectedCompany()
+                            ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                            : "";
+                    String query1 = "select sum(tot-paid) from cust_bal where cid='" + h21.getText() + "'"
+                            + custBalCompanyFilter3a;
                     ResultSet r1;
                     try {
                         r1 = util.doQuery(query1);
@@ -1574,7 +1838,11 @@ public final class estimate extends javax.swing.JInternalFrame {
                 customer_selection = true;
 
                 double old_bal = 0;
-                String query1 = "select sum(tot-paid) from cust_bal where cid='" + h21.getText() + "'";
+                String custBalCompanyFilter4a = UserSession.hasSelectedCompany()
+                        ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                        : "";
+                String query1 = "select sum(tot-paid) from cust_bal where cid='" + h21.getText() + "'"
+                        + custBalCompanyFilter4a;
                 ResultSet r1;
                 try {
                     r1 = util.doQuery(query1);
@@ -1612,7 +1880,11 @@ public final class estimate extends javax.swing.JInternalFrame {
                 scode1 = r.getString(5);
                 customer_selection = true;
                 double old_bal = 0;
-                String query1 = "select sum(tot-paid) from cust_bal where cid='" + h21.getText() + "'";
+                String custBalCompanyFilter5a = UserSession.hasSelectedCompany()
+                        ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                        : "";
+                String query1 = "select sum(tot-paid) from cust_bal where cid='" + h21.getText() + "'"
+                        + custBalCompanyFilter5a;
                 ResultSet r1 = util.doQuery(query1);
                 while (r1.next()) {
                     old_bal = r1.getDouble(1);
@@ -1658,7 +1930,11 @@ public final class estimate extends javax.swing.JInternalFrame {
         try {
             if (pricel.getText().equals("Wholesale") && selvagates == false) {
                 double bal = 0;
-                String query = "select sum(tot-paid) from cust_bal where cid='" + h21.getText() + "'";
+                String custBalCompanyFilter5 = UserSession.hasSelectedCompany()
+                        ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                        : "";
+                String query = "select sum(tot-paid) from cust_bal where cid='" + h21.getText() + "'"
+                        + custBalCompanyFilter5;
                 ResultSet r = util.doQuery(query);
                 while (r.next()) {
                     bal = r.getDouble(1);
@@ -1792,13 +2068,18 @@ public final class estimate extends javax.swing.JInternalFrame {
             }
             save_draft();
             String billno = h1.getText();
+            String companyId = UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "";
+            String companyFilterAlter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + companyId + "'"
+                    : "";
             ArrayList<String> barcode = new ArrayList<>();
             ArrayList<String> ino = new ArrayList<>();
             ArrayList<String> iname = new ArrayList<>();
             ArrayList<String> quan = new ArrayList<>();
             ArrayList<String> entry = new ArrayList<>();
 
-            String query = "select barcode,ino,iname,quan,entry from estimate_items where billno='" + billno + "'";
+            String query = "select barcode,ino,iname,quan,entry from estimate_items where billno='" + billno + "'"
+                    + companyFilterAlter;
             ResultSet set1 = util.doQuery(query);
             boolean selva = false;
             while (set1.next()) {
@@ -1850,25 +2131,30 @@ public final class estimate extends javax.swing.JInternalFrame {
 
             if (selva == true) {
                 PreparedStatement psUpdateStock = conn.prepareStatement(
-                        "UPDATE stock SET quan=quan+? WHERE barcode=? AND ino=? AND iname=? AND entry=?");
+                        "UPDATE stock SET quan=quan+? WHERE barcode=? AND ino=? AND iname=? AND entry=? AND company_id=?");
                 for (int i = 0; i < barcode.size(); i++) {
                     psUpdateStock.setDouble(1, Double.parseDouble(quan.get(i)));
                     psUpdateStock.setString(2, barcode.get(i));
                     psUpdateStock.setString(3, ino.get(i));
                     psUpdateStock.setString(4, iname.get(i));
                     psUpdateStock.setString(5, entry.get(i));
+                    psUpdateStock.setString(6,
+                            UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "");
                     psUpdateStock.addBatch();
                 }
                 psUpdateStock.executeBatch();
             } // selva true ends
 
-            PreparedStatement psDeleteEstimate = conn.prepareStatement("DELETE FROM estimate WHERE billno=?");
+            PreparedStatement psDeleteEstimate = conn
+                    .prepareStatement("DELETE FROM estimate WHERE billno=? AND company_id=?");
             psDeleteEstimate.setString(1, billno);
+            psDeleteEstimate.setString(2, companyId);
             psDeleteEstimate.executeUpdate();
 
             PreparedStatement psDeleteEstimateItems = conn
-                    .prepareStatement("DELETE FROM estimate_items WHERE billno=?");
+                    .prepareStatement("DELETE FROM estimate_items WHERE billno=? AND company_id=?");
             psDeleteEstimateItems.setString(1, billno);
+            psDeleteEstimateItems.setString(2, companyId);
             psDeleteEstimateItems.executeUpdate();
 
             if (h16.getSelectedItem().equals("Credit")) {
@@ -1932,13 +2218,18 @@ public final class estimate extends javax.swing.JInternalFrame {
             }
             save_draft();
             String billno = h1.getText();
+            String companyId = UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "";
+            String companyFilterDelete = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + companyId + "'"
+                    : "";
             ArrayList<String> barcode = new ArrayList<>();
             ArrayList<String> ino = new ArrayList<>();
             ArrayList<String> iname = new ArrayList<>();
             ArrayList<String> quan = new ArrayList<>();
             ArrayList<String> entry = new ArrayList<>();
 
-            String query = "select barcode,ino,iname,quan,entry from estimate_items where billno='" + billno + "'";
+            String query = "select barcode,ino,iname,quan,entry from estimate_items where billno='" + billno + "'"
+                    + companyFilterDelete;
             ResultSet set1 = util.doQuery(query);
             boolean selva = false;
             while (set1.next()) {
@@ -1990,25 +2281,30 @@ public final class estimate extends javax.swing.JInternalFrame {
 
             if (selva == true) {
                 PreparedStatement psUpdateStock = conn.prepareStatement(
-                        "UPDATE stock SET quan=quan+? WHERE barcode=? AND ino=? AND iname=? AND entry=?");
+                        "UPDATE stock SET quan=quan+? WHERE barcode=? AND ino=? AND iname=? AND entry=? AND company_id=?");
                 for (int i = 0; i < barcode.size(); i++) {
                     psUpdateStock.setDouble(1, Double.parseDouble(quan.get(i)));
                     psUpdateStock.setString(2, barcode.get(i));
                     psUpdateStock.setString(3, ino.get(i));
                     psUpdateStock.setString(4, iname.get(i));
                     psUpdateStock.setString(5, entry.get(i));
+                    psUpdateStock.setString(6,
+                            UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "");
                     psUpdateStock.addBatch();
                 }
                 psUpdateStock.executeBatch();
             } // selva true ends
 
-            PreparedStatement psDeleteEstimate = conn.prepareStatement("DELETE FROM estimate WHERE billno=?");
+            PreparedStatement psDeleteEstimate = conn
+                    .prepareStatement("DELETE FROM estimate WHERE billno=? AND company_id=?");
             psDeleteEstimate.setString(1, billno);
+            psDeleteEstimate.setString(2, companyId);
             psDeleteEstimate.executeUpdate();
 
             PreparedStatement psDeleteEstimateItems = conn
-                    .prepareStatement("DELETE FROM estimate_items WHERE billno=?");
+                    .prepareStatement("DELETE FROM estimate_items WHERE billno=? AND company_id=?");
             psDeleteEstimateItems.setString(1, billno);
+            psDeleteEstimateItems.setString(2, companyId);
             psDeleteEstimateItems.executeUpdate();
 
             if (h16.getSelectedItem().equals("Credit")) {
@@ -2057,8 +2353,11 @@ public final class estimate extends javax.swing.JInternalFrame {
             double tquan;
             double stock = 0;
             String entry = "purchase";
+            String editCompanyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             String query = "select quan,entry from stock where barcode='" + barcode + "' and ino='" + ino
-                    + "' and iname='" + iname + "' ";
+                    + "' and iname='" + iname + "'" + editCompanyFilter;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 stock = r.getDouble(1);
@@ -2067,10 +2366,10 @@ public final class estimate extends javax.swing.JInternalFrame {
 
             double entry_stock = 0;
             for (int i = 0; i < jTable1.getRowCount(); i++) {
-                String ino1 = jTable1.getValueAt(i, 1).toString();
-                String barcode1 = jTable1.getValueAt(i, 14).toString();
-                String entry1 = jTable1.getValueAt(i, 17).toString();
-                double quan1 = Double.parseDouble(jTable1.getValueAt(i, 3).toString());
+                String ino1 = s2.getValueAt(i, 1).toString();
+                String barcode1 = s2.getValueAt(i, 15).toString();
+                String entry1 = s2.getValueAt(i, 18).toString();
+                double quan1 = Double.parseDouble(s2.getValueAt(i, 3).toString());
                 if (ino.equals(ino1) && barcode.equals(barcode1) && entry.equals(entry1)) {
                     entry_stock = quan1;
                 }
@@ -2089,7 +2388,7 @@ public final class estimate extends javax.swing.JInternalFrame {
             if (what3 <= 0) {
                 quan2 = split3[0];
             }
-            jTable1.setValueAt(quan2 + "", row, 3);
+            jTable1.setValueAt(quan2 + "", row, 4);
             apply_all_changes();
             h17.requestFocus();
         } catch (HeadlessException | ClassNotFoundException | NumberFormatException | SQLException e) {
@@ -2116,7 +2415,11 @@ public final class estimate extends javax.swing.JInternalFrame {
                 } // retail bill ends
                 else { // wholesale starts
                     String closing_bal = "";
-                    String query = "select sum(tot-paid) from cust_bal where cid='" + h21.getText() + "'";
+                    String custBalCompanyFilter6 = UserSession.hasSelectedCompany()
+                            ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                            : "";
+                    String query = "select sum(tot-paid) from cust_bal where cid='" + h21.getText() + "'"
+                            + custBalCompanyFilter6;
                     ResultSet r = util.doQuery(query);
                     while (r.next()) {
                         closing_bal = String.format("%." + hmany + "f", r.getDouble(1));
@@ -2213,12 +2516,12 @@ public final class estimate extends javax.swing.JInternalFrame {
                 PreparedStatement psHold = conn.prepareStatement(insertHoldQuery);
 
                 for (int i = 0; i < jTable1.getRowCount(); i++) {
-                    String ino = jTable1.getValueAt(i, 1).toString();
-                    String iname = jTable1.getValueAt(i, 2).toString();
-                    String quan = jTable1.getValueAt(i, 3).toString();
-                    String price = jTable1.getValueAt(i, 5).toString();
-                    String barcode = jTable1.getValueAt(i, 14).toString();
-                    String udes = jTable1.getValueAt(i, 13).toString();
+                    String ino = s2.getValueAt(i, 1).toString();
+                    String iname = s2.getValueAt(i, 2).toString();
+                    String quan = s2.getValueAt(i, 3).toString();
+                    String price = s2.getValueAt(i, 6).toString();
+                    String barcode = s2.getValueAt(i, 15).toString();
+                    String udes = s2.getValueAt(i, 14).toString();
 
                     psHold.setInt(1, billno);
                     psHold.setString(2, location);
@@ -2279,8 +2582,8 @@ public final class estimate extends javax.swing.JInternalFrame {
                 return;
             }
             for (int i = 0; i < jTable1.getRowCount(); i++) {
-                String rrate = jTable1.getValueAt(i, 22).toString();
-                jTable1.setValueAt(rrate, i, 5);
+                String rrate = jTable1.getValueAt(i, 25).toString();
+                jTable1.setValueAt(rrate, i, 9);
             } // row counts ends
             pricel.setText("Retail");
             apply_all_changes();
@@ -2298,8 +2601,8 @@ public final class estimate extends javax.swing.JInternalFrame {
                 return;
             }
             for (int i = 0; i < jTable1.getRowCount(); i++) {
-                String wrate = jTable1.getValueAt(i, 23).toString();
-                jTable1.setValueAt(wrate, i, 5);
+                String wrate = jTable1.getValueAt(i, 26).toString();
+                jTable1.setValueAt(wrate, i, 9);
             } // row counts ends
             pricel.setText("Wholesale");
             apply_all_changes();
@@ -2349,8 +2652,13 @@ public final class estimate extends javax.swing.JInternalFrame {
         jSeparator2 = new javax.swing.JSeparator();
         jLabel32 = new javax.swing.JLabel();
         h27 = new javax.swing.JTextField();
+        jLabelLoyaltyPts = new javax.swing.JLabel();
+        h30 = new javax.swing.JTextField();
+        jLabelCredit = new javax.swing.JLabel();
+        h31 = new javax.swing.JTextField();
         jLabel33 = new javax.swing.JLabel();
         selectbutton = new javax.swing.JButton();
+        multiPayCloseBtn = new javax.swing.JButton();
         cname_list = new javax.swing.JDialog();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTable2 = new javax.swing.JTable();
@@ -2466,17 +2774,25 @@ public final class estimate extends javax.swing.JInternalFrame {
         multi_pay_mode.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         multi_pay_mode.setUndecorated(true);
 
-        jLabel29.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
-        jLabel29.setText(" Multi Pay Mode");
+        // ─── Multi Pay Dialog Styling ─────────────────────────────────────────
+        jPanel9.setBackground(java.awt.Color.WHITE);
+        jPanel9.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(41, 128, 185), 2));
 
-        jLabel30.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
+        jLabel29.setFont(new java.awt.Font("Arial", 1, 16)); // NOI18N
+        jLabel29.setText("  \u2605 MULTI PAY MODE");
+        jLabel29.setForeground(java.awt.Color.WHITE);
+        jLabel29.setOpaque(true);
+        jLabel29.setBackground(new java.awt.Color(41, 128, 185));
+
+        jLabel30.setFont(new java.awt.Font("Arial", 0, 15)); // NOI18N
         jLabel30.setText("Cash");
 
         h28.setEditable(false);
-        h28.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        h28.setFont(new java.awt.Font("Arial", 1, 17)); // NOI18N
         h28.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        h28.setBackground(new java.awt.Color(236, 240, 241));
 
-        h25.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        h25.setFont(new java.awt.Font("Arial", 1, 17)); // NOI18N
         h25.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         h25.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -2484,7 +2800,7 @@ public final class estimate extends javax.swing.JInternalFrame {
             }
         });
 
-        h26.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        h26.setFont(new java.awt.Font("Arial", 1, 17)); // NOI18N
         h26.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         h26.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
@@ -2497,13 +2813,13 @@ public final class estimate extends javax.swing.JInternalFrame {
             }
         });
 
-        jLabel31.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
+        jLabel31.setFont(new java.awt.Font("Arial", 0, 15)); // NOI18N
         jLabel31.setText("Card");
 
-        jLabel32.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
+        jLabel32.setFont(new java.awt.Font("Arial", 0, 15)); // NOI18N
         jLabel32.setText("Others");
 
-        h27.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        h27.setFont(new java.awt.Font("Arial", 1, 17)); // NOI18N
         h27.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         h27.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
@@ -2516,13 +2832,49 @@ public final class estimate extends javax.swing.JInternalFrame {
             }
         });
 
-        jLabel33.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
+        jLabelLoyaltyPts.setFont(new java.awt.Font("Arial", 1, 13)); // NOI18N
+        jLabelLoyaltyPts.setText("<html><font color='#27ae60'>Loyalty Pts</font></html>");
+
+        h30.setFont(new java.awt.Font("Arial", 1, 17)); // NOI18N
+        h30.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        h30.setBackground(new java.awt.Color(212, 239, 223));
+        h30.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                h30FocusGained(evt);
+            }
+        });
+        h30.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                h30ActionPerformed(evt);
+            }
+        });
+
+        jLabelCredit.setFont(new java.awt.Font("Arial", 1, 13)); // NOI18N
+        jLabelCredit.setText("<html><font color='#c0392b'>Credit</font></html>");
+
+        h31.setFont(new java.awt.Font("Arial", 1, 17)); // NOI18N
+        h31.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        h31.setBackground(new java.awt.Color(250, 219, 216));
+        h31.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                h31FocusGained(evt);
+            }
+        });
+        h31.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                h31ActionPerformed(evt);
+            }
+        });
+
+        jLabel33.setFont(new java.awt.Font("Arial", 1, 15)); // NOI18N
         jLabel33.setText("Total");
 
-        selectbutton.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+        selectbutton.setFont(new java.awt.Font("Arial", 1, 15)); // NOI18N
         selectbutton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/selectall45.png"))); // NOI18N
         selectbutton.setMnemonic('s');
-        selectbutton.setText("Select");
+        selectbutton.setText("OK - Save Estimate");
+        selectbutton.setBackground(new java.awt.Color(39, 174, 96));
+        selectbutton.setForeground(java.awt.Color.WHITE);
         selectbutton.setToolTipText("");
         selectbutton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -2530,89 +2882,116 @@ public final class estimate extends javax.swing.JInternalFrame {
             }
         });
 
+        multiPayCloseBtn.setFont(new java.awt.Font("Arial", 1, 15));
+        multiPayCloseBtn.setText("Close");
+        multiPayCloseBtn.setBackground(new java.awt.Color(192, 57, 43));
+        multiPayCloseBtn.setForeground(java.awt.Color.WHITE);
+        multiPayCloseBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                multi_pay_mode.dispose();
+            }
+        });
+
         javax.swing.GroupLayout jPanel9Layout = new javax.swing.GroupLayout(jPanel9);
         jPanel9.setLayout(jPanel9Layout);
         jPanel9Layout.setHorizontalGroup(
                 jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(jLabel29, javax.swing.GroupLayout.PREFERRED_SIZE, 160,
+                        .addComponent(jLabel29, javax.swing.GroupLayout.DEFAULT_SIZE, 336, Short.MAX_VALUE)
+                        .addGroup(jPanel9Layout.createSequentialGroup()
+                                .addGap(10, 10, 10)
+                                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(jLabel30, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jLabel31, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jLabel32, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jLabelLoyaltyPts, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jLabelCredit, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jLabel33, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(5, 5, 5)
+                                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(h25, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(h26, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(h27, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(h30, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(h31, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(h28, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 336,
                                 javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGroup(jPanel9Layout.createSequentialGroup()
                                 .addGap(10, 10, 10)
-                                .addComponent(jLabel30, javax.swing.GroupLayout.PREFERRED_SIZE, 60,
+                                .addComponent(selectbutton, javax.swing.GroupLayout.PREFERRED_SIZE, 230,
                                         javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(0, 0, 0)
-                                .addComponent(h25, javax.swing.GroupLayout.PREFERRED_SIZE, 220,
-                                        javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGroup(jPanel9Layout.createSequentialGroup()
-                                .addGap(10, 10, 10)
-                                .addComponent(jLabel31, javax.swing.GroupLayout.PREFERRED_SIZE, 60,
-                                        javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(0, 0, 0)
-                                .addComponent(h26, javax.swing.GroupLayout.PREFERRED_SIZE, 220,
-                                        javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGroup(jPanel9Layout.createSequentialGroup()
-                                .addGap(10, 10, 10)
-                                .addComponent(jLabel32, javax.swing.GroupLayout.PREFERRED_SIZE, 60,
-                                        javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(0, 0, 0)
-                                .addComponent(h27, javax.swing.GroupLayout.PREFERRED_SIZE, 220,
-                                        javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGroup(jPanel9Layout.createSequentialGroup()
-                                .addGap(10, 10, 10)
-                                .addComponent(jLabel33, javax.swing.GroupLayout.PREFERRED_SIZE, 60,
-                                        javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGroup(jPanel9Layout.createSequentialGroup()
-                                .addGap(70, 70, 70)
-                                .addComponent(h28, javax.swing.GroupLayout.PREFERRED_SIZE, 220,
-                                        javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 310,
-                                javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGroup(jPanel9Layout.createSequentialGroup()
-                                .addGap(150, 150, 150)
-                                .addComponent(selectbutton, javax.swing.GroupLayout.PREFERRED_SIZE, 140,
+                                .addGap(6, 6, 6)
+                                .addComponent(multiPayCloseBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 80,
                                         javax.swing.GroupLayout.PREFERRED_SIZE)));
         jPanel9Layout.setVerticalGroup(
                 jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addGroup(jPanel9Layout.createSequentialGroup()
-                                .addComponent(jLabel29, javax.swing.GroupLayout.PREFERRED_SIZE, 30,
+                                .addComponent(jLabel29, javax.swing.GroupLayout.PREFERRED_SIZE, 38,
                                         javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(20, 20, 20)
-                                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addComponent(jLabel30, javax.swing.GroupLayout.PREFERRED_SIZE, 40,
+                                .addGap(8, 8, 8)
+                                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jLabel30, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addComponent(h25, javax.swing.GroupLayout.PREFERRED_SIZE, 40,
+                                        .addComponent(h25, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addComponent(jLabel31, javax.swing.GroupLayout.PREFERRED_SIZE, 40,
+                                .addGap(4, 4, 4)
+                                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jLabel31, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addComponent(h26, javax.swing.GroupLayout.PREFERRED_SIZE, 40,
+                                        .addComponent(h26, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addComponent(jLabel32, javax.swing.GroupLayout.PREFERRED_SIZE, 40,
+                                .addGap(4, 4, 4)
+                                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jLabel32, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addComponent(h27, javax.swing.GroupLayout.PREFERRED_SIZE, 40,
+                                        .addComponent(h27, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(4, 4, 4)
+                                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jLabelLoyaltyPts, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(h30, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(4, 4, 4)
+                                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jLabelCredit, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(h31, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(8, 8, 8)
+                                .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 4,
+                                        javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(8, 8, 8)
+                                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jLabel33, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(h28, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE))
                                 .addGap(10, 10, 10)
-                                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 20,
+                                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(selectbutton, javax.swing.GroupLayout.PREFERRED_SIZE, 48,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addGroup(jPanel9Layout.createSequentialGroup()
-                                                .addGap(10, 10, 10)
-                                                .addGroup(jPanel9Layout
-                                                        .createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                                        .addComponent(jLabel33, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                                40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                        .addComponent(h28, javax.swing.GroupLayout.PREFERRED_SIZE, 40,
-                                                                javax.swing.GroupLayout.PREFERRED_SIZE))))
-                                .addGap(10, 10, 10)
-                                .addComponent(selectbutton, javax.swing.GroupLayout.PREFERRED_SIZE, 50,
-                                        javax.swing.GroupLayout.PREFERRED_SIZE)));
+                                        .addComponent(multiPayCloseBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 48,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(8, 8, 8)));
 
         javax.swing.GroupLayout multi_pay_modeLayout = new javax.swing.GroupLayout(multi_pay_mode.getContentPane());
         multi_pay_mode.getContentPane().setLayout(multi_pay_modeLayout);
         multi_pay_modeLayout.setHorizontalGroup(
                 multi_pay_modeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(jPanel9, javax.swing.GroupLayout.PREFERRED_SIZE, 306,
+                        .addComponent(jPanel9, javax.swing.GroupLayout.PREFERRED_SIZE, 336,
                                 javax.swing.GroupLayout.PREFERRED_SIZE));
         multi_pay_modeLayout.setVerticalGroup(
                 multi_pay_modeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -3126,7 +3505,7 @@ public final class estimate extends javax.swing.JInternalFrame {
         getContentPane().add(jPanel2);
         jPanel2.setBounds(1010, 0, 280, 630);
 
-        jTable1.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
+        jTable1.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
                 new Object[][] {
                         { null, null, null, null },
@@ -3137,7 +3516,7 @@ public final class estimate extends javax.swing.JInternalFrame {
                 new String[] {
                         "Title 1", "Title 2", "Title 3", "Title 4"
                 }));
-        jTable1.setRowHeight(25);
+        jTable1.setRowHeight(20);
         jTable1.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
                 jTable1KeyPressed(evt);
@@ -3146,7 +3525,7 @@ public final class estimate extends javax.swing.JInternalFrame {
         jScrollPane1.setViewportView(jTable1);
 
         getContentPane().add(jScrollPane1);
-        jScrollPane1.setBounds(0, 110, 990, 350);
+        jScrollPane1.setBounds(0, 110, 1000, 350);
 
         h18.setEditable(false);
         h18.setFont(new java.awt.Font("Arial", 1, 14)); // NOI18N
@@ -3637,7 +4016,11 @@ public final class estimate extends javax.swing.JInternalFrame {
                 JOptionPane.showMessageDialog(this, "No Records Were Found!", "No Records", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            String query = "select billno from estimate where billno > '" + grn + "' order by billno limit 1";
+            String navCompanyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select billno from estimate where billno > '" + grn + "'" + navCompanyFilter
+                    + " order by billno limit 1";
             ResultSet set1 = util.doQuery(query);
             boolean selva = false;
             String search_grn = "";
@@ -3659,10 +4042,17 @@ public final class estimate extends javax.swing.JInternalFrame {
         try {
             String grn = h1.getText();
             String query;
+            String prevCompanyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String prevCompanyFilterWhere = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             if (grn.equalsIgnoreCase("--")) {
-                query = "select max(billno) from estimate";
+                query = "select max(billno) from estimate" + prevCompanyFilterWhere;
             } else {
-                query = "select billno from estimate where billno < '" + grn + "' order by billno desc limit 1";
+                query = "select billno from estimate where billno < '" + grn + "'" + prevCompanyFilter
+                        + " order by billno desc limit 1";
             }
 
             ResultSet set1 = util.doQuery(query);
@@ -3756,11 +4146,28 @@ public final class estimate extends javax.swing.JInternalFrame {
 
     private void h27ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h27ActionPerformed
         get_paid_bal_details();
+        h30.requestFocus();
+    }// GEN-LAST:event_h27ActionPerformed
+
+    private void h30FocusGained(java.awt.event.FocusEvent evt) {
+        h30.selectAll();
+    }
+
+    private void h30ActionPerformed(java.awt.event.ActionEvent evt) {
+        get_paid_bal_details();
+        h31.requestFocus();
+    }
+
+    private void h31FocusGained(java.awt.event.FocusEvent evt) {
+        h31.selectAll();
+    }
+
+    private void h31ActionPerformed(java.awt.event.ActionEvent evt) {
+        get_paid_bal_details();
         get_bal_details();
         multi_pay_mode.dispose();
         h22.requestFocus();
-
-    }// GEN-LAST:event_h27ActionPerformed
+    }
 
     private void h25ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h25ActionPerformed
         get_paid_bal_details();
@@ -3874,7 +4281,7 @@ public final class estimate extends javax.swing.JInternalFrame {
             }
 
             for (int i = 0; i < jTable1.getRowCount(); i++) {
-                jTable1.setValueAt(disp, i, 7);
+                jTable1.setValueAt(disp, i, 11);
             }
         } catch (NumberFormatException e) {
             // Handle cases where the text is not a valid number, if necessary
@@ -3996,14 +4403,21 @@ public final class estimate extends javax.swing.JInternalFrame {
                     iname_list.setLocation(l.x, l.y + jLabel28.getHeight());
                     iname_list.setSize(1281, 528);
                     iname_list.setVisible(true);
+                    String itemCompanyFilter = UserSession.hasSelectedCompany()
+                            ? " AND i.company_id='" + UserSession.getSelectedCompanyID() + "'"
+                            : "";
+                    String subCompanyFilter = UserSession.hasSelectedCompany()
+                            ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                            : "";
                     String query = "SELECT i.barcode, i.ino, i.iname, i.iname1, i.prate, i.mrp, i.rprice, i.wprice "
                             + "FROM item i "
                             + "JOIN ( "
                             + "    SELECT iname, MIN(ino) AS min_ino "
                             + "    FROM item "
-                            + "    WHERE iname LIKE '%" + h17.getText() + "%' "
+                            + "    WHERE iname LIKE '%" + h17.getText() + "%'" + subCompanyFilter + " "
                             + "    GROUP BY iname "
                             + ") sub ON i.iname = sub.iname AND i.ino = sub.min_ino "
+                            + "WHERE 1=1" + itemCompanyFilter + " "
                             + "ORDER BY i.ino "
                             + "LIMIT 500";
                     ResultSet r = util.doQuery(query);
@@ -4070,7 +4484,11 @@ public final class estimate extends javax.swing.JInternalFrame {
             get_balance();
 
             double old_bal = 0;
-            String query1 = "select sum(tot-paid) from cust_bal where cid='" + h21.getText() + "'";
+            String custBalCompanyFilter7 = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query1 = "select sum(tot-paid) from cust_bal where cid='" + h21.getText() + "'"
+                    + custBalCompanyFilter7;
             ResultSet r1;
             try {
                 r1 = util.doQuery(query1);
@@ -4100,7 +4518,11 @@ public final class estimate extends javax.swing.JInternalFrame {
                 customer_selection = true;
 
                 double old_bal = 0;
-                String query1 = "select sum(tot-paid) from cust_bal where cid='" + h21.getText() + "'";
+                String custBalCompanyFilter8 = UserSession.hasSelectedCompany()
+                        ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                        : "";
+                String query1 = "select sum(tot-paid) from cust_bal where cid='" + h21.getText() + "'"
+                        + custBalCompanyFilter8;
                 ResultSet r1;
                 try {
                     r1 = util.doQuery(query1);
@@ -4166,13 +4588,17 @@ public final class estimate extends javax.swing.JInternalFrame {
                     cname_list.setLocation(l.x, l.y + jLabel28.getHeight());
                     cname_list.setSize(1063, 528);
                     cname_list.setVisible(true);
+                    String custCompanyFilter = UserSession.hasSelectedCompany()
+                            ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                            : "";
                     String query;
                     if (pricel.getText().equals("Retail")) {
                         query = "select cid,ctype,cname,cardno,mobile,city,scode from cust where cname like '"
-                                + h24.getText() + "%' order by cname limit 300";
+                                + h24.getText() + "%'" + custCompanyFilter + " order by cname limit 300";
                     } else {
                         query = "select cid,ctype,cname,cardno,mobile,city,scode from cust where cname like '"
-                                + h24.getText() + "%' and ctype='Credit Customer' order by cname limit 300";
+                                + h24.getText() + "%' and ctype='Credit Customer'" + custCompanyFilter
+                                + " order by cname limit 300";
                     }
 
                     ResultSet r = util.doQuery(query);
@@ -4276,10 +4702,17 @@ public final class estimate extends javax.swing.JInternalFrame {
         if (jTable3.getRowCount() > 0) {
             try {
                 String selectedName = jTable3.getValueAt(jTable3.getSelectedRow(), 2).toString();
+                String companyFilter = UserSession.hasSelectedCompany()
+                        ? " AND i.company_id='" + UserSession.getSelectedCompanyID() + "'"
+                        : "";
+                String stockCompanyFilter = UserSession.hasSelectedCompany()
+                        ? " AND s.company_id='" + UserSession.getSelectedCompanyID() + "'"
+                        : "";
                 String query = "SELECT i.ino, i.iname, i.barcode, "
-                        + (CompanySettingUtil.getInstance().isDisplayBatch() ? "i.batch" : "i.size")
-                        + ", DATE_FORMAT(i.mfg_date, '%d/%m/%Y') as mfg_date, DATE_FORMAT(i.exp_date, '%d/%m/%Y') as exp_date, i.rprice, i.wprice, i.udes, i.subunit, i.subconv, (SELECT IFNULL(SUM(s.quan), 0) FROM stock s WHERE s.ino = i.ino) AS stock FROM item i WHERE i.iname = '"
-                        + selectedName + "'";
+                        + (CompanySettingUtil.getInstance().isDisplayBatch() ? "i.batch, " : "")
+                        + "IFNULL(i.size,'') as size, IFNULL(i.color,'') as color, IFNULL(i.brand,'') as brand, DATE_FORMAT(i.mfg_date, '%d/%m/%Y') as mfg_date, DATE_FORMAT(i.exp_date, '%d/%m/%Y') as exp_date, i.rprice, i.wprice, i.udes, i.subunit, i.subconv, (SELECT IFNULL(SUM(s.quan), 0) FROM stock s WHERE s.ino = i.ino"
+                        + stockCompanyFilter + ") AS stock FROM item i WHERE i.iname = '"
+                        + selectedName + "'" + companyFilter;
                 ResultSet set = util.doQuery(query);
 
                 List<Object[]> rows = new ArrayList<>();
@@ -4289,7 +4722,12 @@ public final class estimate extends javax.swing.JInternalFrame {
                     row.add(set.getString("ino"));
                     row.add(set.getString("iname"));
                     row.add(set.getString("barcode"));
-                    row.add(set.getString(CompanySettingUtil.getInstance().isDisplayBatch() ? "batch" : "size"));
+                    if (CompanySettingUtil.getInstance().isDisplayBatch()) {
+                        row.add(set.getString("batch"));
+                    }
+                    row.add(set.getString("size"));
+                    row.add(set.getString("color"));
+                    row.add(set.getString("brand"));
 
                     if (CompanySettingUtil.getInstance().isDisplayMfg()) {
                         row.add(set.getString("mfg_date"));
@@ -4321,9 +4759,13 @@ public final class estimate extends javax.swing.JInternalFrame {
                     // Multiple records found, show selection dialog
                     String selectedIno = showSelectionDialog(rows);
                     if (selectedIno != null) {
+                        String itemCompanyFilter = UserSession.hasSelectedCompany()
+                                ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                                : "";
                         query = "SELECT ino, iname, barcode,"
                                 + (CompanySettingUtil.getInstance().isDisplayBatch() ? "batch" : "size")
-                                + ",rprice, wprice, udes, subunit,subconv  FROM item WHERE ino = '" + selectedIno + "'";
+                                + ",rprice, wprice, udes, subunit,subconv  FROM item WHERE ino = '" + selectedIno + "'"
+                                + itemCompanyFilter;
                         set = util.doQuery(query);
                         valueMap.clear();
                         while (set.next()) {
@@ -4381,7 +4823,12 @@ public final class estimate extends javax.swing.JInternalFrame {
         colList.add("Item No");
         colList.add("Item Name");
         colList.add("Barcode");
-        colList.add(CompanySettingUtil.getInstance().isDisplayBatch() ? "Batch" : "Size");
+        if (CompanySettingUtil.getInstance().isDisplayBatch()) {
+            colList.add("Batch");
+        }
+        colList.add("Size");
+        colList.add("Color");
+        colList.add("Brand");
 
         if (CompanySettingUtil.getInstance().isDisplayMfg()) {
             colList.add("Mfg Date");
@@ -4531,6 +4978,8 @@ public final class estimate extends javax.swing.JInternalFrame {
     private javax.swing.JTextField h26;
     private javax.swing.JTextField h27;
     private javax.swing.JTextField h28;
+    private javax.swing.JTextField h30;
+    private javax.swing.JTextField h31;
     private javax.swing.JTextField h3;
     private javax.swing.JTextField h4;
     private javax.swing.JTextField h5;
@@ -4543,6 +4992,9 @@ public final class estimate extends javax.swing.JInternalFrame {
     private javax.swing.JDialog iname_list;
     private javax.swing.JLabel infol;
     private javax.swing.JLabel inol;
+    private javax.swing.JLabel jLabelLoyaltyPts;
+    private javax.swing.JLabel jLabelCredit;
+    private javax.swing.JButton multiPayCloseBtn;
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton3;
     private javax.swing.JButton jButton4;
@@ -4623,4 +5075,11 @@ public final class estimate extends javax.swing.JInternalFrame {
     private javax.swing.JButton viewbutton;
     private javax.swing.JButton wholesalebutton;
     // End of variables declaration//GEN-END:variables
+
+    private void hideCol(javax.swing.JTable table, int colIdx) {
+        javax.swing.table.TableColumn tc = table.getColumnModel().getColumn(colIdx);
+        tc.setMinWidth(0);
+        tc.setMaxWidth(0);
+        tc.setPreferredWidth(0);
+    }
 }

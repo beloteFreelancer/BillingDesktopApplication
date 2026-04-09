@@ -3,6 +3,9 @@ package menupack;
 import ActivationPack.AES;
 import MISPack.profit_billwise;
 import MISPack.profit_category;
+import MISPack.estimate_profit_billwise;
+import MISPack.estimate_profit_daywise;
+import MISPack.estimate_profit_itemwise;
 import MISPack.profit_daywise;
 import MISPack.profit_itemwise;
 import MISPack.profit_itemwise_barcode;
@@ -107,6 +110,7 @@ import loyaltypack.cust_points_details;
 import loyaltypack.cust_points_withdraw;
 import loyaltypack.cust_points_withdraw_list;
 import loyaltypack.points_setting;
+import loyaltypack.points_redemption;
 import packingpack.packing_entry;
 import packingpack.packing_report;
 import pospack.sales;
@@ -192,8 +196,10 @@ public final class menu_form extends javax.swing.JFrame {
 
     DataUtil util = null;
     String username = "", user_type = "", drive = "", folder = Utils.AppConfig.getAppPath(),
-            version = "Swayam software";
+            version = "Swayam Billing Software";
     int hmany = 2;
+    private javax.swing.JComboBox<String> fyCombo; // Financial Year selector on dashboard
+    private javax.swing.JComboBox<String> companyCombo; // Company selector on dashboard
 
     public String getUsername() {
         return username;
@@ -230,9 +236,13 @@ public final class menu_form extends javax.swing.JFrame {
             get_details();
             clearl.setVisible(true);
         }
-        if (!user_type.equalsIgnoreCase("Super Admin")) {
+        if (user_type.equalsIgnoreCase("Super Admin")) {
+            jMenu12.setText("Accounts");
+            jMenu12.setVisible(true);
+        } else {
             jMenu20.setVisible(false);
             jMenu9.setVisible(false);
+            jMenu12.setVisible(false);
         }
         jMenu10.setVisible(true); // Always show Sales menu
     }
@@ -260,59 +270,92 @@ public final class menu_form extends javax.swing.JFrame {
 
             // version details
             final String secretKey = "!@#$%^&*()_+;.,|";
-            String cname = "", what_version = "", date = "";
-            String query = "select cname,vname,dat from setting_user";
+            String cname = "", what_version = "", date = "", encDate = "";
+            String query = "select cname,vname,user_valid_date,dat from setting_user";
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 cname = r.getString(1);
                 what_version = r.getString(2);
-                date = r.getString(3);
+                String encValidDate = r.getString(3);
+                encDate = r.getString(4);
+                // Decrypt user_valid_date
+                if (encValidDate != null && !encValidDate.trim().isEmpty()) {
+                    String decrypted = AES.decrypt(encValidDate, secretKey);
+                    if (decrypted != null && !decrypted.trim().isEmpty()) {
+                        try {
+                            java.util.Date parsed = new java.text.SimpleDateFormat("yyyy-MM-dd").parse(decrypted);
+                            date = new java.text.SimpleDateFormat("dd/MM/yyyy").format(parsed);
+                        } catch (Exception e) {
+                            date = decrypted;
+                        }
+                    }
+                }
             }
             what_version = AES.decrypt(what_version, secretKey);
             cname = AES.decrypt(cname, secretKey);
-            
+            // Use user_valid_date if available, otherwise decrypt dat as fallback
+            if (date == null || date.trim().isEmpty()) {
+                String decryptedDate = AES.decrypt(encDate, secretKey);
+                if (decryptedDate != null && !decryptedDate.trim().isEmpty()) {
+                    date = decryptedDate;
+                } else {
+                    date = "N/A";
+                }
+            }
+
             // Set version label and activation button state
             if (what_version != null && !what_version.trim().isEmpty()) {
-                versionl.setText("🏆 " + what_version + " Edition");
-                
+                versionl.setText(" Licence Expiry Date: " + date);
+
                 // Check if it's a full version
-                if (what_version.toLowerCase().contains("full") || what_version.toLowerCase().contains("professional") || what_version.toLowerCase().contains("premium")) {
+                if (what_version.toLowerCase().contains("full") || what_version.toLowerCase().contains("professional")
+                        || what_version.toLowerCase().contains("premium")) {
                     // Already activated - change button appearance
                     activatel.setText("✓ Full Version Activated");
                     activatel.setToolTipText("Full version is already activated");
                     activatel.setVisible(true);
                 } else {
                     // Trial version - show activation button
-                    activatel.setText("⚡ Activate Full Version");
+                    activatel.setText(" Activate Full Version");
                     activatel.setToolTipText("Click here to activate full version");
                     activatel.setVisible(true);
                 }
             } else {
-                versionl.setText("🏆 Swayam Professional Edition");
+                versionl.setText(" Licence Expiry Date: " + date);
                 activatel.setText("⚡ Activate Full Version");
                 activatel.setToolTipText("Click here to activate full version");
                 activatel.setVisible(true);
             }
-            
+
             if (cname != null && !cname.trim().isEmpty()) {
-                // Replace any "BBS" references with "Swayam"
-                cname = cname.replace("BBS", "Swayam").replace("bbs", "Swayam");
                 cnamel.setText(cname + "  ");
             }
 
             // version details ends
 
             String shopName = null;
-            query = "select cname, hmany from setting_bill";
-            r = util.doQuery(query);
-            while (r.next()) {
-                shopName = r.getString(1);
-                hmany = r.getInt(2);
+            if (UserSession.hasSelectedCompany()) {
+                query = "SELECT cname, hmany, privacy_mode FROM company WHERE companyID = ?";
+                try (java.sql.PreparedStatement ps = util.getConnection().prepareStatement(query)) {
+                    ps.setString(1, UserSession.getSelectedCompanyID());
+                    r = ps.executeQuery();
+                    if (r.next()) {
+                        shopName = r.getString(1);
+                        hmany = r.getInt(2);
+                        UserSession.setPrivacyMode("Yes".equalsIgnoreCase(r.getString("privacy_mode")));
+                    }
+                }
+            } else {
+                query = "select cname, hmany, privacy_mode from company ORDER BY cname LIMIT 1";
+                r = util.doQuery(query);
+                if (r.next()) {
+                    shopName = r.getString(1);
+                    hmany = r.getInt(2);
+                    UserSession.setPrivacyMode("Yes".equalsIgnoreCase(r.getString("privacy_mode")));
+                }
             }
 
             if (shopName != null && !shopName.trim().isEmpty() && !shopName.trim().equals(".")) {
-                // Replace any "BBS" references with "Swayam"
-                shopName = shopName.replace("BBS", "Swayam").replace("bbs", "Swayam");
                 cnamel.setText(shopName + "  ");
             }
         } catch (IOException | ClassNotFoundException | SQLException e) {
@@ -331,6 +374,126 @@ public final class menu_form extends javax.swing.JFrame {
             connection = "No";
         }
         return connection;
+    }
+
+    /**
+     * Checks if Privacy Mode is enabled. If so, prompts for the super admin
+     * (License Owner) password. Returns true if access is allowed.
+     */
+    private int privacyPasswordFailCount = 0;
+
+    private boolean checkPrivacyMode() {
+        if (!UserSession.isPrivacyMode()) {
+            return true;
+        }
+        javax.swing.JPasswordField passwordField = new javax.swing.JPasswordField();
+        int option = javax.swing.JOptionPane.showConfirmDialog(this, passwordField,
+                "Privacy Mode - Enter Super Admin Password",
+                javax.swing.JOptionPane.OK_CANCEL_OPTION, javax.swing.JOptionPane.PLAIN_MESSAGE);
+        if (option != javax.swing.JOptionPane.OK_OPTION) {
+            return false;
+        }
+        String enteredPassword = new String(passwordField.getPassword());
+        if (enteredPassword.isEmpty()) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Password cannot be empty.", "Error",
+                    javax.swing.JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+        try {
+            java.sql.PreparedStatement ps = util.getConnection().prepareStatement(
+                    "SELECT pass FROM users WHERE utype='License Owner' LIMIT 1");
+            java.sql.ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                String storedHash = rs.getString("pass");
+                if (Utils.PasswordUtils.verifyPassword(enteredPassword, storedHash)) {
+                    privacyPasswordFailCount = 0;
+                    return true;
+                }
+            }
+            privacyPasswordFailCount++;
+            javax.swing.JOptionPane.showMessageDialog(this, "Incorrect password.", "Access Denied",
+                    javax.swing.JOptionPane.ERROR_MESSAGE);
+            if (privacyPasswordFailCount >= 3) {
+                handlePrivacyLockout();
+            }
+            return false;
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Called after 3 failed privacy password attempts.
+     * Backs up the DB to privacybackupFile.sql, then empties all sales/purchase
+     * tables.
+     */
+    private void handlePrivacyLockout() {
+        try {
+            // 1. Read DB config
+            java.util.Properties dbProps = com.selrom.db.Database.getInstance().loadConfig();
+            String dbUrl = dbProps.getProperty("db.url");
+            String dbUser = dbProps.getProperty("db.username");
+            String dbPass = dbProps.getProperty("db.password");
+
+            // Extract DB name from JDBC URL e.g.
+            // jdbc:mysql://localhost:3306/swayam_main?...
+            String dbName = dbUrl;
+            int slashIdx = dbUrl.lastIndexOf('/');
+            if (slashIdx >= 0) {
+                dbName = dbUrl.substring(slashIdx + 1);
+                int qIdx = dbName.indexOf('?');
+                if (qIdx >= 0)
+                    dbName = dbName.substring(0, qIdx);
+            }
+
+            // 2. Backup entire database using mysqldump via ProcessBuilder
+            String backupFile = Utils.AppConfig.getAppPath() + "/privacybackupFile.sql";
+            ProcessBuilder pb = new ProcessBuilder(
+                    "mysqldump",
+                    "-u" + dbUser,
+                    "-p" + dbPass,
+                    "--result-file=" + backupFile,
+                    dbName);
+            pb.redirectErrorStream(true);
+            Process p = pb.start();
+            int exitCode = p.waitFor();
+            if (exitCode != 0) {
+                javax.swing.JOptionPane.showMessageDialog(this,
+                        "Database backup failed (exit code " + exitCode + "). Aborting lockout.",
+                        "Privacy Lockout Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // 3. Truncate (empty) all sales, purchase and stock related tables
+            String[] tables = {
+                    "sales_items", "sales_hold", "alter_sales_delete", "alter_sales", "sales",
+                    "purchase_items", "purchase",
+                    "po_items", "po_entry",
+                    "stock_entry_items", "stock_entry", "stock_alter", "stock",
+                    "cust_pay", "ven_pay"
+            };
+            java.sql.Connection conn = util.getConnection();
+            java.sql.Statement st = conn.createStatement();
+            st.executeUpdate("SET FOREIGN_KEY_CHECKS = 0");
+            for (String tbl : tables) {
+                try {
+                    st.executeUpdate("TRUNCATE TABLE `" + tbl + "`");
+                } catch (Exception ex) {
+                    System.out.println("Error truncating table " + tbl + ": " + ex.getMessage());
+                }
+            }
+            st.executeUpdate("SET FOREIGN_KEY_CHECKS = 1");
+            st.close();
+
+            // Refresh the dashboard to reflect emptied tables
+            get_details();
+
+            System.out.println(
+                    "Privacy lockout: Database backed up as " + backupFile + " and all sales/purchase tables emptied.");
+        } catch (Exception ex) {
+            System.out.println("Privacy lockout failed: " + ex.getMessage());
+        }
     }
 
     final void button_short() {
@@ -359,12 +522,40 @@ public final class menu_form extends javax.swing.JFrame {
 
     final void get_details() {
         try {
-            int scount = 0;
-            double sale = 0;
+            // Resolve FY date range from UserSession (set by FY combo)
+            String fyStart = UserSession.getFinancialYearStart();
+            String fyEnd = UserSession.getFinancialYearEnd();
+            String fyLabel = UserSession.getFinancialYearLabel();
+
+            // Fallback: use today if FY not yet initialised
             Date d = new Date();
             SimpleDateFormat g = new SimpleDateFormat("yyyy/MM/dd");
             String today = g.format(d);
-            String query = "select sum(net),count(billno) from sales where dat='" + today + "'";
+            if (fyStart == null || fyEnd == null) {
+                fyStart = today;
+                fyEnd = today;
+                fyLabel = "Today";
+            }
+
+            // Update tile sub-labels with selected period
+            String companyCtx = UserSession.hasSelectedCompany()
+                    ? " [" + UserSession.getSelectedCompanyName() + "]"
+                    : "";
+            jLabel1.setText(" 📅 " + fyLabel + " – Business Overview" + companyCtx);
+            jLabel13.setText("💰 Sales Amount – " + fyLabel);
+            jLabel9.setText("📄 Sales Bills – " + fyLabel);
+            jLabel7.setText("📋 Purchase Entries – " + fyLabel);
+            jLabel16.setText(" Purchase Orders – " + fyLabel);
+            jLabel25.setText("💳 Cust Payments – " + fyLabel);
+
+            String companyClause = UserSession.hasSelectedCompany()
+                    ? " AND company_id = '" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+
+            int scount = 0;
+            double sale = 0;
+            String query = "select sum(net),count(billno) from sales where dat between '" + fyStart + "' and '" + fyEnd
+                    + "'" + companyClause;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 sale = r.getDouble(1);
@@ -375,7 +566,8 @@ public final class menu_form extends javax.swing.JFrame {
             jLabel8.setText("" + scount);
 
             int purchase = 0;
-            query = "select count(grn) from purchase where dat='" + today + "'";
+            query = "select count(grn) from purchase where dat between '" + fyStart + "' and '" + fyEnd + "'"
+                    + companyClause;
             r = util.doQuery(query);
             while (r.next()) {
                 purchase = r.getInt(1);
@@ -383,7 +575,8 @@ public final class menu_form extends javax.swing.JFrame {
             jLabel6.setText("" + purchase);
 
             int po = 0;
-            query = "select count(grn) from po_entry where dat='" + today + "'";
+            query = "select count(grn) from po_entry where dat between '" + fyStart + "' and '" + fyEnd + "'"
+                    + companyClause;
             r = util.doQuery(query);
             while (r.next()) {
                 po = r.getInt(1);
@@ -391,7 +584,8 @@ public final class menu_form extends javax.swing.JFrame {
             jLabel15.setText("" + po);
 
             double pay = 0;
-            query = "select sum(net) from cust_pay where dat='" + today + "'";
+            query = "select sum(net) from cust_pay where dat between '" + fyStart + "' and '" + fyEnd + "'"
+                    + companyClause;
             r = util.doQuery(query);
             while (r.next()) {
                 pay = r.getDouble(1);
@@ -400,7 +594,7 @@ public final class menu_form extends javax.swing.JFrame {
             jLabel10.setText(pay1);
 
             double mrp_value = 0;
-            query = "select sum(prate*quan) from stock where quan >0";
+            query = "select sum(prate*quan) from stock where quan >0" + companyClause;
             r = util.doQuery(query);
             while (r.next()) {
                 mrp_value = r.getDouble(1);
@@ -409,7 +603,7 @@ public final class menu_form extends javax.swing.JFrame {
             jLabel4.setText(mrp2);
 
             int items = 0;
-            query = "select count(ino) from item";
+            query = "select count(ino) from item" + companyClause.replace(" AND company_id", " WHERE company_id");
             r = util.doQuery(query);
             while (r.next()) {
                 items = r.getInt(1);
@@ -417,7 +611,8 @@ public final class menu_form extends javax.swing.JFrame {
             jLabel19.setText("" + items);
 
             int minstock = 0;
-            query = "select distinct count(a.ino) from stock a,item b where a.ino=b.ino and quan<minstock";
+            query = "select distinct count(a.ino) from stock a,item b where a.ino=b.ino and quan<minstock"
+                    + companyClause.replace(" AND company_id", " AND a.company_id");
             r = util.doQuery(query);
             while (r.next()) {
                 minstock = r.getInt(1);
@@ -425,7 +620,8 @@ public final class menu_form extends javax.swing.JFrame {
             jLabel17.setText("" + minstock);
 
             int maxstock = 0;
-            query = "select distinct count(a.ino) from stock a,item b where a.ino=b.ino and quan>maxstock";
+            query = "select distinct count(a.ino) from stock a,item b where a.ino=b.ino and quan>maxstock"
+                    + companyClause.replace(" AND company_id", " AND a.company_id");
             r = util.doQuery(query);
             while (r.next()) {
                 maxstock = r.getInt(1);
@@ -433,7 +629,7 @@ public final class menu_form extends javax.swing.JFrame {
             jLabel21.setText("" + maxstock);
 
             int nillstock = 0;
-            query = "select distinct count(ino) from stock where quan<=0";
+            query = "select distinct count(ino) from stock where quan<=0" + companyClause;
             r = util.doQuery(query);
             while (r.next()) {
                 nillstock = r.getInt(1);
@@ -441,7 +637,10 @@ public final class menu_form extends javax.swing.JFrame {
             jLabel2.setText("" + nillstock);
 
             double cust_bal = 0;
-            query = "select sum(tot-paid) from cust_bal";
+            query = "select sum(tot-paid) from cust_bal"
+                    + (UserSession.hasSelectedCompany()
+                            ? " WHERE IFNULL(company_id,'') = '" + UserSession.getSelectedCompanyID() + "'"
+                            : "");
             r = util.doQuery(query);
             while (r.next()) {
                 cust_bal = r.getDouble(1);
@@ -450,7 +649,10 @@ public final class menu_form extends javax.swing.JFrame {
             jLabel24.setText(cust_bal2);
 
             double ven_bal = 0;
-            query = "select sum(tot-paid) from ven_bal";
+            query = "select sum(tot-paid) from ven_bal"
+                    + (UserSession.hasSelectedCompany()
+                            ? " WHERE IFNULL(company_id,'') = '" + UserSession.getSelectedCompanyID() + "'"
+                            : "");
             r = util.doQuery(query);
             while (r.next()) {
                 ven_bal = r.getDouble(1);
@@ -467,7 +669,10 @@ public final class menu_form extends javax.swing.JFrame {
             jLabel29.setText("" + vouchers);
 
             int cust_over_due = 0;
-            query = "select count(billno) from cust_bal where ddate < '" + today + "' and tot-paid>0";
+            query = "select count(billno) from cust_bal where ddate < '" + today + "' and tot-paid>0"
+                    + (UserSession.hasSelectedCompany()
+                            ? " AND IFNULL(company_id,'') = '" + UserSession.getSelectedCompanyID() + "'"
+                            : "");
             r = util.doQuery(query);
             while (r.next()) {
                 cust_over_due = r.getInt(1);
@@ -475,7 +680,10 @@ public final class menu_form extends javax.swing.JFrame {
             jLabel37.setText("" + cust_over_due);
 
             int ven_over_due = 0;
-            query = "select count(billno) from ven_bal where ddate < '" + today + "' and tot-paid>0";
+            query = "select count(billno) from ven_bal where ddate < '" + today + "' and tot-paid>0"
+                    + (UserSession.hasSelectedCompany()
+                            ? " AND IFNULL(company_id,'') = '" + UserSession.getSelectedCompanyID() + "'"
+                            : "");
             r = util.doQuery(query);
             while (r.next()) {
                 ven_over_due = r.getInt(1);
@@ -623,6 +831,8 @@ public final class menu_form extends javax.swing.JFrame {
 
         // ACCOUNTS
         if (pm.hasPermission("Accounts")) {
+            System.out.println("Accounts permission granted");
+            jMenu12.setText("Accounts");
             jMenu12.setVisible(true);
             cashbookbutton.setVisible(true);
             jPanel16.setVisible(true); // Vouchers Tile
@@ -725,17 +935,287 @@ public final class menu_form extends javax.swing.JFrame {
 
     public menu_form() {
         initComponents();
+        // Auto-apply dark theme to every JInternalFrame opened on the desktop
+        jDesktopPane1.addContainerListener(new java.awt.event.ContainerAdapter() {
+            @Override
+            public void componentAdded(java.awt.event.ContainerEvent e) {
+                if (e.getChild() instanceof javax.swing.JInternalFrame) {
+                    javax.swing.JInternalFrame frame = (javax.swing.JInternalFrame) e.getChild();
+                    Utils.ThemeManager.applyTheme((java.awt.Container) frame.getContentPane());
+                }
+            }
+
+            @Override
+            public void componentRemoved(java.awt.event.ContainerEvent e) {
+                if (e.getChild() instanceof javax.swing.JInternalFrame) {
+                    get_details();
+                }
+            }
+        });
         util = new DataUtil();
-        get_defauls();
         button_short();
+        initFinancialYear();
+        get_defauls();
         versionl.setVisible(true);
         activatel.setVisible(true);
+    }
+
+    /** Builds the date-filter combo and places it next to the company name. */
+    private void initFinancialYear() {
+        java.util.List<String> items = new java.util.ArrayList<>();
+        // Quick presets
+        items.add("Today");
+        items.add("Yesterday");
+        items.add("This Month");
+        items.add("Last Month");
+        // Financial years (2018-19 … current+1)
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        int year = cal.get(java.util.Calendar.YEAR);
+        int month = cal.get(java.util.Calendar.MONTH);
+        int currentFYStart = (month >= 3) ? year : year - 1;
+        for (int y = 2018; y <= currentFYStart + 1; y++) {
+            items.add(y + "-" + String.format("%02d", (y + 1) % 100));
+        }
+
+        fyCombo = new javax.swing.JComboBox<>(items.toArray(new String[0]));
+        fyCombo.setSelectedItem("Today"); // default = Today
+        fyCombo.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
+        fyCombo.setForeground(new java.awt.Color(115, 15, 158));
+        fyCombo.setBackground(java.awt.Color.WHITE);
+        fyCombo.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        fyCombo.setToolTipText("Select Period / Financial Year");
+        fyCombo.setBounds(950, 10, 155, 34);
+
+        jPanel4.add(fyCombo);
+
+        // Initialise session with Today
+        applyFilterSession("Today");
+
+        fyCombo.addActionListener(e -> {
+            String selected = (String) fyCombo.getSelectedItem();
+            if (selected != null) {
+                applyFilterSession(selected);
+                get_details();
+            }
+        });
+
+        // ── Company combobox ─────────────────────────────────────────────────
+        companyCombo = new javax.swing.JComboBox<>();
+        companyCombo.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 13));
+        companyCombo.setForeground(new java.awt.Color(115, 15, 158));
+        companyCombo.setBackground(java.awt.Color.WHITE);
+        companyCombo.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        companyCombo.setToolTipText("Select Company");
+        try {
+            java.sql.ResultSet crs = util.doQuery("SELECT companyID, cname FROM company ORDER BY cname");
+            while (crs.next()) {
+                companyCombo.addItem(crs.getString("companyID") + " - " + crs.getString("cname"));
+            }
+        } catch (Exception ignored) {
+        }
+        // Restore previously selected company, or default to first
+        if (UserSession.hasSelectedCompany()) {
+            String prevId = UserSession.getSelectedCompanyID();
+            boolean found = false;
+            for (int i = 0; i < companyCombo.getItemCount(); i++) {
+                String item = companyCombo.getItemAt(i);
+                if (item != null && item.startsWith(prevId + " - ")) {
+                    companyCombo.setSelectedIndex(i);
+                    found = true;
+                    break;
+                }
+            }
+            if (!found && companyCombo.getItemCount() > 0) {
+                companyCombo.setSelectedIndex(0);
+            }
+        } else {
+            if (companyCombo.getItemCount() > 0) {
+                companyCombo.setSelectedIndex(0);
+            }
+        }
+        companyCombo.setBounds(1154, 10, 200, 34);
+        jPanel4.add(companyCombo);
+
+        companyCombo.addActionListener(e -> {
+            String sel = (String) companyCombo.getSelectedItem();
+            if (sel != null) {
+                // Items are stored as "companyID - cname"
+                int dashIdx = sel.indexOf(" - ");
+                String cid = (dashIdx > 0) ? sel.substring(0, dashIdx).trim() : sel;
+                String cname = (dashIdx > 0) ? sel.substring(dashIdx + 3).trim() : sel;
+                UserSession.setSelectedCompany(cid, cname);
+            }
+            get_defauls();
+            get_details();
+        });
+
+        // Set company in UserSession only if not already set
+        if (!UserSession.hasSelectedCompany() && companyCombo.getItemCount() > 0) {
+            String sel = (String) companyCombo.getSelectedItem();
+            if (sel != null) {
+                int dashIdx = sel.indexOf(" - ");
+                String cid = (dashIdx > 0) ? sel.substring(0, dashIdx).trim() : sel;
+                String cname = (dashIdx > 0) ? sel.substring(dashIdx + 3).trim() : sel;
+                UserSession.setSelectedCompany(cid, cname);
+            }
+        }
+
+        // ── Responsive layout: reposition tiles whenever jPanel4 is resized ──
+        jPanel4.addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentResized(java.awt.event.ComponentEvent e) {
+                layoutDashboard();
+            }
+        });
+        // Trigger initial layout once the frame is visible and sized
+        javax.swing.SwingUtilities.invokeLater(() -> layoutDashboard());
+    }
+
+    /**
+     * Proportionally repositions all dashboard components in jPanel4 based on
+     * the panel's current width/height. Called on every window resize.
+     */
+    private void layoutDashboard() {
+        int w = jPanel4.getWidth();
+        int h = jPanel4.getHeight();
+        if (w < 600 || h < 300)
+            return;
+
+        // ── Proportional geometry ────────────────────────────────────────
+        // Base design was 1360 px wide with secWidth = 410 per section
+        final int INNER_GAP = 10; // gap between the two small tiles in a section
+        final int SEC_GAP = 20; // gap between the 3 major sections
+        final int TILE_H = 90; // KPI tile height
+        final int FOOTER_H = 110; // footer panel height
+        final int L_MARGIN = 20; // left margin
+
+        // Keep proportions: 3 × 410 = 1230 out of 1360 is section space
+        int secWidth = Math.max(150, w * 410 / 1360);
+        int smallW = (secWidth - INNER_GAP) / 2;
+
+        int sec1X = L_MARGIN;
+        int sec2X = sec1X + secWidth + SEC_GAP;
+        int sec3X = sec2X + secWidth + SEC_GAP;
+
+        // ── Row y positions ──────────────────────────────────────────────
+        int row1Y = 100;
+        int row2Y = row1Y + TILE_H + 10;
+        int row3Y = row2Y + TILE_H + 10;
+        int infoY = row3Y + TILE_H + 20;
+        int footerY = Math.max(infoY + 100, h - FOOTER_H);
+
+        // ── FY and Company combos (right-aligned in header) ──────────────
+        int compW = 200;
+        int fyW = 155;
+        int compX = w - compW - 10;
+        int fyX = compX - fyW - 5;
+        if (fyCombo != null)
+            fyCombo.setBounds(fyX, 10, fyW, 34);
+        if (companyCombo != null)
+            companyCombo.setBounds(compX, 10, compW, 34);
+
+        // ── Header labels ────────────────────────────────────────────────
+        cnamel.setBounds(L_MARGIN, 5, fyX - L_MARGIN - 6, 50);
+        jLabel1.setBounds(sec1X, 55, secWidth, 35);
+        jLabel41.setBounds(sec2X, row1Y - 30, secWidth, 25);
+        jLabel43.setBounds(sec3X, row1Y - 30, secWidth, 25);
+
+        // ── Row 1: large tiles ───────────────────────────────────────────
+        jPanel1.setBounds(sec1X, row1Y, secWidth, TILE_H);
+        jPanel7.setBounds(sec2X, row1Y, secWidth, TILE_H);
+        jPanel13.setBounds(sec3X, row1Y, secWidth, TILE_H);
+        // Keep value labels filling the tile width
+        jLabel12.setBounds(20, 18, secWidth - 30, 40);
+        jLabel4.setBounds(15, 15, secWidth - 25, 45);
+        jLabel24.setBounds(15, 15, secWidth - 25, 45);
+
+        // ── Row 2: small tiles ───────────────────────────────────────────
+        jPanel2.setBounds(sec1X, row2Y, smallW, TILE_H);
+        jPanel3.setBounds(sec1X + smallW + INNER_GAP, row2Y, smallW, TILE_H);
+        jPanel8.setBounds(sec2X, row2Y, smallW, TILE_H);
+        jPanel9.setBounds(sec2X + smallW + INNER_GAP, row2Y, smallW, TILE_H);
+        jPanel15.setBounds(sec3X, row2Y, smallW, TILE_H);
+        jPanel16.setBounds(sec3X + smallW + INNER_GAP, row2Y, smallW, TILE_H);
+
+        // ── Row 3: small tiles ───────────────────────────────────────────
+        jPanel5.setBounds(sec1X, row3Y, smallW, TILE_H);
+        jPanel6.setBounds(sec1X + smallW + INNER_GAP, row3Y, smallW, TILE_H);
+        jPanel10.setBounds(sec2X, row3Y, smallW, TILE_H);
+        jPanel11.setBounds(sec2X + smallW + INNER_GAP, row3Y, smallW, TILE_H);
+        jPanel17.setBounds(sec3X, row3Y, smallW, TILE_H);
+        jPanel14.setBounds(sec3X + smallW + INNER_GAP, row3Y, smallW, TILE_H);
+
+        // ── System info labels ───────────────────────────────────────────
+        jLabel32.setBounds(sec1X, infoY, 200, 30);
+        jLabel33.setBounds(sec1X + 205, infoY, 210, 30);
+        jLabel30.setBounds(sec1X, infoY + 32, 200, 30);
+        jLabel34.setBounds(sec1X + 205, infoY + 32, 210, 30);
+        jLabel31.setBounds(sec1X, infoY + 64, 200, 30);
+        jLabel35.setBounds(sec1X + 205, infoY + 64, 210, 30);
+        dayclose.setBounds(sec2X, infoY + 32, 140, 30);
+        clearl.setBounds(sec2X + 150, infoY + 32, 120, 30);
+
+        // ── Footer panel (full-width, anchored to panel bottom) ──────────
+        jPanel12.setBounds(0, footerY, w, FOOTER_H);
+        jLabel26.setBounds(30, 20, (int) (w * 0.52), 35);
+        jLabel42.setBounds(30, 55, (int) (w * 0.68), 25);
+        versionl.setBounds((int) (w * 0.55), 18, (int) (w * 0.40), 30);
+        activatel.setBounds(w - 240, 50, 220, 32);
+
+        jPanel4.revalidate();
+        jPanel4.repaint();
+    }
+
+    /**
+     * Resolves the selected filter item into a start/end date range and stores it
+     * in UserSession.
+     */
+    private void applyFilterSession(String selected) {
+        java.text.SimpleDateFormat fmt = new java.text.SimpleDateFormat("yyyy/MM/dd");
+        java.util.Calendar c = java.util.Calendar.getInstance();
+        String start, end, label;
+        switch (selected) {
+            case "Today":
+                start = end = fmt.format(c.getTime());
+                label = "Today";
+                break;
+            case "Yesterday":
+                c.add(java.util.Calendar.DAY_OF_MONTH, -1);
+                start = end = fmt.format(c.getTime());
+                label = "Yesterday";
+                break;
+            case "This Month":
+                c.set(java.util.Calendar.DAY_OF_MONTH, 1);
+                start = fmt.format(c.getTime());
+                c.set(java.util.Calendar.DAY_OF_MONTH, c.getActualMaximum(java.util.Calendar.DAY_OF_MONTH));
+                end = fmt.format(c.getTime());
+                label = "This Month";
+                break;
+            case "Last Month":
+                c.add(java.util.Calendar.MONTH, -1);
+                c.set(java.util.Calendar.DAY_OF_MONTH, 1);
+                start = fmt.format(c.getTime());
+                c.set(java.util.Calendar.DAY_OF_MONTH, c.getActualMaximum(java.util.Calendar.DAY_OF_MONTH));
+                end = fmt.format(c.getTime());
+                label = "Last Month";
+                break;
+            default:
+                // FY format "YYYY-YY"
+                int startYear = Integer.parseInt(selected.split("-")[0]);
+                start = startYear + "/04/01";
+                end = (startYear + 1) + "/03/31";
+                label = selected;
+        }
+        UserSession.setFinancialYear(label, start, end);
     }
 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated
     // Code">//GEN-BEGIN:initComponents
     private void initComponents() {
+
+        // Apply comprehensive dark purple theme to all new Swing components
+        Utils.ThemeManager.applyGlobalUIManager();
 
         jMenuItem164 = new javax.swing.JMenuItem();
         jDesktopPane1 = new javax.swing.JDesktopPane();
@@ -814,7 +1294,24 @@ public final class menu_form extends javax.swing.JFrame {
         jLabel38 = new javax.swing.JLabel();
         jLabel41 = new javax.swing.JLabel();
         jLabel43 = new javax.swing.JLabel();
-        jMenuBar1 = new javax.swing.JMenuBar();
+        jMenuBar1 = new javax.swing.JMenuBar() {
+            @Override
+            protected void paintComponent(java.awt.Graphics g) {
+                java.awt.Graphics2D g2d = (java.awt.Graphics2D) g.create();
+                g2d.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING,
+                        java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                // Deep purple → dark blue horizontal gradient
+                java.awt.GradientPaint gradient = new java.awt.GradientPaint(
+                        0, 0, new java.awt.Color(50, 8, 100),
+                        getWidth(), 0, new java.awt.Color(15, 45, 110));
+                g2d.setPaint(gradient);
+                g2d.fillRect(0, 0, getWidth(), getHeight());
+                // Bright purple bottom accent line
+                g2d.setColor(new java.awt.Color(140, 40, 195, 220));
+                g2d.fillRect(0, getHeight() - 3, getWidth(), 3);
+                g2d.dispose();
+            }
+        };
         jMenu10 = new javax.swing.JMenu();
         jSeparator85 = new javax.swing.JPopupMenu.Separator();
         jMenuItem38 = new javax.swing.JMenuItem();
@@ -1033,6 +1530,7 @@ public final class menu_form extends javax.swing.JFrame {
         jSeparator115 = new javax.swing.JPopupMenu.Separator();
         jMenuItem83 = new javax.swing.JMenuItem();
         jMenuItem89 = new javax.swing.JMenuItem();
+        jMenuItemRedemption = new javax.swing.JMenuItem();
         jMenuItem82 = new javax.swing.JMenuItem();
         jSeparator116 = new javax.swing.JPopupMenu.Separator();
         jMenuItem90 = new javax.swing.JMenuItem();
@@ -1044,6 +1542,9 @@ public final class menu_form extends javax.swing.JFrame {
         jMenuItem160 = new javax.swing.JMenuItem();
         jMenuItem107 = new javax.swing.JMenuItem();
         jMenuItem110 = new javax.swing.JMenuItem();
+        jMenuItem166 = new javax.swing.JMenuItem();
+        jMenuItem167 = new javax.swing.JMenuItem();
+        jMenuItem168 = new javax.swing.JMenuItem();
         jSeparator122 = new javax.swing.JPopupMenu.Separator();
         jMenuItem111 = new javax.swing.JMenuItem();
         jMenuItem112 = new javax.swing.JMenuItem();
@@ -1066,6 +1567,7 @@ public final class menu_form extends javax.swing.JFrame {
         jSeparator78 = new javax.swing.JPopupMenu.Separator();
         jMenuItem4 = new javax.swing.JMenuItem();
         jMenuItem40 = new javax.swing.JMenuItem();
+        jMenuItem165 = new javax.swing.JMenuItem();
         jSeparator77 = new javax.swing.JPopupMenu.Separator();
         jMenu8 = new javax.swing.JMenu();
         jSeparator81 = new javax.swing.JPopupMenu.Separator();
@@ -1074,7 +1576,7 @@ public final class menu_form extends javax.swing.JFrame {
         jSeparator82 = new javax.swing.JPopupMenu.Separator();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        getContentPane().setLayout(null);
+        getContentPane().setLayout(new java.awt.BorderLayout());
 
         // Modern Material Design Toolbar with gradient and rounded corners
         jToolBar1 = new javax.swing.JToolBar() {
@@ -1094,9 +1596,9 @@ public final class menu_form extends javax.swing.JFrame {
                 }
 
                 // Professional gradient background
-                java.awt.Color color1 = new java.awt.Color(25, 118, 210, 255); // Material Blue 600
-                java.awt.Color color2 = new java.awt.Color(21, 101, 192, 255); // Material Blue 700
-                java.awt.Color color3 = new java.awt.Color(30, 136, 229, 255); // Material Blue 500
+                java.awt.Color color1 = new java.awt.Color(115, 15, 158, 255); // Deep Purple (matches login accent)
+                java.awt.Color color2 = new java.awt.Color(22, 100, 180, 255); // Vivid Blue (matches login CTA)
+                java.awt.Color color3 = new java.awt.Color(140, 40, 195, 255); // Bright Purple (top highlight)
 
                 java.awt.GradientPaint gradient = new java.awt.GradientPaint(
                         0, 0, color3, 0, getHeight(), color2);
@@ -1161,7 +1663,7 @@ public final class menu_form extends javax.swing.JFrame {
         salesbutton.setForeground(new java.awt.Color(255, 255, 255, 240));
         salesbutton.setIcon(ColorConstants.loadIcon("/icons/pos45.png"));
         salesbutton.setMnemonic('s');
-        salesbutton.setText("💰 Sales");
+        salesbutton.setText("Sales");
         salesbutton.setToolTipText("Open Sales Module (Alt+S)");
         salesbutton.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         salesbutton.setFocusable(false);
@@ -2085,7 +2587,7 @@ public final class menu_form extends javax.swing.JFrame {
         // Material Design Header with Professional Typography
         jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 20)); // Clean, professional font - reduced for better fit
         jLabel1.setForeground(new java.awt.Color(33, 33, 33)); // Material Design dark grey
-        jLabel1.setText("📊 Today's Business Overview"); // More professional icon
+        jLabel1.setText(" Today's Business Overview"); // More professional icon
         jLabel1.setBorder(javax.swing.BorderFactory.createCompoundBorder(
                 javax.swing.BorderFactory.createMatteBorder(0, 0, 2, 0, new java.awt.Color(33, 150, 243, 120)), // Material
                                                                                                                 // Blue
@@ -2168,7 +2670,7 @@ public final class menu_form extends javax.swing.JFrame {
 
         jLabel16.setFont(new java.awt.Font("Segoe UI", 0, 13)); // Clean secondary text
         jLabel16.setForeground(new java.awt.Color(255, 255, 255, 190)); // Slightly more opaque for orange background
-        jLabel16.setText("📦 Purchase Orders");
+        jLabel16.setText(" Purchase Orders");
         jPanel3.add(jLabel16);
         jLabel16.setBounds(18, 58, 160, 22);
 
@@ -2626,9 +3128,9 @@ public final class menu_form extends javax.swing.JFrame {
                 }
 
                 // Professional gradient background
-                java.awt.Color color1 = new java.awt.Color(13, 71, 161, 255); // Material Blue 900
-                java.awt.Color color2 = new java.awt.Color(25, 118, 210, 255); // Material Blue 600
-                java.awt.Color color3 = new java.awt.Color(33, 150, 243, 255); // Material Blue 500
+                java.awt.Color color1 = new java.awt.Color(40, 5, 80, 255); // Deep Purple (bottom)
+                java.awt.Color color2 = new java.awt.Color(115, 15, 158, 255); // Medium Purple (mid)
+                java.awt.Color color3 = new java.awt.Color(22, 100, 180, 255); // Vivid Blue (top)
 
                 java.awt.GradientPaint gradient = new java.awt.GradientPaint(
                         0, 0, color3, 0, h, color1);
@@ -2664,7 +3166,7 @@ public final class menu_form extends javax.swing.JFrame {
 
         jLabel26.setFont(new java.awt.Font("Segoe UI", 1, 28)); // Refined size for better balance
         jLabel26.setForeground(new java.awt.Color(255, 255, 255, 245)); // Slightly transparent white
-        jLabel26.setText("🎯 Swayam Billing Software - Professional Edition");
+        jLabel26.setText("Swayam Billing Software - Professional Edition");
         jLabel26.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 5, 0)); // Bottom spacing
         jPanel12.add(jLabel26);
         jLabel26.setBounds(30, 20, 700, 35);
@@ -2672,7 +3174,7 @@ public final class menu_form extends javax.swing.JFrame {
         jLabel42.setFont(new java.awt.Font("Segoe UI", 0, 13)); // Slightly smaller for better hierarchy
         jLabel42.setForeground(new java.awt.Color(255, 255, 255, 200)); // Semi-transparent for secondary info
         jLabel42.setText(
-                "📧 Swayamsoftware+@gmail.com  •  📞9999999999   •  🌐 Swayamerp.in  •  💼 Complete Business Solution");
+                "Phone: 9845972853 / 8496803966  |  Website: Swayamerp.in  |  Email: Swayamsoftwaretarget@gmail.com  |  Complete Business Solution");
         jLabel42.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 8, 0)); // Bottom spacing
         jPanel12.add(jLabel42);
         jLabel42.setBounds(30, 55, 900, 25);
@@ -2752,15 +3254,15 @@ public final class menu_form extends javax.swing.JFrame {
         jPanel12.setBounds(0, 510, 1360, 110);
 
         cnamel.setFont(new java.awt.Font("Segoe UI", 1, 40)); // Modern professional font
-        cnamel.setForeground(new java.awt.Color(33, 150, 243)); // Professional blue
+        cnamel.setForeground(new java.awt.Color(115, 15, 158)); // Modern purple (matches login accent)
         cnamel.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         cnamel.setText(".");
         // Add text shadow effect
         cnamel.setBorder(javax.swing.BorderFactory.createCompoundBorder(
                 javax.swing.BorderFactory.createEmptyBorder(2, 2, 2, 2),
-                javax.swing.BorderFactory.createLineBorder(new java.awt.Color(33, 150, 243, 30), 1)));
+                javax.swing.BorderFactory.createLineBorder(new java.awt.Color(115, 15, 158, 30), 1)));
         jPanel4.add(cnamel);
-        cnamel.setBounds(20, 5, 1340, 50);
+        cnamel.setBounds(20, 5, 910, 50); // narrowed to leave room for FY selector
 
         // Modern System Info Cards
         jLabel30.setFont(new java.awt.Font("Segoe UI", 1, 13));
@@ -3197,7 +3699,7 @@ public final class menu_form extends javax.swing.JFrame {
         jDesktopPane1.setLayout(jDesktopPane1Layout);
         jDesktopPane1Layout.setHorizontalGroup(
                 jDesktopPane1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(jToolBar1, javax.swing.GroupLayout.DEFAULT_SIZE, 1360, Short.MAX_VALUE)
+                        .addComponent(jToolBar1, javax.swing.GroupLayout.DEFAULT_SIZE, 800, Short.MAX_VALUE)
                         .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE,
                                 javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE));
         jDesktopPane1Layout.setVerticalGroup(
@@ -3208,33 +3710,23 @@ public final class menu_form extends javax.swing.JFrame {
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, 589, Short.MAX_VALUE)));
 
-        getContentPane().add(jDesktopPane1);
+        getContentPane().add(jDesktopPane1, java.awt.BorderLayout.CENTER);
 
-        // Center jDesktopPane1 horizontally and align to top
-        java.awt.Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
-        int desktopPaneWidth = 1360;
-        int desktopPaneHeight = 690;
-        int x = (screenSize.width - desktopPaneWidth) / 2; // Center horizontally
-        int y = 30; // Align to top with menu bar offset
-        jDesktopPane1.setBounds(x, y, desktopPaneWidth, desktopPaneHeight);
-
-        // Set menu bar to start from left edge
-        jMenuBar1.setBounds(0, 0, 1360, 30);
-
-        jMenuBar1.setPreferredSize(new java.awt.Dimension(1360, 30));
-        jMenuBar1.setBackground(ColorConstants.PRIMARY_BLUE);
-        jMenuBar1.setForeground(ColorConstants.TEXT_LIGHT);
-        jMenuBar1.setBorder(javax.swing.BorderFactory.createEmptyBorder());
+        jMenuBar1.setBackground(new java.awt.Color(50, 8, 100));
+        jMenuBar1.setForeground(java.awt.Color.WHITE);
+        jMenuBar1.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 6, 3, 6));
 
         // Set as the frame's menu bar to ensure proper display
         this.setJMenuBar(jMenuBar1);
 
         jMenu10.setText("Sales");
-        jMenu10.setForeground(ColorConstants.TEXT_LIGHT);
-        jMenu10.setFont(new java.awt.Font("Arial", 1, 14));
+        jMenu10.setForeground(java.awt.Color.WHITE);
+        jMenu10.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
         jMenu10.setMnemonic('S');
+        jMenu10.setOpaque(false);
+        jMenu10.setMargin(new java.awt.Insets(0, 6, 0, 6));
 
-        jSeparator85.setBackground(ColorConstants.PRIMARY_BLUE_LIGHT);
+        jSeparator85.setBackground(new java.awt.Color(115, 15, 158, 120));
         jSeparator85.setForeground(ColorConstants.PRIMARY_BLUE_LIGHT);
         jSeparator85.setOpaque(true);
         jSeparator85.setPreferredSize(new java.awt.Dimension(0, 3));
@@ -3424,12 +3916,14 @@ public final class menu_form extends javax.swing.JFrame {
 
         jMenuBar1.add(jMenu10);
 
-        jMenu3.setText("Purchase");
-        jMenu3.setForeground(ColorConstants.TEXT_LIGHT);
-        jMenu3.setFont(new java.awt.Font("Arial", 1, 14));
+        jMenu3.setText(" Purchase");
+        jMenu3.setForeground(java.awt.Color.WHITE);
+        jMenu3.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
         jMenu3.setMnemonic('P');
+        jMenu3.setOpaque(false);
+        jMenu3.setMargin(new java.awt.Insets(0, 6, 0, 6));
 
-        jSeparator68.setBackground(ColorConstants.SECONDARY_ORANGE);
+        jSeparator68.setBackground(new java.awt.Color(255, 140, 0, 120));
         jSeparator68.setForeground(ColorConstants.SECONDARY_ORANGE);
         jSeparator68.setOpaque(true);
         jSeparator68.setPreferredSize(new java.awt.Dimension(0, 3));
@@ -3549,12 +4043,14 @@ public final class menu_form extends javax.swing.JFrame {
 
         jMenuBar1.add(jMenu3);
 
-        jMenu21.setText("Estimate");
-        jMenu21.setForeground(ColorConstants.TEXT_LIGHT);
-        jMenu21.setFont(new java.awt.Font("Arial", 1, 14));
+        jMenu21.setText(" Estimate");
+        jMenu21.setForeground(java.awt.Color.WHITE);
+        jMenu21.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
         jMenu21.setMnemonic('E');
+        jMenu21.setOpaque(false);
+        jMenu21.setMargin(new java.awt.Insets(0, 6, 0, 6));
 
-        jSeparator125.setBackground(ColorConstants.WARNING_YELLOW);
+        jSeparator125.setBackground(new java.awt.Color(255, 193, 7, 120));
         jSeparator125.setForeground(ColorConstants.WARNING_YELLOW);
         jSeparator125.setOpaque(true);
         jSeparator125.setPreferredSize(new java.awt.Dimension(0, 3));
@@ -3744,10 +4240,14 @@ public final class menu_form extends javax.swing.JFrame {
 
         jMenuBar1.add(jMenu21);
 
-        jMenu1.setText("Item");
+        jMenu1.setText(" Item");
+        jMenu1.setForeground(java.awt.Color.WHITE);
+        jMenu1.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
+        jMenu1.setOpaque(false);
+        jMenu1.setMargin(new java.awt.Insets(0, 6, 0, 6));
 
-        jSeparator72.setBackground(ColorConstants.PRIMARY_BLUE_LIGHT);
-        jSeparator72.setForeground(ColorConstants.PRIMARY_BLUE_LIGHT);
+        jSeparator72.setBackground(new java.awt.Color(115, 15, 158, 120));
+        jSeparator72.setForeground(new java.awt.Color(115, 15, 158, 120));
         jSeparator72.setOpaque(true);
         jSeparator72.setPreferredSize(new java.awt.Dimension(0, 3));
         jMenu1.add(jSeparator72);
@@ -3792,13 +4292,14 @@ public final class menu_form extends javax.swing.JFrame {
 
         jMenuBar1.add(jMenu1);
 
-        jMenu5.setText("Stock");
-        jMenu5.setForeground(ColorConstants.TEXT_LIGHT);
-        jMenu5.setFont(new java.awt.Font("Arial", 1, 14));
+        jMenu5.setText(" Stock");
+        jMenu5.setForeground(java.awt.Color.WHITE);
+        jMenu5.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
         jMenu5.setMnemonic('t');
-        jMenu5.setFont(new java.awt.Font("Arial", 1, 14));
+        jMenu5.setOpaque(false);
+        jMenu5.setMargin(new java.awt.Insets(0, 6, 0, 6));
 
-        jSeparator63.setBackground(ColorConstants.SUCCESS_GREEN);
+        jSeparator63.setBackground(new java.awt.Color(34, 139, 34, 120));
         jSeparator63.setForeground(ColorConstants.SUCCESS_GREEN);
         jSeparator63.setOpaque(true);
         jSeparator63.setPreferredSize(new java.awt.Dimension(0, 3));
@@ -3944,10 +4445,14 @@ public final class menu_form extends javax.swing.JFrame {
 
         jMenuBar1.add(jMenu5);
 
-        jMenu11.setText("PO");
+        jMenu11.setText(" PO");
+        jMenu11.setForeground(java.awt.Color.WHITE);
+        jMenu11.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
+        jMenu11.setOpaque(false);
+        jMenu11.setMargin(new java.awt.Insets(0, 6, 0, 6));
 
-        jSeparator100.setBackground(ColorConstants.PRIMARY_BLUE_LIGHT);
-        jSeparator100.setForeground(ColorConstants.PRIMARY_BLUE_LIGHT);
+        jSeparator100.setBackground(new java.awt.Color(115, 15, 158, 120));
+        jSeparator100.setForeground(new java.awt.Color(115, 15, 158, 120));
         jSeparator100.setOpaque(true);
         jSeparator100.setPreferredSize(new java.awt.Dimension(0, 3));
         jMenu11.add(jSeparator100);
@@ -3999,9 +4504,13 @@ public final class menu_form extends javax.swing.JFrame {
         jMenuBar1.add(jMenu11);
 
         jMenu19.setText("Packing");
+        jMenu19.setForeground(java.awt.Color.WHITE);
+        jMenu19.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
+        jMenu19.setOpaque(false);
+        jMenu19.setMargin(new java.awt.Insets(0, 6, 0, 6));
 
-        jSeparator119.setBackground(ColorConstants.PRIMARY_BLUE_LIGHT);
-        jSeparator119.setForeground(ColorConstants.PRIMARY_BLUE_LIGHT);
+        jSeparator119.setBackground(new java.awt.Color(115, 15, 158, 120));
+        jSeparator119.setForeground(new java.awt.Color(115, 15, 158, 120));
         jSeparator119.setOpaque(true);
         jSeparator119.setPreferredSize(new java.awt.Dimension(0, 3));
         jMenu19.add(jSeparator119);
@@ -4030,10 +4539,12 @@ public final class menu_form extends javax.swing.JFrame {
 
         jMenuBar1.add(jMenu19);
 
-        jMenu12.setForeground(ColorConstants.TEXT_LIGHT);
-        jMenu12.setFont(new java.awt.Font("Arial", 1, 14));
+        jMenu12.setForeground(java.awt.Color.WHITE);
+        jMenu12.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
+        jMenu12.setOpaque(false);
+        jMenu12.setMargin(new java.awt.Insets(0, 6, 0, 6));
 
-        jSeparator93.setBackground(ColorConstants.INFO_BLUE);
+        jSeparator93.setBackground(new java.awt.Color(23, 162, 184, 120));
         jSeparator93.setForeground(ColorConstants.INFO_BLUE);
         jSeparator93.setOpaque(true);
         jSeparator93.setPreferredSize(new java.awt.Dimension(0, 3));
@@ -4187,10 +4698,12 @@ public final class menu_form extends javax.swing.JFrame {
 
         jMenuBar1.add(jMenu12);
         jMenu2.setText("Supplier");
-        jMenu2.setForeground(ColorConstants.TEXT_LIGHT);
-        jMenu2.setFont(new java.awt.Font("Arial", 1, 14));
+        jMenu2.setForeground(java.awt.Color.WHITE);
+        jMenu2.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
+        jMenu2.setOpaque(false);
+        jMenu2.setMargin(new java.awt.Insets(0, 6, 0, 6));
 
-        jSeparator75.setBackground(ColorConstants.SECONDARY_ORANGE_DARK);
+        jSeparator75.setBackground(new java.awt.Color(204, 82, 0, 120));
         jSeparator75.setForeground(ColorConstants.SECONDARY_ORANGE_DARK);
         jSeparator75.setOpaque(true);
         jSeparator75.setPreferredSize(new java.awt.Dimension(0, 3));
@@ -4297,10 +4810,14 @@ public final class menu_form extends javax.swing.JFrame {
 
         jMenuBar1.add(jMenu2);
 
-        jMenu7.setText("Customer");
+        jMenu7.setText(" Customer");
+        jMenu7.setForeground(java.awt.Color.WHITE);
+        jMenu7.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
+        jMenu7.setOpaque(false);
+        jMenu7.setMargin(new java.awt.Insets(0, 6, 0, 6));
 
-        jSeparator80.setBackground(ColorConstants.PRIMARY_BLUE_LIGHT);
-        jSeparator80.setForeground(ColorConstants.PRIMARY_BLUE_LIGHT);
+        jSeparator80.setBackground(new java.awt.Color(115, 15, 158, 120));
+        jSeparator80.setForeground(new java.awt.Color(115, 15, 158, 120));
         jSeparator80.setOpaque(true);
         jSeparator80.setPreferredSize(new java.awt.Dimension(0, 3));
         jMenu7.add(jSeparator80);
@@ -4446,9 +4963,13 @@ public final class menu_form extends javax.swing.JFrame {
         jMenuBar1.add(jMenu7);
 
         jMenu15.setText("HR");
+        jMenu15.setForeground(java.awt.Color.WHITE);
+        jMenu15.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
+        jMenu15.setOpaque(false);
+        jMenu15.setMargin(new java.awt.Insets(0, 6, 0, 6));
 
-        jSeparator103.setBackground(ColorConstants.PRIMARY_BLUE_LIGHT);
-        jSeparator103.setForeground(ColorConstants.PRIMARY_BLUE_LIGHT);
+        jSeparator103.setBackground(new java.awt.Color(115, 15, 158, 120));
+        jSeparator103.setForeground(new java.awt.Color(115, 15, 158, 120));
         jSeparator103.setOpaque(true);
         jSeparator103.setPreferredSize(new java.awt.Dimension(0, 3));
         jMenu15.add(jSeparator103);
@@ -4478,9 +4999,13 @@ public final class menu_form extends javax.swing.JFrame {
         jMenuBar1.add(jMenu15);
 
         jMenu22.setText("Payroll");
+        jMenu22.setForeground(java.awt.Color.WHITE);
+        jMenu22.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
+        jMenu22.setOpaque(false);
+        jMenu22.setMargin(new java.awt.Insets(0, 6, 0, 6));
 
-        jSeparator132.setBackground(ColorConstants.PRIMARY_BLUE_LIGHT);
-        jSeparator132.setForeground(ColorConstants.PRIMARY_BLUE_LIGHT);
+        jSeparator132.setBackground(new java.awt.Color(115, 15, 158, 120));
+        jSeparator132.setForeground(new java.awt.Color(115, 15, 158, 120));
         jSeparator132.setOpaque(true);
         jSeparator132.setPreferredSize(new java.awt.Dimension(0, 3));
         jMenu22.add(jSeparator132);
@@ -4555,10 +5080,14 @@ public final class menu_form extends javax.swing.JFrame {
 
         jMenuBar1.add(jMenu22);
 
-        jMenu23.setText("Attendance");
+        jMenu23.setText(" Attendance");
+        jMenu23.setForeground(java.awt.Color.WHITE);
+        jMenu23.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
+        jMenu23.setOpaque(false);
+        jMenu23.setMargin(new java.awt.Insets(0, 6, 0, 6));
 
-        jSeparator133.setBackground(ColorConstants.PRIMARY_BLUE_LIGHT);
-        jSeparator133.setForeground(ColorConstants.PRIMARY_BLUE_LIGHT);
+        jSeparator133.setBackground(new java.awt.Color(115, 15, 158, 120));
+        jSeparator133.setForeground(new java.awt.Color(115, 15, 158, 120));
         jSeparator133.setOpaque(true);
         jSeparator133.setPreferredSize(new java.awt.Dimension(0, 3));
         jMenu23.add(jSeparator133);
@@ -4595,10 +5124,14 @@ public final class menu_form extends javax.swing.JFrame {
 
         jMenuBar1.add(jMenu23);
 
-        jMenu6.setText("GSTR");
+        jMenu6.setText(" GSTR");
+        jMenu6.setForeground(java.awt.Color.WHITE);
+        jMenu6.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
+        jMenu6.setOpaque(false);
+        jMenu6.setMargin(new java.awt.Insets(0, 6, 0, 6));
 
-        jSeparator79.setBackground(ColorConstants.PRIMARY_BLUE_LIGHT);
-        jSeparator79.setForeground(ColorConstants.PRIMARY_BLUE_LIGHT);
+        jSeparator79.setBackground(new java.awt.Color(115, 15, 158, 120));
+        jSeparator79.setForeground(new java.awt.Color(115, 15, 158, 120));
         jSeparator79.setOpaque(true);
         jSeparator79.setPreferredSize(new java.awt.Dimension(0, 3));
         jMenu6.add(jSeparator79);
@@ -4696,9 +5229,13 @@ public final class menu_form extends javax.swing.JFrame {
         jMenuBar1.add(jMenu6);
 
         jMenu13.setText("SMS");
+        jMenu13.setForeground(java.awt.Color.WHITE);
+        jMenu13.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
+        jMenu13.setOpaque(false);
+        jMenu13.setMargin(new java.awt.Insets(0, 6, 0, 6));
 
-        jSeparator67.setBackground(ColorConstants.PRIMARY_BLUE_LIGHT);
-        jSeparator67.setForeground(ColorConstants.PRIMARY_BLUE_LIGHT);
+        jSeparator67.setBackground(new java.awt.Color(115, 15, 158, 120));
+        jSeparator67.setForeground(new java.awt.Color(115, 15, 158, 120));
         jSeparator67.setOpaque(true);
         jSeparator67.setPreferredSize(new java.awt.Dimension(0, 3));
         jMenu13.add(jSeparator67);
@@ -4727,10 +5264,14 @@ public final class menu_form extends javax.swing.JFrame {
 
         jMenuBar1.add(jMenu13);
 
-        jMenu17.setText("Email");
+        jMenu17.setText(" Email");
+        jMenu17.setForeground(java.awt.Color.WHITE);
+        jMenu17.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
+        jMenu17.setOpaque(false);
+        jMenu17.setMargin(new java.awt.Insets(0, 6, 0, 6));
 
-        jSeparator113.setBackground(ColorConstants.PRIMARY_BLUE_LIGHT);
-        jSeparator113.setForeground(ColorConstants.PRIMARY_BLUE_LIGHT);
+        jSeparator113.setBackground(new java.awt.Color(115, 15, 158, 120));
+        jSeparator113.setForeground(new java.awt.Color(115, 15, 158, 120));
         jSeparator113.setOpaque(true);
         jSeparator113.setPreferredSize(new java.awt.Dimension(0, 3));
         jMenu17.add(jSeparator113);
@@ -4752,9 +5293,13 @@ public final class menu_form extends javax.swing.JFrame {
         jMenuBar1.add(jMenu17);
 
         jMenu14.setText("Barcode");
+        jMenu14.setForeground(java.awt.Color.WHITE);
+        jMenu14.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
+        jMenu14.setOpaque(false);
+        jMenu14.setMargin(new java.awt.Insets(0, 6, 0, 6));
 
-        jSeparator101.setBackground(ColorConstants.PRIMARY_BLUE_LIGHT);
-        jSeparator101.setForeground(ColorConstants.PRIMARY_BLUE_LIGHT);
+        jSeparator101.setBackground(new java.awt.Color(115, 15, 158, 120));
+        jSeparator101.setForeground(new java.awt.Color(115, 15, 158, 120));
         jSeparator101.setOpaque(true);
         jSeparator101.setPreferredSize(new java.awt.Dimension(0, 3));
         jMenu14.add(jSeparator101);
@@ -4775,10 +5320,14 @@ public final class menu_form extends javax.swing.JFrame {
 
         jMenuBar1.add(jMenu14);
 
-        jMenu18.setText("Loyalty");
+        jMenu18.setText(" Loyalty");
+        jMenu18.setForeground(java.awt.Color.WHITE);
+        jMenu18.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
+        jMenu18.setOpaque(false);
+        jMenu18.setMargin(new java.awt.Insets(0, 6, 0, 6));
 
-        jSeparator115.setBackground(ColorConstants.PRIMARY_BLUE_LIGHT);
-        jSeparator115.setForeground(ColorConstants.PRIMARY_BLUE_LIGHT);
+        jSeparator115.setBackground(new java.awt.Color(115, 15, 158, 120));
+        jSeparator115.setForeground(new java.awt.Color(115, 15, 158, 120));
         jSeparator115.setOpaque(true);
         jSeparator115.setPreferredSize(new java.awt.Dimension(0, 3));
         jMenu18.add(jSeparator115);
@@ -4798,6 +5347,14 @@ public final class menu_form extends javax.swing.JFrame {
             }
         });
         jMenu18.add(jMenuItem89);
+
+        jMenuItemRedemption.setText("🎁 Points Redemption (Cash)");
+        jMenuItemRedemption.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemRedemptionActionPerformed(evt);
+            }
+        });
+        jMenu18.add(jMenuItemRedemption);
 
         jMenuItem82.setText("Loyalty Points Setting");
         jMenuItem82.addActionListener(new java.awt.event.ActionListener() {
@@ -4829,10 +5386,14 @@ public final class menu_form extends javax.swing.JFrame {
 
         jMenuBar1.add(jMenu18);
 
-        jMenu20.setText("MIS");
+        jMenu20.setText(" MIS");
+        jMenu20.setForeground(java.awt.Color.WHITE);
+        jMenu20.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
+        jMenu20.setOpaque(false);
+        jMenu20.setMargin(new java.awt.Insets(0, 6, 0, 6));
 
-        jSeparator121.setBackground(ColorConstants.PRIMARY_BLUE_LIGHT);
-        jSeparator121.setForeground(ColorConstants.PRIMARY_BLUE_LIGHT);
+        jSeparator121.setBackground(new java.awt.Color(115, 15, 158, 120));
+        jSeparator121.setForeground(new java.awt.Color(115, 15, 158, 120));
         jSeparator121.setOpaque(true);
         jSeparator121.setPreferredSize(new java.awt.Dimension(0, 3));
         jMenu20.add(jSeparator121);
@@ -4853,6 +5414,14 @@ public final class menu_form extends javax.swing.JFrame {
         });
         jMenu20.add(jMenuItem106);
 
+        jMenuItem167.setText("Estimate Item Wise Profit");
+        jMenuItem167.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem167ActionPerformed(evt);
+            }
+        });
+        jMenu20.add(jMenuItem167);
+
         jMenuItem160.setText("Barcode Wise Profit");
         jMenuItem160.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -4869,6 +5438,14 @@ public final class menu_form extends javax.swing.JFrame {
         });
         jMenu20.add(jMenuItem107);
 
+        jMenuItem168.setText("Estimate Bill Wise Profit");
+        jMenuItem168.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem168ActionPerformed(evt);
+            }
+        });
+        jMenu20.add(jMenuItem168);
+
         jMenuItem110.setText("Day Wise Profit");
         jMenuItem110.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -4876,6 +5453,14 @@ public final class menu_form extends javax.swing.JFrame {
             }
         });
         jMenu20.add(jMenuItem110);
+
+        jMenuItem166.setText("Estimate Day Wise Profit");
+        jMenuItem166.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem166ActionPerformed(evt);
+            }
+        });
+        jMenu20.add(jMenuItem166);
 
         jSeparator122.setBackground(ColorConstants.PRIMARY_BLUE_LIGHT);
         jSeparator122.setForeground(ColorConstants.PRIMARY_BLUE_LIGHT);
@@ -4946,9 +5531,13 @@ public final class menu_form extends javax.swing.JFrame {
         jMenuBar1.add(jMenu20);
 
         jMenu9.setText("Users");
+        jMenu9.setForeground(java.awt.Color.WHITE);
+        jMenu9.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
+        jMenu9.setOpaque(false);
+        jMenu9.setMargin(new java.awt.Insets(0, 6, 0, 6));
 
-        jSeparator83.setBackground(ColorConstants.PRIMARY_BLUE_LIGHT);
-        jSeparator83.setForeground(ColorConstants.PRIMARY_BLUE_LIGHT);
+        jSeparator83.setBackground(new java.awt.Color(115, 15, 158, 120));
+        jSeparator83.setForeground(new java.awt.Color(115, 15, 158, 120));
         jSeparator83.setOpaque(true);
         jSeparator83.setPreferredSize(new java.awt.Dimension(0, 3));
         jMenu9.add(jSeparator83);
@@ -4986,9 +5575,13 @@ public final class menu_form extends javax.swing.JFrame {
         jMenuBar1.add(jMenu9);
 
         jMenu16.setText("Backup");
+        jMenu16.setForeground(java.awt.Color.WHITE);
+        jMenu16.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
+        jMenu16.setOpaque(false);
+        jMenu16.setMargin(new java.awt.Insets(0, 6, 0, 6));
 
-        jSeparator111.setBackground(ColorConstants.PRIMARY_BLUE_LIGHT);
-        jSeparator111.setForeground(ColorConstants.PRIMARY_BLUE_LIGHT);
+        jSeparator111.setBackground(new java.awt.Color(115, 15, 158, 120));
+        jSeparator111.setForeground(new java.awt.Color(115, 15, 158, 120));
         jSeparator111.setOpaque(true);
         jSeparator111.setPreferredSize(new java.awt.Dimension(0, 3));
         jMenu16.add(jSeparator111);
@@ -5007,23 +5600,45 @@ public final class menu_form extends javax.swing.JFrame {
         jSeparator112.setPreferredSize(new java.awt.Dimension(0, 3));
         jMenu16.add(jSeparator112);
 
+        javax.swing.JMenuItem jMenuItemRestore = new javax.swing.JMenuItem();
+        jMenuItemRestore.setText("Restore Database");
+        jMenuItemRestore.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                try {
+                    couldpack.DatabaseRestore im = new couldpack.DatabaseRestore();
+                    jDesktopPane1.add(im);
+                    im.setVisible(true);
+                    java.awt.Dimension desktopSize = jDesktopPane1.getSize();
+                    java.awt.Dimension frameSize = im.getSize();
+                    im.setLocation((desktopSize.width - frameSize.width) / 2,
+                            (desktopSize.height - frameSize.height) / 2);
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                }
+            }
+        });
+        jMenu16.add(jMenuItemRestore);
+
+        javax.swing.JPopupMenu.Separator sepAfterRestore = new javax.swing.JPopupMenu.Separator();
+        sepAfterRestore.setBackground(ColorConstants.PRIMARY_BLUE_LIGHT);
+        sepAfterRestore.setForeground(ColorConstants.PRIMARY_BLUE_LIGHT);
+        sepAfterRestore.setOpaque(true);
+        sepAfterRestore.setPreferredSize(new java.awt.Dimension(0, 3));
+        jMenu16.add(sepAfterRestore);
+
         jMenuBar1.add(jMenu16);
 
-        jMenu4.setText("Setting");
+        jMenu4.setText(" Setting");
+        jMenu4.setForeground(java.awt.Color.WHITE);
+        jMenu4.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
+        jMenu4.setOpaque(false);
+        jMenu4.setMargin(new java.awt.Insets(0, 6, 0, 6));
 
-        jSeparator78.setBackground(ColorConstants.PRIMARY_BLUE_LIGHT);
-        jSeparator78.setForeground(ColorConstants.PRIMARY_BLUE_LIGHT);
+        jSeparator78.setBackground(new java.awt.Color(115, 15, 158, 120));
+        jSeparator78.setForeground(new java.awt.Color(115, 15, 158, 120));
         jSeparator78.setOpaque(true);
         jSeparator78.setPreferredSize(new java.awt.Dimension(0, 3));
         jMenu4.add(jSeparator78);
-
-        jMenuItem4.setText("Setting");
-        jMenuItem4.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem4ActionPerformed(evt);
-            }
-        });
-        jMenu4.add(jMenuItem4);
 
         jMenuItem40.setText("Terminal Setting");
         jMenuItem40.addActionListener(new java.awt.event.ActionListener() {
@@ -5032,6 +5647,14 @@ public final class menu_form extends javax.swing.JFrame {
             }
         });
         jMenu4.add(jMenuItem40);
+
+        jMenuItem165.setText("Company Management");
+        jMenuItem165.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem165ActionPerformed(evt);
+            }
+        });
+        jMenu4.add(jMenuItem165);
 
         jSeparator77.setBackground(ColorConstants.PRIMARY_BLUE_LIGHT);
         jSeparator77.setForeground(ColorConstants.PRIMARY_BLUE_LIGHT);
@@ -5042,9 +5665,13 @@ public final class menu_form extends javax.swing.JFrame {
         jMenuBar1.add(jMenu4);
 
         jMenu8.setText("Exit");
+        jMenu8.setForeground(new java.awt.Color(255, 120, 120));
+        jMenu8.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
+        jMenu8.setOpaque(false);
+        jMenu8.setMargin(new java.awt.Insets(0, 6, 0, 6));
 
-        jSeparator81.setBackground(ColorConstants.PRIMARY_BLUE_LIGHT);
-        jSeparator81.setForeground(ColorConstants.PRIMARY_BLUE_LIGHT);
+        jSeparator81.setBackground(new java.awt.Color(220, 53, 69, 120));
+        jSeparator81.setForeground(new java.awt.Color(220, 53, 69, 120));
         jSeparator81.setOpaque(true);
         jSeparator81.setPreferredSize(new java.awt.Dimension(0, 3));
         jMenu8.add(jSeparator81);
@@ -5074,6 +5701,9 @@ public final class menu_form extends javax.swing.JFrame {
         jMenuBar1.add(jMenu8);
 
         setJMenuBar(jMenuBar1);
+
+        // Refresh all menu components to pick up UIManager theme
+        javax.swing.SwingUtilities.updateComponentTreeUI(jMenuBar1);
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -5160,6 +5790,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_itembuttonActionPerformed
 
     private void jMenuItem5ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem5ActionPerformed
+        if (!checkPrivacyMode())
+            return;
 
         try {
             purchase_report im = new purchase_report(util);
@@ -5176,6 +5808,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem5ActionPerformed
 
     private void jMenuItem6ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem6ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             purchase_report_cname im = new purchase_report_cname(util);
             jDesktopPane1.add(im);
@@ -5191,6 +5825,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem6ActionPerformed
 
     private void jMenuItem84ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem84ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             purchase_report_iname im = new purchase_report_iname(util);
             jDesktopPane1.add(im);
@@ -5206,6 +5842,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem84ActionPerformed
 
     private void jMenuItem85ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem85ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             purchase_summary_iname im = new purchase_summary_iname(util);
             jDesktopPane1.add(im);
@@ -5221,6 +5859,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem85ActionPerformed
 
     private void jMenuItem86ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem86ActionPerformed
+        if (!checkPrivacyMode())
+            return;
 
         try {
             purchase_summary_manu im = new purchase_summary_manu(util);
@@ -5237,6 +5877,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem86ActionPerformed
 
     private void jMenuItem87ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem87ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             purchase_summary_category im = new purchase_summary_category(util);
             jDesktopPane1.add(im);
@@ -5252,6 +5894,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem87ActionPerformed
 
     private void jMenuItem88ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem88ActionPerformed
+        if (!checkPrivacyMode())
+            return;
 
         try {
             purchase_summary_supplier im = new purchase_summary_supplier(util);
@@ -5299,6 +5943,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem109ActionPerformed
 
     private void jMenuItem66ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem66ActionPerformed
+        if (!checkPrivacyMode())
+            return;
 
         try {
             stock_report im = new stock_report(util);
@@ -5315,6 +5961,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem66ActionPerformed
 
     private void jMenuItem7ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem7ActionPerformed
+        if (!checkPrivacyMode())
+            return;
 
         try {
             stock_summary im = new stock_summary(util);
@@ -5331,6 +5979,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem7ActionPerformed
 
     private void jMenuItem94ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem94ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             stock_report_min_stock im = new stock_report_min_stock(util);
             jDesktopPane1.add(im);
@@ -5346,6 +5996,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem94ActionPerformed
 
     private void jMenuItem95ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem95ActionPerformed
+        if (!checkPrivacyMode())
+            return;
 
         try {
             stock_report_max_stock im = new stock_report_max_stock(util);
@@ -5362,6 +6014,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem95ActionPerformed
 
     private void jMenuItem8ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem8ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             stock_report_nill_stock im = new stock_report_nill_stock(util);
             jDesktopPane1.add(im);
@@ -5377,6 +6031,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem8ActionPerformed
 
     private void jMenuItem9ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem9ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             stock_report_barcode im = new stock_report_barcode(util);
             jDesktopPane1.add(im);
@@ -5547,6 +6203,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem14ActionPerformed
 
     private void jMenuItem17ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem17ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             salespack.sales_report im = new sales_report(util);
             jDesktopPane1.add(im);
@@ -5562,6 +6220,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem17ActionPerformed
 
     private void jMenuItem18ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem18ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             salespack.sales_report_location im = new sales_report_location(util);
             jDesktopPane1.add(im);
@@ -5577,6 +6237,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem18ActionPerformed
 
     private void jMenuItem19ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem19ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             salespack.sales_report_price_type im = new sales_report_price_type(util);
             jDesktopPane1.add(im);
@@ -5593,6 +6255,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem19ActionPerformed
 
     private void jMenuItem20ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem20ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             salespack.sales_report_terminal im = new sales_report_terminal(util);
             jDesktopPane1.add(im);
@@ -5608,6 +6272,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem20ActionPerformed
 
     private void jMenuItem21ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem21ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             salespack.sales_summary im = new sales_summary(util);
             jDesktopPane1.add(im);
@@ -5623,6 +6289,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem21ActionPerformed
 
     private void jMenuItem22ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem22ActionPerformed
+        if (!checkPrivacyMode())
+            return;
 
         try {
             salespack.sales_summary_cust im = new sales_summary_cust(util);
@@ -5639,6 +6307,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem22ActionPerformed
 
     private void jMenuItem23ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem23ActionPerformed
+        if (!checkPrivacyMode())
+            return;
 
         try {
             salespack.sales_report_cust im = new sales_report_cust(util);
@@ -5656,6 +6326,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem23ActionPerformed
 
     private void jMenuItem24ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem24ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             salespack.sales_summary_item im = new sales_summary_item(util);
             jDesktopPane1.add(im);
@@ -5671,6 +6343,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem24ActionPerformed
 
     private void jMenuItem25ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem25ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             salespack.sales_summary_category im = new sales_summary_category(util);
             jDesktopPane1.add(im);
@@ -5686,6 +6360,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem25ActionPerformed
 
     private void jMenuItem26ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem26ActionPerformed
+        if (!checkPrivacyMode())
+            return;
 
         try {
             salespack.sales_summary_manu im = new sales_summary_manu(util);
@@ -5702,6 +6378,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem26ActionPerformed
 
     private void jMenuItem27ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem27ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             salespack.sales_summary_daywise im = new sales_summary_daywise(util);
             jDesktopPane1.add(im);
@@ -5717,6 +6395,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem27ActionPerformed
 
     private void jMenuItem28ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem28ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             salespack.sales_report_bill_itemwise im = new sales_report_bill_itemwise(util);
             jDesktopPane1.add(im);
@@ -5733,6 +6413,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem28ActionPerformed
 
     private void jMenuItem29ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem29ActionPerformed
+        if (!checkPrivacyMode())
+            return;
 
         try {
             salespack.daily_sales_select im = new daily_sales_select(util);
@@ -5749,6 +6431,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem29ActionPerformed
 
     private void jMenuItem30ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem30ActionPerformed
+        if (!checkPrivacyMode())
+            return;
 
         try {
             salespack.daily_sales_report_select im = new daily_sales_report_select(util);
@@ -5767,6 +6451,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem30ActionPerformed
 
     private void jMenuItem31ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem31ActionPerformed
+        if (!checkPrivacyMode())
+            return;
 
         try {
             salespack.sreturn_report im = new sreturn_report(util);
@@ -5784,6 +6470,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem31ActionPerformed
 
     private void jMenuItem32ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem32ActionPerformed
+        if (!checkPrivacyMode())
+            return;
 
         try {
             salespack.sreturn_summary_item im = new sreturn_summary_item(util);
@@ -5833,6 +6521,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem34ActionPerformed
 
     private void jMenuItem35ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem35ActionPerformed
+        if (!checkPrivacyMode())
+            return;
 
         try {
             preturn_report im = new preturn_report(util);
@@ -5850,6 +6540,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem35ActionPerformed
 
     private void jMenuItem36ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem36ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             preturn_summary_iname im = new preturn_summary_iname(util);
             jDesktopPane1.add(im);
@@ -5964,6 +6656,21 @@ public final class menu_form extends javax.swing.JFrame {
         }
 
     }// GEN-LAST:event_jMenuItem40ActionPerformed
+
+    private void jMenuItem165ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem165ActionPerformed
+        try {
+            CompanyManagement im = new CompanyManagement(util);
+            jDesktopPane1.add(im);
+            im.setVisible(true);
+
+            Dimension desktopSize = jDesktopPane1.getSize();
+            Dimension jInternalFrameSize = im.getSize();
+            im.setLocation((desktopSize.width - jInternalFrameSize.width) / 2,
+                    (desktopSize.height - jInternalFrameSize.height) / 2);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }// GEN-LAST:event_jMenuItem165ActionPerformed
 
     private void jMenuItem41ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem41ActionPerformed
         try {
@@ -6143,6 +6850,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem51ActionPerformed
 
     private void jMenuItem52ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem52ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             stock_entry_report im = new stock_entry_report(util);
             jDesktopPane1.add(im);
@@ -6487,6 +7196,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem72ActionPerformed
 
     private void jMenuItem73ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem73ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             stock_report_entry_wise im = new stock_report_entry_wise(util);
             jDesktopPane1.add(im);
@@ -6502,6 +7213,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem73ActionPerformed
 
     private void jMenuItem74ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem74ActionPerformed
+        if (!checkPrivacyMode())
+            return;
 
         try {
             stock_summary_entry_wise im = new stock_summary_entry_wise(util);
@@ -6583,6 +7296,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem78ActionPerformed
 
     private void jMenuItem79ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem79ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             stock_alter_report im = new stock_alter_report(util);
             jDesktopPane1.add(im);
@@ -6692,7 +7407,29 @@ public final class menu_form extends javax.swing.JFrame {
         }
     }// GEN-LAST:event_jMenuItem90ActionPerformed
 
+    private void jMenuItemRedemptionActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItemRedemptionActionPerformed
+        try {
+            points_redemption instance = new points_redemption(util);
+            jDesktopPane1.add(instance);
+            instance.setVisible(true);
+
+            // Center the window
+            Dimension desktopSize = jDesktopPane1.getSize();
+            Dimension frameSize = instance.getSize();
+            instance.setLocation((desktopSize.width - frameSize.width) / 2,
+                    (desktopSize.height - frameSize.height) / 2);
+        } catch (Exception e) {
+            System.out.println("Error opening points redemption: " + e.getMessage());
+            JOptionPane.showMessageDialog(this,
+                    "<html><h2>Error Opening Points Redemption</h2>" +
+                            "<p>" + e.getMessage() + "</p></html>",
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }// GEN-LAST:event_jMenuItemRedemptionActionPerformed
+
     private void jMenuItem91ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem91ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             purchase_order_list im = new purchase_order_list(util);
             jDesktopPane1.add(im);
@@ -6710,6 +7447,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem91ActionPerformed
 
     private void jMenuItem92ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem92ActionPerformed
+        if (!checkPrivacyMode())
+            return;
 
         try {
             purchase_order_report im = new purchase_order_report(util);
@@ -6847,6 +7586,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem102ActionPerformed
 
     private void jMenuItem105ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem105ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             profit_category im = new profit_category(util);
             jDesktopPane1.add(im);
@@ -6863,6 +7604,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem105ActionPerformed
 
     private void jMenuItem106ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem106ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             profit_itemwise im = new profit_itemwise(util);
             jDesktopPane1.add(im);
@@ -6877,7 +7620,26 @@ public final class menu_form extends javax.swing.JFrame {
         }
     }// GEN-LAST:event_jMenuItem106ActionPerformed
 
+    private void jMenuItem167ActionPerformed(java.awt.event.ActionEvent evt) {
+        if (!checkPrivacyMode())
+            return;
+        try {
+            estimate_profit_itemwise im = new estimate_profit_itemwise(util);
+            jDesktopPane1.add(im);
+            im.setVisible(true);
+
+            Dimension desktopSize = jDesktopPane1.getSize();
+            Dimension jInternalFrameSize = im.getSize();
+            im.setLocation((desktopSize.width - jInternalFrameSize.width) / 2,
+                    (desktopSize.height - jInternalFrameSize.height) / 2);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
     private void jMenuItem107ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem107ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             profit_billwise im = new profit_billwise(util);
             jDesktopPane1.add(im);
@@ -6892,7 +7654,26 @@ public final class menu_form extends javax.swing.JFrame {
         }
     }// GEN-LAST:event_jMenuItem107ActionPerformed
 
+    private void jMenuItem168ActionPerformed(java.awt.event.ActionEvent evt) {
+        if (!checkPrivacyMode())
+            return;
+        try {
+            estimate_profit_billwise im = new estimate_profit_billwise(util);
+            jDesktopPane1.add(im);
+            im.setVisible(true);
+
+            Dimension desktopSize = jDesktopPane1.getSize();
+            Dimension jInternalFrameSize = im.getSize();
+            im.setLocation((desktopSize.width - jInternalFrameSize.width) / 2,
+                    (desktopSize.height - jInternalFrameSize.height) / 2);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
     private void jMenuItem110ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem110ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             profit_daywise im = new profit_daywise(util);
             jDesktopPane1.add(im);
@@ -6907,7 +7688,26 @@ public final class menu_form extends javax.swing.JFrame {
         }
     }// GEN-LAST:event_jMenuItem110ActionPerformed
 
+    private void jMenuItem166ActionPerformed(java.awt.event.ActionEvent evt) {
+        if (!checkPrivacyMode())
+            return;
+        try {
+            estimate_profit_daywise im = new estimate_profit_daywise(util);
+            jDesktopPane1.add(im);
+            im.setVisible(true);
+
+            Dimension desktopSize = jDesktopPane1.getSize();
+            Dimension jInternalFrameSize = im.getSize();
+            im.setLocation((desktopSize.width - jInternalFrameSize.width) / 2,
+                    (desktopSize.height - jInternalFrameSize.height) / 2);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
     private void jMenuItem111ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem111ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             top_selling_items im = new top_selling_items(util);
             jDesktopPane1.add(im);
@@ -6925,6 +7725,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem111ActionPerformed
 
     private void jMenuItem112ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem112ActionPerformed
+        if (!checkPrivacyMode())
+            return;
 
         try {
             top_customers_for_item im = new top_customers_for_item(util);
@@ -6941,6 +7743,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem112ActionPerformed
 
     private void jMenuItem113ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem113ActionPerformed
+        if (!checkPrivacyMode())
+            return;
 
         try {
             top_customers_points_wise im = new top_customers_points_wise(util);
@@ -6957,6 +7761,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem113ActionPerformed
 
     private void jMenuItem114ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem114ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             sales_summary_userwise im = new sales_summary_userwise(util);
             jDesktopPane1.add(im);
@@ -6972,6 +7778,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem114ActionPerformed
 
     private void jMenuItem115ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem115ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             top_users im = new top_users(util);
             jDesktopPane1.add(im);
@@ -6987,6 +7795,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem115ActionPerformed
 
     private void jMenuItem116ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem116ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             sales_alter_list im = new sales_alter_list(util);
             jDesktopPane1.add(im);
@@ -7002,6 +7812,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem116ActionPerformed
 
     private void jMenuItem117ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem117ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             sales_deleted_list im = new sales_deleted_list(util);
             jDesktopPane1.add(im);
@@ -7047,6 +7859,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_estimatebuttonActionPerformed
 
     private void jMenuItem119ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem119ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             daily_estimate_select im = new daily_estimate_select(util);
             jDesktopPane1.add(im);
@@ -7062,6 +7876,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem119ActionPerformed
 
     private void jMenuItem120ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem120ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             daily_estimate_report_select im = new daily_estimate_report_select(util);
             jDesktopPane1.add(im);
@@ -7078,6 +7894,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem120ActionPerformed
 
     private void jMenuItem121ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem121ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             estimate_report im = new estimate_report(util);
             jDesktopPane1.add(im);
@@ -7093,6 +7911,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem121ActionPerformed
 
     private void jMenuItem122ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem122ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             estimate_report_location im = new estimate_report_location(util);
             jDesktopPane1.add(im);
@@ -7108,6 +7928,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem122ActionPerformed
 
     private void jMenuItem123ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem123ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             estimate_report_terminal im = new estimate_report_terminal(util);
             jDesktopPane1.add(im);
@@ -7123,6 +7945,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem123ActionPerformed
 
     private void jMenuItem124ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem124ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             estimate_report_price_type im = new estimate_report_price_type(util);
             jDesktopPane1.add(im);
@@ -7138,6 +7962,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem124ActionPerformed
 
     private void jMenuItem125ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem125ActionPerformed
+        if (!checkPrivacyMode())
+            return;
 
         try {
             estimate_report_cust im = new estimate_report_cust(util);
@@ -7154,6 +7980,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem125ActionPerformed
 
     private void jMenuItem126ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem126ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             estimate_report_bill_itemwise im = new estimate_report_bill_itemwise(util);
             jDesktopPane1.add(im);
@@ -7169,6 +7997,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem126ActionPerformed
 
     private void jMenuItem127ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem127ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             estimate_summary im = new estimate_summary(util);
             jDesktopPane1.add(im);
@@ -7184,6 +8014,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem127ActionPerformed
 
     private void jMenuItem128ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem128ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             estimate_summary_daywise im = new estimate_summary_daywise(util);
             jDesktopPane1.add(im);
@@ -7199,6 +8031,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem128ActionPerformed
 
     private void jMenuItem129ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem129ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             estimate_summary_cust im = new estimate_summary_cust(util);
             jDesktopPane1.add(im);
@@ -7214,6 +8048,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem129ActionPerformed
 
     private void jMenuItem130ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem130ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             estimate_summary_item im = new estimate_summary_item(util);
             jDesktopPane1.add(im);
@@ -7229,6 +8065,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem130ActionPerformed
 
     private void jMenuItem131ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem131ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             estimate_summary_category im = new estimate_summary_category(util);
             jDesktopPane1.add(im);
@@ -7244,6 +8082,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem131ActionPerformed
 
     private void jMenuItem132ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem132ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             estimate_summary_manu im = new estimate_summary_manu(util);
             jDesktopPane1.add(im);
@@ -7259,6 +8099,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem132ActionPerformed
 
     private void jMenuItem133ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem133ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             estimate_summary_userwise im = new estimate_summary_userwise(util);
             jDesktopPane1.add(im);
@@ -7289,6 +8131,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem134ActionPerformed
 
     private void jMenuItem135ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem135ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             ereturn_report im = new ereturn_report(util);
             jDesktopPane1.add(im);
@@ -7304,6 +8148,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem135ActionPerformed
 
     private void jMenuItem136ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem136ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             ereturn_summary_item im = new ereturn_summary_item(util);
             jDesktopPane1.add(im);
@@ -7415,13 +8261,13 @@ public final class menu_form extends javax.swing.JFrame {
     private void activatelMouseClicked(java.awt.event.MouseEvent evt) {// GEN-FIRST:event_activatelMouseClicked
         // Check if already activated
         if (activatel.getText().contains("Activated")) {
-            JOptionPane.showMessageDialog(this, 
-                "Full version is already activated!\nEnjoy all premium features.",
-                "Already Activated", 
-                JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Full version is already activated!\nEnjoy all premium features.",
+                    "Already Activated",
+                    JOptionPane.INFORMATION_MESSAGE);
             return;
         }
-        
+
         // Check internet connection for activation
         String connection = check_internet_connect();
         if (connection.equals("Yes")) {
@@ -7429,20 +8275,22 @@ public final class menu_form extends javax.swing.JFrame {
                 new ActivationPack.activation_home().setVisible(true);
                 this.dispose();
             } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, 
-                    "Error opening activation window: " + e.getMessage(),
-                    "Activation Error", 
-                    JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this,
+                        "Error opening activation window: " + e.getMessage(),
+                        "Activation Error",
+                        JOptionPane.ERROR_MESSAGE);
             }
         } else {
-            JOptionPane.showMessageDialog(this, 
-                "Internet connection is required for activation!\nPlease check your network connection and try again.",
-                "No Internet Connection", 
-                JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Internet connection is required for activation!\nPlease check your network connection and try again.",
+                    "No Internet Connection",
+                    JOptionPane.WARNING_MESSAGE);
         }
     }// GEN-LAST:event_activatelMouseClicked
 
     private void jLabel12MouseClicked(java.awt.event.MouseEvent evt) {// GEN-FIRST:event_jLabel12MouseClicked
+        if (!checkPrivacyMode())
+            return;
         try {
             salespack.sales_report im = new sales_report(util);
             jDesktopPane1.add(im);
@@ -7458,6 +8306,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jLabel12MouseClicked
 
     private void jLabel8MouseClicked(java.awt.event.MouseEvent evt) {// GEN-FIRST:event_jLabel8MouseClicked
+        if (!checkPrivacyMode())
+            return;
         try {
             salespack.sales_report im = new sales_report(util);
             jDesktopPane1.add(im);
@@ -7488,6 +8338,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jLabel10MouseClicked
 
     private void jLabel15MouseClicked(java.awt.event.MouseEvent evt) {// GEN-FIRST:event_jLabel15MouseClicked
+        if (!checkPrivacyMode())
+            return;
         try {
             purchase_order_report im = new purchase_order_report(util);
             jDesktopPane1.add(im);
@@ -7503,6 +8355,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jLabel15MouseClicked
 
     private void jLabel6MouseClicked(java.awt.event.MouseEvent evt) {// GEN-FIRST:event_jLabel6MouseClicked
+        if (!checkPrivacyMode())
+            return;
         try {
             purchase_report im = new purchase_report(util);
             jDesktopPane1.add(im);
@@ -7518,6 +8372,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jLabel6MouseClicked
 
     private void jLabel4MouseClicked(java.awt.event.MouseEvent evt) {// GEN-FIRST:event_jLabel4MouseClicked
+        if (!checkPrivacyMode())
+            return;
         try {
             stock_summary im = new stock_summary(util);
             jDesktopPane1.add(im);
@@ -7533,6 +8389,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jLabel4MouseClicked
 
     private void jLabel17MouseClicked(java.awt.event.MouseEvent evt) {// GEN-FIRST:event_jLabel17MouseClicked
+        if (!checkPrivacyMode())
+            return;
         try {
             stock_report_min_stock im = new stock_report_min_stock(util);
             jDesktopPane1.add(im);
@@ -7548,6 +8406,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jLabel17MouseClicked
 
     private void jLabel21MouseClicked(java.awt.event.MouseEvent evt) {// GEN-FIRST:event_jLabel21MouseClicked
+        if (!checkPrivacyMode())
+            return;
 
         try {
             stock_report_max_stock im = new stock_report_max_stock(util);
@@ -7564,6 +8424,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jLabel21MouseClicked
 
     private void jLabel2MouseClicked(java.awt.event.MouseEvent evt) {// GEN-FIRST:event_jLabel2MouseClicked
+        if (!checkPrivacyMode())
+            return;
         try {
             stock_report_nill_stock im = new stock_report_nill_stock(util);
             jDesktopPane1.add(im);
@@ -7579,6 +8441,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jLabel2MouseClicked
 
     private void jLabel19MouseClicked(java.awt.event.MouseEvent evt) {// GEN-FIRST:event_jLabel19MouseClicked
+        if (!checkPrivacyMode())
+            return;
         try {
             items_list im = new items_list(util);
             jDesktopPane1.add(im);
@@ -7910,6 +8774,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem159ActionPerformed
 
     private void jMenuItem160ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jMenuItem160ActionPerformed
+        if (!checkPrivacyMode())
+            return;
         try {
             profit_itemwise_barcode im = new profit_itemwise_barcode(util);
             jDesktopPane1.add(im);
@@ -7955,6 +8821,8 @@ public final class menu_form extends javax.swing.JFrame {
     }// GEN-LAST:event_jMenuItem163ActionPerformed
 
     private void jMenuItem164ActionPerformed(java.awt.event.ActionEvent evt) {
+        if (!checkPrivacyMode())
+            return;
         try {
             expiry_report im = new expiry_report(util);
             jDesktopPane1.add(im);
@@ -8095,6 +8963,9 @@ public final class menu_form extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItem11;
     private javax.swing.JMenuItem jMenuItem110;
     private javax.swing.JMenuItem jMenuItem111;
+    private javax.swing.JMenuItem jMenuItem166;
+    private javax.swing.JMenuItem jMenuItem167;
+    private javax.swing.JMenuItem jMenuItem168;
     private javax.swing.JMenuItem jMenuItem112;
     private javax.swing.JMenuItem jMenuItem113;
     private javax.swing.JMenuItem jMenuItem114;
@@ -8180,6 +9051,7 @@ public final class menu_form extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItem39;
     private javax.swing.JMenuItem jMenuItem4;
     private javax.swing.JMenuItem jMenuItem40;
+    private javax.swing.JMenuItem jMenuItem165;
     private javax.swing.JMenuItem jMenuItem41;
     private javax.swing.JMenuItem jMenuItem42;
     private javax.swing.JMenuItem jMenuItem43;
@@ -8235,6 +9107,7 @@ public final class menu_form extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItem89;
     private javax.swing.JMenuItem jMenuItem9;
     private javax.swing.JMenuItem jMenuItem90;
+    private javax.swing.JMenuItem jMenuItemRedemption;
     private javax.swing.JMenuItem jMenuItem91;
     private javax.swing.JMenuItem jMenuItem92;
     private javax.swing.JMenuItem jMenuItem93;

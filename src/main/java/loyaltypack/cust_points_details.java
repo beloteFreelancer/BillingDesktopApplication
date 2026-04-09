@@ -1,5 +1,6 @@
 package loyaltypack;
 
+import Utils.ColorConstants;
 import ca.odell.glazedlists.GlazedLists;
 import ca.odell.glazedlists.swing.AutoCompleteSupport;
 import com.selrom.db.DataUtil;
@@ -24,7 +25,7 @@ import smspack.manual_sms;
 /**
  *
  * @author K.SELVAKUMAR, copyrights K.SELVAKUMAR, +91 99427 32229,
- * mysoft.java@gmail.com
+ *         mysoft.java@gmail.com
  */
 public final class cust_points_details extends javax.swing.JInternalFrame {
 
@@ -42,8 +43,10 @@ public final class cust_points_details extends javax.swing.JInternalFrame {
 
         setTitle("Customer Points Details");
         this.setSize(1021, 648);
-        ImageIcon icon = new ImageIcon(ClassLoader.getSystemResource("images/icon.png"));
-        this.setFrameIcon(icon);
+        ImageIcon icon = ColorConstants.loadIcon("/images/icon.png");
+        if (icon != null) {
+            this.setFrameIcon(icon);
+        }
     }
 
     public void load_list_table() {
@@ -72,7 +75,8 @@ public final class cust_points_details extends javax.swing.JInternalFrame {
         if (h2.getText().equals("")) {
             h2.setText("" + 0);
         }
-        String query = "select a.cid,a.cname,city,mobile,points from cust a,cust_points b where a.cid=b.cid and points " + h1.getSelectedItem() + " " + h2.getText() + " order by points";
+        String query = "select a.cid,a.cname,city,mobile,points from cust a,cust_points b where a.cid=b.cid and points "
+                + h1.getSelectedItem() + " " + h2.getText() + " order by points";
         load_report(query);
     }
 
@@ -82,7 +86,8 @@ public final class cust_points_details extends javax.swing.JInternalFrame {
             h3.requestFocus();
             return;
         }
-        String query = "select a.cid,a.cname,city,mobile,points from cust a,cust_points b where a.cid=b.cid and mobile=" + h3.getSelectedItem() + " order by points";
+        String query = "select a.cid,a.cname,city,mobile,points from cust a,cust_points b where a.cid=b.cid and mobile="
+                + h3.getSelectedItem() + " order by points";
         load_report(query);
     }
 
@@ -101,7 +106,8 @@ public final class cust_points_details extends javax.swing.JInternalFrame {
 
             r = util.doQuery(query);
             while (r.next()) {
-                s2.addRow(new Object[]{r.getString(1), r.getString(2), r.getString(3), r.getString(4), (int) r.getDouble(5)});
+                s2.addRow(new Object[] { r.getString(1), r.getString(2), r.getString(3), r.getString(4),
+                        (int) r.getDouble(5) });
             }
             totl.setText(" Total Records: " + jTable1.getRowCount());
         } catch (ClassNotFoundException | NumberFormatException | SQLException e) {
@@ -142,7 +148,8 @@ public final class cust_points_details extends javax.swing.JInternalFrame {
     }
 
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated
+    // Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         titlelablel = new javax.swing.JLabel();
@@ -171,7 +178,7 @@ public final class cust_points_details extends javax.swing.JInternalFrame {
         titlelablel.setBounds(10, 0, 370, 30);
 
         generatebutton.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        generatebutton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/generate30.png"))); // NOI18N
+        generatebutton.setIcon(ColorConstants.loadIcon("/icons/generate30.png")); // NOI18N
         generatebutton.setText("Generate");
         generatebutton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -182,7 +189,7 @@ public final class cust_points_details extends javax.swing.JInternalFrame {
         generatebutton.setBounds(220, 50, 170, 30);
 
         excelbutton.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        excelbutton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/excel45.png"))); // NOI18N
+        excelbutton.setIcon(ColorConstants.loadIcon("/icons/excel45.png")); // NOI18N
         excelbutton.setMnemonic('i');
         excelbutton.setText("Excel");
         excelbutton.addActionListener(new java.awt.event.ActionListener() {
@@ -194,7 +201,7 @@ public final class cust_points_details extends javax.swing.JInternalFrame {
         excelbutton.setBounds(490, 560, 130, 50);
 
         clearbutton.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        clearbutton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/clear45.png"))); // NOI18N
+        clearbutton.setIcon(ColorConstants.loadIcon("/icons/clear45.png")); // NOI18N
         clearbutton.setMnemonic('c');
         clearbutton.setText("Clear");
         clearbutton.addActionListener(new java.awt.event.ActionListener() {
@@ -206,7 +213,7 @@ public final class cust_points_details extends javax.swing.JInternalFrame {
         clearbutton.setBounds(750, 560, 130, 50);
 
         closebutton.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        closebutton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/close45.png"))); // NOI18N
+        closebutton.setIcon(ColorConstants.loadIcon("/icons/close45.png")); // NOI18N
         closebutton.setMnemonic('o');
         closebutton.setText("Close");
         closebutton.addActionListener(new java.awt.event.ActionListener() {
@@ -233,7 +240,7 @@ public final class cust_points_details extends javax.swing.JInternalFrame {
         h1.setBounds(50, 50, 50, 30);
 
         smsbutton.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        smsbutton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/sms45.png"))); // NOI18N
+        smsbutton.setIcon(ColorConstants.loadIcon("/icons/sms45.png")); // NOI18N
         smsbutton.setMnemonic('m');
         smsbutton.setText("SMS");
         smsbutton.addActionListener(new java.awt.event.ActionListener() {
@@ -246,16 +253,15 @@ public final class cust_points_details extends javax.swing.JInternalFrame {
 
         jTable1.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
-        ));
+                new Object[][] {
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null }
+                },
+                new String[] {
+                        "Title 1", "Title 2", "Title 3", "Title 4"
+                }));
         jTable1.setRowHeight(25);
         jScrollPane2.setViewportView(jTable1);
 
@@ -281,7 +287,7 @@ public final class cust_points_details extends javax.swing.JInternalFrame {
         h3.setBounds(490, 50, 160, 30);
 
         generatebutton1.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        generatebutton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/generate30.png"))); // NOI18N
+        generatebutton1.setIcon(ColorConstants.loadIcon("/icons/generate30.png")); // NOI18N
         generatebutton1.setText("Generate");
         generatebutton1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -292,7 +298,7 @@ public final class cust_points_details extends javax.swing.JInternalFrame {
         generatebutton1.setBounds(650, 50, 130, 30);
 
         generatebutton2.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        generatebutton2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/select22.png"))); // NOI18N
+        generatebutton2.setIcon(ColorConstants.loadIcon("/icons/select22.png")); // NOI18N
         generatebutton2.setText("Select All");
         generatebutton2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -305,12 +311,12 @@ public final class cust_points_details extends javax.swing.JInternalFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void generatebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_generatebuttonActionPerformed
+    private void generatebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_generatebuttonActionPerformed
         load_report_using_points();
 
-    }//GEN-LAST:event_generatebuttonActionPerformed
+    }// GEN-LAST:event_generatebuttonActionPerformed
 
-    private void excelbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_excelbuttonActionPerformed
+    private void excelbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_excelbuttonActionPerformed
         if (s2.getRowCount() <= 0) {
             JOptionPane.showMessageDialog(this, "Sorry, No Records Were Found!", "Oops", JOptionPane.ERROR_MESSAGE);
             return;
@@ -345,9 +351,9 @@ public final class cust_points_details extends javax.swing.JInternalFrame {
             System.out.println(e.getMessage());
         }
 
-    }//GEN-LAST:event_excelbuttonActionPerformed
+    }// GEN-LAST:event_excelbuttonActionPerformed
 
-    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearbuttonActionPerformed
+    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_clearbuttonActionPerformed
         if (s2.getRowCount() > 0) {
             s2.getDataVector().removeAllElements();
             s2.fireTableDataChanged();
@@ -355,17 +361,17 @@ public final class cust_points_details extends javax.swing.JInternalFrame {
         h1.setSelectedIndex(0);
         h2.setText("");
         h3.setSelectedItem("");
-    }//GEN-LAST:event_clearbuttonActionPerformed
+    }// GEN-LAST:event_clearbuttonActionPerformed
 
-    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closebuttonActionPerformed
+    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_closebuttonActionPerformed
         this.dispose();
-    }//GEN-LAST:event_closebuttonActionPerformed
+    }// GEN-LAST:event_closebuttonActionPerformed
 
-    private void h1ItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_h1ItemStateChanged
+    private void h1ItemStateChanged(java.awt.event.ItemEvent evt) {// GEN-FIRST:event_h1ItemStateChanged
 
-    }//GEN-LAST:event_h1ItemStateChanged
+    }// GEN-LAST:event_h1ItemStateChanged
 
-    private void smsbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_smsbuttonActionPerformed
+    private void smsbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_smsbuttonActionPerformed
         if (s2.getRowCount() <= 0) {
             JOptionPane.showMessageDialog(this, "Sorry, No Records Were Found!", "Oops", JOptionPane.ERROR_MESSAGE);
             return;
@@ -389,16 +395,16 @@ public final class cust_points_details extends javax.swing.JInternalFrame {
         oe.setLocation((desktopSize.width - jInternalFrameSize.width) / 2,
                 (desktopSize.height - jInternalFrameSize.height) / 2);
 
-    }//GEN-LAST:event_smsbuttonActionPerformed
+    }// GEN-LAST:event_smsbuttonActionPerformed
 
-    private void generatebutton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_generatebutton1ActionPerformed
+    private void generatebutton1ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_generatebutton1ActionPerformed
         load_report_using_mobileno();
 
-    }//GEN-LAST:event_generatebutton1ActionPerformed
+    }// GEN-LAST:event_generatebutton1ActionPerformed
 
-    private void generatebutton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_generatebutton2ActionPerformed
+    private void generatebutton2ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_generatebutton2ActionPerformed
         load_report_all();
-    }//GEN-LAST:event_generatebutton2ActionPerformed
+    }// GEN-LAST:event_generatebutton2ActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton clearbutton;

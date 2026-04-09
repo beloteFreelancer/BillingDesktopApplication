@@ -15,6 +15,7 @@ import javax.swing.JFrame;
 import menupack.AmountInWords;
 import menupack.SelRomJasper;
 import menupack.menu_form;
+import menupack.UserSession;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
@@ -27,9 +28,8 @@ public class print_po_A4 {
 
     JasperViewer jasperViewer;
     int num = 0;
-    String rupe = "", hmany = "2";
-    ;
-DataUtil util;
+    String rupe = "", hmany = "2";;
+    DataUtil util;
 
     public void Report(DataUtil util, String billno) {
         this.util = util;
@@ -38,7 +38,10 @@ DataUtil util;
             Map<String, Object> parameters = new HashMap<>();
 
             String add1 = "", add2 = "", add3 = "", add4 = "", add5 = "", sname = "", scode = "", logoPath = "";
-            String query = "select cname,add1,add2,add3,add4,state,scode,hmany,logo_path from setting_bill";
+            String companyWhere = UserSession.hasSelectedCompany()
+                    ? " WHERE companyID='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select cname,add1,add2,add3,add4,state,scode,hmany,logo_path from company" + companyWhere;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 logoPath = r.getString("logo_path");
@@ -51,7 +54,8 @@ DataUtil util;
                 scode = r.getString(7);
                 hmany = r.getString(8);
             }
-            parameters.put("logo_path", logoPath);            parameters.put("parameter1", "" + add1);
+            parameters.put("logo_path", logoPath);
+            parameters.put("parameter1", "" + add1);
             parameters.put("parameter2", "");
             parameters.put("parameter3", "");
             parameters.put("parameter4", "");
@@ -76,7 +80,8 @@ DataUtil util;
 
             String date = "", quans = "", cname = "", sms1 = "", sms2 = "", sms3 = "", sms4 = "";
             double sub = 0, net = 0, taxamt = 0;
-            query = "select date_format(dat,'%d/%m/%Y'),quans,sub,taxamt,net,cname,term1,term2,term3,term4 from po_entry where grn='" + billno + "'";
+            query = "select date_format(dat,'%d/%m/%Y'),quans,sub,taxamt,net,cname,term1,term2,term3,term4 from po_entry where grn='"
+                    + billno + "'";
             r = util.doQuery(query);
             while (r.next()) {
                 date = r.getString(1);
@@ -102,8 +107,13 @@ DataUtil util;
             parameters.put("parameter12", "");
             parameters.put("parameter13", "");
 
-            String ad1 = "", ad2 = "", ad3 = "", area = "", mobile = "", phone = "", ctin = "", csname = "", cscode = "";
-            query = "select cname,add1,add2,add3,city,mobile,phone,gstno,sname,scode from vendor where cname='" + cname + "'";
+            String ad1 = "", ad2 = "", ad3 = "", area = "", mobile = "", phone = "", ctin = "", csname = "",
+                    cscode = "";
+            String venCompanyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            query = "select cname,add1,add2,add3,city,mobile,phone,gstno,sname,scode from vendor where cname='" + cname
+                    + "'" + venCompanyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 cname = r.getString(1);
@@ -188,30 +198,37 @@ DataUtil util;
             int serial = 1;
             String iname;
             int taxp = 0;
-            double quan, price, amount, taxamt1, total;
-            query = "select iname,quan,price,amount,taxp,taxamt,total from po_items where grn='" + billno + "'";
+            double quan, freeQty, price, amount, taxamt1, total;
+            query = "select iname,quan,IFNULL(free_qty,0) as free_qty,price,amount,taxp,taxamt,total from po_items where grn='"
+                    + billno + "'";
             r = util.doQuery(query);
             while (r.next()) {
                 SelRomJasper selRomJasper = new SelRomJasper();
                 iname = r.getString(1);
                 quan = r.getDouble(2);
-                price = r.getDouble(3);
-                amount = r.getDouble(4);
-                taxp = (int) r.getDouble(5);
-                taxamt1 = r.getDouble(6);
-                total = r.getDouble(7);
+                freeQty = r.getDouble(3);
+                price = r.getDouble(4);
+                amount = r.getDouble(5);
+                taxp = (int) r.getDouble(6);
+                taxamt1 = r.getDouble(7);
+                total = r.getDouble(8);
 
                 selRomJasper.setField1("" + serial);
                 selRomJasper.setField2(" " + iname);
                 int quan1 = (int) quan;
-                selRomJasper.setField3("" + quan1);
+                int freeQty1 = (int) freeQty;
+                if (freeQty1 > 0) {
+                    selRomJasper.setField3("" + quan1 + "+" + freeQty1);
+                } else {
+                    selRomJasper.setField3("" + quan1);
+                }
 
                 String price2 = String.format("%." + hmany + "f", price);
                 String amount2 = String.format("%." + hmany + "f", amount);
                 String taxamt3 = String.format("%." + hmany + "f", taxamt1);
                 String total2 = String.format("%." + hmany + "f", total);
 
-                selRomJasper.setField3("" + quan1);
+                selRomJasper.setField3(selRomJasper.getField3());
                 selRomJasper.setField4("" + price2);
                 selRomJasper.setField5("" + amount2);
                 selRomJasper.setField6("" + taxp);

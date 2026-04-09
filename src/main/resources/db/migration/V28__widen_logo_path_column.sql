@@ -1,0 +1,1 @@
+ALTER TABLE company MODIFY COLUMN logo_path varchar(500) DEFAULT NULL;

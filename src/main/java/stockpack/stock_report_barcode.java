@@ -17,6 +17,7 @@ import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import menupack.menu_form;
 import menupack.sample2;
+import menupack.UserSession;
 
 /**
  *
@@ -83,12 +84,16 @@ public class stock_report_barcode extends javax.swing.JInternalFrame {
             boolean selva = false;
             double prate, mrp, srate, wrate;
             String query;
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
 
             if (all.isSelected()) {
-                query = "select barcode,ino,iname,sum(quan),sum(quan*prate),sum(quan*mrp),sum(quan*rprice),sum(quan*wprice) from stock where quan>0 group by barcode,ino order by ino";
+                query = "select barcode,ino,iname,sum(quan),sum(quan*prate),sum(quan*mrp),sum(quan*rprice),sum(quan*wprice) from stock where quan>0"
+                        + companyFilter + " group by barcode,ino order by ino";
             } else {
                 query = "select barcode,ino,iname,sum(quan),sum(quan*prate),sum(quan*mrp),sum(quan*rprice),sum(quan*wprice) from stock where cat='"
-                        + h3.getSelectedItem() + "' and quan>0 group by barcode,ino order by ino";
+                        + h3.getSelectedItem() + "' and quan>0" + companyFilter + " group by barcode,ino order by ino";
             }
             r = util.doQuery(query);
             while (r.next()) {
@@ -143,13 +148,16 @@ public class stock_report_barcode extends javax.swing.JInternalFrame {
 
     final void get_cid() {
         try {
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             int count = 0;
-            String query = "select distinct cat from stock";
+            String query = "select distinct cat from stock" + companyFilter;
             ResultSet r1 = util.doQuery(query);
             while (r1.next()) {
                 count = count + 1;
             }
-            query = "select distinct cat from stock";
+            query = "select distinct cat from stock" + companyFilter;
             r1 = util.doQuery(query);
             Object f[] = new Object[count];
             int index = 0;

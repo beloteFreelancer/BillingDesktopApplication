@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.swing.JFrame;
 import menupack.SelRomJasper;
+import menupack.UserSession;
 import menupack.menu_form;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperFillManager;
@@ -52,8 +53,13 @@ public class daily_sales_report {
             Map<String, Object> parameters = new HashMap<>();
 
             String sname = "";
-            String query = "select cname,hmany from setting_bill";
+            String companyNameFilter = "";
+            if (UserSession.hasSelectedCompany()) {
+                companyNameFilter = " where companyID='" + UserSession.getSelectedCompanyID() + "'";
+            }
+            String query = "select cname,hmany from company" + companyNameFilter;
             r = util.doQuery(query);
+            if (r == null) return;
             while (r.next()) {
                 sname = r.getString(1);
                 hmany = r.getInt(2);
@@ -65,7 +71,8 @@ public class daily_sales_report {
 
             ArrayList terminal = new ArrayList();
             ArrayList cashier = new ArrayList();
-            query = "select distinct terminal,cashier from sales where dat between '" + lk + "' and '" + lk1 + "' order by terminal,cashier";
+            query = "select distinct terminal,cashier from sales where dat between '" + lk + "' and '" + lk1
+                    + "' order by terminal,cashier";
             r = util.doQuery(query);
             while (r.next()) {
                 terminal.add(r.getString(1));
@@ -86,14 +93,17 @@ public class daily_sales_report {
             for (int i = 0; i < terminal.size(); i++) {
                 date.add("");
                 time.add("");
-                billno.add("Counter: " + terminal.get(i).toString().toUpperCase() + ", " + cashier.get(i).toString().toUpperCase());
+                billno.add("Counter: " + terminal.get(i).toString().toUpperCase() + ", "
+                        + cashier.get(i).toString().toUpperCase());
                 items.add("");
                 quans.add("");
                 net.add("");
                 pby.add("");
                 price_type.add("");
                 double total = 0;
-                query = "select date_format(dat,'%d/%m/%Y'),tim,billno,items,quans,pby,price_type,net from sales where dat between '" + lk + "' and '" + lk1 + "' and terminal='" + terminal.get(i) + "' and cashier='" + cashier.get(i) + "' order by dat,billno";
+                query = "select date_format(dat,'%d/%m/%Y'),tim,billno,items,quans,pby,price_type,net from sales where dat between '"
+                        + lk + "' and '" + lk1 + "' and terminal='" + terminal.get(i) + "' and cashier='"
+                        + cashier.get(i) + "' order by dat,billno";
                 r = util.doQuery(query);
                 while (r.next()) {
                     date.add(r.getString(1));
@@ -146,7 +156,7 @@ public class daily_sales_report {
                 net.add("");
                 pby.add("");
                 price_type.add("");
-            }//terminal array size
+            } // terminal array size
 
             ArrayList k = new ArrayList();
 
@@ -164,13 +174,14 @@ public class daily_sales_report {
                 k.add(selRomJasper);
             }
 
-            //sales ends
+            // sales ends
             String tnet1 = String.format("%." + hmany + "f", tnet);
             parameters.put("parameter3", "Total: " + tbills);
             parameters.put("parameter4", "" + tnet1);
 
             double cash = 0, card = 0, credit = 0, others = 0;
-            query = "select sum(cash),sum(card),sum(credit),sum(others),sum(bal) from sales where dat between '" + lk + "' and '" + lk1 + "'";
+            query = "select sum(cash),sum(card),sum(credit),sum(others),sum(bal) from sales where dat between '" + lk
+                    + "' and '" + lk1 + "'";
             r = util.doQuery(query);
             while (r.next()) {
                 cash = r.getDouble(1);
@@ -193,8 +204,7 @@ public class daily_sales_report {
             disable_warnigs.disableAccessWarnings();
             jasperReport = JasperReportCompiler.compileReport("/JasperFiles/Reports/Daily_Sales_Report.jrxml");
 
-            JRBeanCollectionDataSource beanColDataSource
-                    = new JRBeanCollectionDataSource(k);
+            JRBeanCollectionDataSource beanColDataSource = new JRBeanCollectionDataSource(k);
             jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, beanColDataSource);
             jasperViewer = new JasperViewer(jasperPrint);
             jasperViewer.setVisible(true);

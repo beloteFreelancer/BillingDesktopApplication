@@ -1,9 +1,15 @@
 package purchase_order_pack;
 
+import Utils.CompanySettingUtil;
 import com.selrom.db.DataUtil;
+import menupack.UserSession;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Frame;
 import java.awt.HeadlessException;
 import java.awt.Point;
+import java.awt.Window;
 import java.awt.event.KeyEvent;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -11,10 +17,19 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import menupack.menu_form;
@@ -49,7 +64,7 @@ public final class purchase_order extends javax.swing.JInternalFrame {
 
         @Override
         public boolean isCellEditable(int row, int column) {
-            return column == 2 || column == 5 || column == 6;
+            return column == 2 || column == 5 || column == 6 || column == 7;
         }
     }
 
@@ -82,7 +97,8 @@ public final class purchase_order extends javax.swing.JInternalFrame {
         s2.addColumn("MRP");
         s2.addColumn("Re-Order Level");
         s2.addColumn("Stock-in-Hand");
-        s2.addColumn("Order_Qty");
+        s2.addColumn("Paid_Qty");
+        s2.addColumn("Free_Qty");
         s2.addColumn("Purchase Price");
         s2.addColumn("Amount");
         s2.addColumn("Tax %");
@@ -100,6 +116,7 @@ public final class purchase_order extends javax.swing.JInternalFrame {
         jTable1.getColumnModel().getColumn(8).setCellRenderer(dtcr1);
         jTable1.getColumnModel().getColumn(9).setCellRenderer(dtcr1);
         jTable1.getColumnModel().getColumn(10).setCellRenderer(dtcr1);
+        jTable1.getColumnModel().getColumn(11).setCellRenderer(dtcr1);
         jTable1.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         jTable1.getColumnModel().getColumn(0).setPreferredWidth(123);
         jTable1.getColumnModel().getColumn(1).setPreferredWidth(300);
@@ -107,21 +124,62 @@ public final class purchase_order extends javax.swing.JInternalFrame {
         jTable1.getColumnModel().getColumn(3).setPreferredWidth(110);
         jTable1.getColumnModel().getColumn(4).setPreferredWidth(110);
         jTable1.getColumnModel().getColumn(5).setPreferredWidth(120);
-        jTable1.getColumnModel().getColumn(6).setPreferredWidth(120);
+        jTable1.getColumnModel().getColumn(6).setPreferredWidth(90);
         jTable1.getColumnModel().getColumn(7).setPreferredWidth(120);
-        jTable1.getColumnModel().getColumn(8).setPreferredWidth(100);
-        jTable1.getColumnModel().getColumn(9).setPreferredWidth(110);
-        jTable1.getColumnModel().getColumn(10).setPreferredWidth(120);
+        jTable1.getColumnModel().getColumn(8).setPreferredWidth(120);
+        jTable1.getColumnModel().getColumn(9).setPreferredWidth(100);
+        jTable1.getColumnModel().getColumn(10).setPreferredWidth(110);
+        jTable1.getColumnModel().getColumn(11).setPreferredWidth(120);
         String Ta = "Arial";
         int Bold = 0, size = 14;
         jTable1.getTableHeader().setFont(new Font(Ta, Bold, size));
         jTable1.setShowGrid(true);
+        try {
+            String colCompanyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : " AND company_id=''";
+            ResultSet colRs = util
+                    .doQuery("SELECT col_key, col_visible FROM invoice_columns WHERE doc_type='po'" + colCompanyFilter);
+            while (colRs != null && colRs.next()) {
+                int colIdx = -1;
+                switch (colRs.getString("col_key")) {
+                    case "mrp":
+                        colIdx = 2;
+                        break;
+                    case "reorder_level":
+                        colIdx = 3;
+                        break;
+                    case "stock_hand":
+                        colIdx = 4;
+                        break;
+                    case "tax_pct":
+                        colIdx = 9;
+                        break;
+                    case "tax_amt":
+                        colIdx = 10;
+                        break;
+                    case "total":
+                        colIdx = 11;
+                        break;
+                }
+                if (colIdx >= 0 && colRs.getInt("col_visible") == 0) {
+                    javax.swing.table.TableColumn tc = jTable1.getColumnModel().getColumn(colIdx);
+                    tc.setMinWidth(0);
+                    tc.setMaxWidth(0);
+                    tc.setPreferredWidth(0);
+                }
+            }
+        } catch (Exception ignored) {
+        }
     }
 
     void get_grn_no() {
         try {
             int sno = 1;
-            String query = "select max(grn) from po_entry";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select max(grn) from po_entry" + companyFilter;
             ResultSet r = util.doQuery(query);
             boolean selva = false;
             while (r.next()) {
@@ -139,14 +197,20 @@ public final class purchase_order extends javax.swing.JInternalFrame {
 
     void get_item_details_using_itemcode() {
         try {
-            String query = "select iname,taxp from item where ino='" + h7.getText() + "' order by ino limit 1";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select iname,taxp from item where ino='" + h7.getText() + "'" + companyFilter
+                    + " order by ino limit 1";
             ResultSet r = util.doQuery(query);
+            if (r == null) return;
             while (r.next()) {
                 h8.setText(r.getString(1));
                 h10.setText(r.getString(2));
             }
-            query = "select distinct prate from stock where ino='" + h7.getText() + "' order by barcode";
+            query = "select distinct prate from stock where ino='" + h7.getText() + "'" + companyFilter;
             r = util.doQuery(query);
+            if (r == null) return;
             while (r.next()) {
                 h9.setText(r.getString(1));
             }
@@ -164,8 +228,12 @@ public final class purchase_order extends javax.swing.JInternalFrame {
                 h3.requestFocus();
                 return;
             }
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND b.company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             String query = "select distinct a.ino,a.iname,mrp,minstock,sum(quan),prate,taxp from vendor_link a,stock b where cname='"
-                    + h3.getText() + "' and a.ino=b.ino and a.iname=b.iname group by a.ino order by a.ino";
+                    + h3.getText() + "' and a.ino=b.ino and a.iname=b.iname" + companyFilter
+                    + " group by a.ino order by a.ino";
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 int taxp = r.getInt(7);
@@ -179,7 +247,7 @@ public final class purchase_order extends javax.swing.JInternalFrame {
                 }
                 String prate2 = String.format("%." + hmany + "f", prate);
                 s2.addRow(new Object[] { r.getString(1), r.getString(2), r.getString(3), r.getString(4), r.getString(5),
-                        "" + 0, "" + prate2, "", "" + taxp, "" + 0, "" + 0 });
+                        "" + 0, "" + 0, "" + prate2, "", "" + taxp, "" + 0, "" + 0 });
             }
             apply_all_changes();
         } catch (HeadlessException | ClassNotFoundException | SQLException e) {
@@ -210,8 +278,12 @@ public final class purchase_order extends javax.swing.JInternalFrame {
             double prate = Double.parseDouble(h9.getText());
             int taxp = Integer.parseInt(h10.getText());
             double quan = Double.parseDouble(h11.getText());
+            double freeQty = h12.getText().isEmpty() ? 0 : Double.parseDouble(h12.getText());
             double minstock = 0, stock = 0, mrp = 0;
-            String query = "select minstock from item where ino='" + ino + "'";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select minstock from item where ino='" + ino + "'" + companyFilter;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 selva = true;
@@ -223,7 +295,7 @@ public final class purchase_order extends javax.swing.JInternalFrame {
                 return;
             }
 
-            query = "select sum(quan),mrp from stock where ino='" + ino + "' group by mrp";
+            query = "select sum(quan),mrp from stock where ino='" + ino + "'" + companyFilter + " group by mrp";
             r = util.doQuery(query);
             while (r.next()) {
                 stock = r.getDouble(1);
@@ -248,7 +320,8 @@ public final class purchase_order extends javax.swing.JInternalFrame {
                 total = amount;
             }
 
-            s2.addRow(new Object[] { ino, iname, mrp, minstock, stock, quan, prate, amount, taxp, taxamt, total });
+            s2.addRow(new Object[] { ino, iname, mrp, minstock, stock, quan, freeQty, prate, amount, taxp, taxamt,
+                    total });
             apply_all_changes();
             fields_clear();
         } catch (HeadlessException | ClassNotFoundException | SQLException e) {
@@ -263,8 +336,9 @@ public final class purchase_order extends javax.swing.JInternalFrame {
             for (int i = 0; i < jTable1.getRowCount(); i++) {
                 double mrp = Double.parseDouble(jTable1.getValueAt(i, 2).toString());
                 double quan = Double.parseDouble(jTable1.getValueAt(i, 5).toString());
-                double prate = Double.parseDouble(jTable1.getValueAt(i, 6).toString());
-                double taxp = Double.parseDouble(jTable1.getValueAt(i, 8).toString());
+                double freeQty = Double.parseDouble(jTable1.getValueAt(i, 6).toString());
+                double prate = Double.parseDouble(jTable1.getValueAt(i, 7).toString());
+                double taxp = Double.parseDouble(jTable1.getValueAt(i, 9).toString());
 
                 double amount = prate * quan;
                 double total, taxamt;
@@ -283,10 +357,10 @@ public final class purchase_order extends javax.swing.JInternalFrame {
                 String total2 = String.format("%." + hmany + "f", total);
 
                 jTable1.setValueAt(mrp2, i, 2);
-                jTable1.setValueAt(prate2, i, 6);
-                jTable1.setValueAt(amount2, i, 7);
-                jTable1.setValueAt(taxamt2, i, 9);
-                jTable1.setValueAt(total2, i, 10);
+                jTable1.setValueAt(prate2, i, 7);
+                jTable1.setValueAt(amount2, i, 8);
+                jTable1.setValueAt(taxamt2, i, 10);
+                jTable1.setValueAt(total2, i, 11);
 
                 nquan = nquan + quan;
                 nsub = nsub + amount;
@@ -358,6 +432,7 @@ public final class purchase_order extends javax.swing.JInternalFrame {
             h9.setText("");
             h10.setText("");
             h11.setText("");
+            h12.setText("");
             h7.requestFocus();
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -443,15 +518,20 @@ public final class purchase_order extends javax.swing.JInternalFrame {
                 String minstock = jTable1.getValueAt(i, 3).toString();
                 String stock = jTable1.getValueAt(i, 4).toString();
                 String quan = jTable1.getValueAt(i, 5).toString();
-                String price = jTable1.getValueAt(i, 6).toString();
-                String amount = jTable1.getValueAt(i, 7).toString();
-                String taxp = jTable1.getValueAt(i, 8).toString();
-                String taxamt1 = jTable1.getValueAt(i, 9).toString();
-                String total = jTable1.getValueAt(i, 10).toString();
+                String free_qty = jTable1.getValueAt(i, 6).toString();
+                String price = jTable1.getValueAt(i, 7).toString();
+                String amount = jTable1.getValueAt(i, 8).toString();
+                String taxp = jTable1.getValueAt(i, 9).toString();
+                String taxamt1 = jTable1.getValueAt(i, 10).toString();
+                String total = jTable1.getValueAt(i, 11).toString();
 
-                query_batch.add("insert into po_items values ('" + grn + "','" + date + "','" + cname + "','" + ino
-                        + "','" + iname + "','" + mrp + "','" + minstock + "','" + stock + "','" + quan + "','" + price
-                        + "','" + amount + "','" + taxp + "','" + taxamt1 + "','" + total + "','" + ttype + "')");
+                query_batch.add(
+                        "insert into po_items (grn,dat,cname,ino,iname,mrp,minstock,stock,quan,free_qty,price,amount,taxp,taxamt,total,ttype) values ('"
+                                + grn + "','" + date + "','" + cname + "','" + ino
+                                + "','" + iname + "','" + mrp + "','" + minstock + "','" + stock + "','" + quan + "','"
+                                + free_qty + "','" + price
+                                + "','" + amount + "','" + taxp + "','" + taxamt1 + "','" + total + "','" + ttype
+                                + "')");
             }
 
             String items = h17.getText();
@@ -467,10 +547,15 @@ public final class purchase_order extends javax.swing.JInternalFrame {
             String term2 = h24.getText();
             String term3 = h25.getText();
             String term4 = h26.getText();
-            query_batch.add("insert into po_entry values ('" + grn + "','" + date + "','" + cname + "','" + items
-                    + "','" + quans + "','" + sub + "','" + taxamt + "','" + round + "','" + net + "','" + status
-                    + "','" + pstatus + "','" + username + "','" + last + "','" + ttype + "','" + rdate + "','" + term1
-                    + "','" + term2 + "','" + term3 + "','" + term4 + "')");
+            String cid_val = UserSession.getSelectedCompanyID() != null ? UserSession.getSelectedCompanyID() : "";
+            query_batch.add(
+                    "insert into po_entry (grn, dat, cname, items, quans, sub, taxamt, round, net, status, pstatus, user, last, ttype, rdate, term1, term2, term3, term4, company_id) values ('"
+                            + grn + "','" + date + "','" + cname + "','" + items
+                            + "','" + quans + "','" + sub + "','" + taxamt + "','" + round + "','" + net + "','"
+                            + status
+                            + "','" + pstatus + "','" + username + "','" + last + "','" + ttype + "','" + rdate + "','"
+                            + term1
+                            + "','" + term2 + "','" + term3 + "','" + term4 + "','" + cid_val + "')");
 
             int count = util.doManipulation_Batch(query_batch);
             if (count > 0) {
@@ -563,17 +648,18 @@ public final class purchase_order extends javax.swing.JInternalFrame {
                     h25.setText(set1.getString(13));
                     h26.setText(set1.getString(14));
                 }
-                query = "select ino,iname,mrp,minstock,stock,quan,price,amount,taxp,taxamt,total from po_items where grn='"
+                query = "select ino,iname,mrp,minstock,stock,quan,IFNULL(free_qty,0) as free_qty,price,amount,taxp,taxamt,total from po_items where grn='"
                         + grn + "'";
                 set1 = util.doQuery(query);
                 while (set1.next()) {
                     String mrp2 = String.format("%." + hmany + "f", set1.getDouble(3));
-                    String price2 = String.format("%." + hmany + "f", set1.getDouble(7));
-                    String amount2 = String.format("%." + hmany + "f", set1.getDouble(8));
-                    String taxamt2 = String.format("%." + hmany + "f", set1.getDouble(10));
-                    String total2 = String.format("%." + hmany + "f", set1.getDouble(11));
+                    String price2 = String.format("%." + hmany + "f", set1.getDouble(8));
+                    String amount2 = String.format("%." + hmany + "f", set1.getDouble(9));
+                    String taxamt2 = String.format("%." + hmany + "f", set1.getDouble(11));
+                    String total2 = String.format("%." + hmany + "f", set1.getDouble(12));
                     s2.addRow(new Object[] { set1.getString(1), set1.getString(2), mrp2, set1.getString(4),
-                            set1.getString(5), set1.getString(6), price2, amount2, set1.getString(9), taxamt2,
+                            set1.getString(5), set1.getString(6), set1.getString(7), price2, amount2,
+                            set1.getString(10), taxamt2,
                             total2 });
                 }
             } // if selva true ends
@@ -979,7 +1065,7 @@ public final class purchase_order extends javax.swing.JInternalFrame {
         h8.setEditable(false);
         h8.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         getContentPane().add(h8);
-        h8.setBounds(260, 130, 530, 30);
+        h8.setBounds(245, 130, 340, 30);
 
         jTable1.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
@@ -1004,24 +1090,24 @@ public final class purchase_order extends javax.swing.JInternalFrame {
         jScrollPane1.setBounds(10, 170, 1220, 280);
 
         jLabel10.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        jLabel10.setText("Qty");
+        jLabel10.setText("Paid Qty");
         getContentPane().add(jLabel10);
-        jLabel10.setBounds(1100, 130, 30, 30);
+        jLabel10.setBounds(825, 130, 55, 30);
 
         h10.setEditable(false);
         h10.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         getContentPane().add(h10);
-        h10.setBounds(1040, 130, 50, 30);
+        h10.setBounds(770, 130, 50, 30);
 
         jLabel13.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        jLabel13.setText(" Tax %");
+        jLabel13.setText("Tax%");
         getContentPane().add(jLabel13);
-        jLabel13.setBounds(990, 130, 60, 30);
+        jLabel13.setBounds(730, 130, 40, 30);
 
         jLabel14.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        jLabel14.setText(" Purchase Price");
+        jLabel14.setText("Pur.Price");
         getContentPane().add(jLabel14);
-        jLabel14.setBounds(790, 130, 100, 30);
+        jLabel14.setBounds(585, 130, 60, 30);
 
         h9.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         h9.addActionListener(new java.awt.event.ActionListener() {
@@ -1030,12 +1116,12 @@ public final class purchase_order extends javax.swing.JInternalFrame {
             }
         });
         getContentPane().add(h9);
-        h9.setBounds(890, 130, 100, 30);
+        h9.setBounds(645, 130, 85, 30);
 
         jLabel15.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jLabel15.setText("Item Code");
         getContentPane().add(jLabel15);
-        jLabel15.setBounds(10, 130, 80, 30);
+        jLabel15.setBounds(10, 130, 65, 30);
 
         h7.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         h7.addActionListener(new java.awt.event.ActionListener() {
@@ -1049,7 +1135,7 @@ public final class purchase_order extends javax.swing.JInternalFrame {
             }
         });
         getContentPane().add(h7);
-        h7.setBounds(80, 130, 180, 30);
+        h7.setBounds(75, 130, 170, 30);
 
         h11.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         h11.addActionListener(new java.awt.event.ActionListener() {
@@ -1058,12 +1144,28 @@ public final class purchase_order extends javax.swing.JInternalFrame {
             }
         });
         getContentPane().add(h11);
-        h11.setBounds(1130, 130, 100, 30);
+        h11.setBounds(880, 130, 75, 30);
+
+        jLabel27 = new javax.swing.JLabel();
+        jLabel27.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+        jLabel27.setText("Free Qty");
+        getContentPane().add(jLabel27);
+        jLabel27.setBounds(960, 130, 60, 30);
+
+        h12 = new javax.swing.JTextField();
+        h12.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+        h12.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                h12ActionPerformed(evt);
+            }
+        });
+        getContentPane().add(h12);
+        h12.setBounds(1020, 130, 70, 30);
 
         jLabel20.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        jLabel20.setText(" Total Qty");
+        jLabel20.setText("Paid Qty");
         getContentPane().add(jLabel20);
-        jLabel20.setBounds(210, 450, 70, 30);
+        jLabel20.setBounds(210, 450, 65, 30);
 
         jLabel21.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jLabel21.setText(" Sub Total");
@@ -1073,7 +1175,7 @@ public final class purchase_order extends javax.swing.JInternalFrame {
         h18.setEditable(false);
         h18.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         getContentPane().add(h18);
-        h18.setBounds(280, 450, 120, 30);
+        h18.setBounds(275, 450, 120, 30);
 
         jLabel24.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jLabel24.setText("  Net Value");
@@ -1394,6 +1496,13 @@ public final class purchase_order extends javax.swing.JInternalFrame {
     }// GEN-LAST:event_h7ActionPerformed
 
     private void h11ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h11ActionPerformed
+        if (h11.getText().equals("")) {
+            h11.setText("" + 1);
+        }
+        h12.requestFocus();
+    }// GEN-LAST:event_h11ActionPerformed
+
+    private void h12ActionPerformed(java.awt.event.ActionEvent evt) {
         try {
             if (h7.getText().equals("") || h8.getText().equals("")) {
                 JOptionPane.showMessageDialog(this, "Enter Item Details ?", "Item Details", JOptionPane.ERROR_MESSAGE);
@@ -1412,6 +1521,9 @@ public final class purchase_order extends javax.swing.JInternalFrame {
             if (h11.getText().equals("")) {
                 h11.setText("" + 1);
             }
+            if (h12.getText().equals("")) {
+                h12.setText("" + 0);
+            }
             int taxp = Integer.parseInt(h10.getText());
             if (taxp != 0 && taxp != 5 && taxp != 12 && taxp != 18 && taxp != 28) {
                 JOptionPane.showMessageDialog(this, "<html><h4>Allowed: 0%, 5%, 12%, 18%, 28%</h4></html>",
@@ -1423,8 +1535,7 @@ public final class purchase_order extends javax.swing.JInternalFrame {
         } catch (HeadlessException | NumberFormatException e) {
             System.out.println(e.getMessage());
         }
-
-    }// GEN-LAST:event_h11ActionPerformed
+    }
 
     private void h9ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h9ActionPerformed
         h11.requestFocus();
@@ -1461,8 +1572,11 @@ public final class purchase_order extends javax.swing.JInternalFrame {
                     cname_list.setLocation(l.x, l.y + h3.getHeight());
                     cname_list.setSize(857, 438);
                     cname_list.setVisible(true);
+                    String companyFilter = UserSession.hasSelectedCompany()
+                            ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                            : "";
                     String query = "select distinct cname,city from vendor where cname like '" + h3.getText()
-                            + "%' order by cname limit 300";
+                            + "%'" + companyFilter + " order by cname limit 300";
                     ResultSet r = util.doQuery(query);
                     while (r.next()) {
                         s3.addRow(new Object[] { r.getString(1), r.getString(2) });
@@ -1506,8 +1620,7 @@ public final class purchase_order extends javax.swing.JInternalFrame {
 
     private void jTable3MouseClicked(java.awt.event.MouseEvent evt) {// GEN-FIRST:event_jTable3MouseClicked
         if (jTable3.getRowCount() > 0) {
-            h7.setText(jTable3.getValueAt(jTable3.getSelectedRow(), 0).toString());
-            h8.setText(jTable3.getValueAt(jTable3.getSelectedRow(), 1).toString());
+            selectItemFromJTable();
         }
         get_item_details_using_itemcode();
         h9.requestFocus();
@@ -1518,8 +1631,7 @@ public final class purchase_order extends javax.swing.JInternalFrame {
 
         if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
             if (jTable3.getRowCount() > 0) {
-                h7.setText(jTable3.getValueAt(jTable3.getSelectedRow(), 0).toString());
-                h8.setText(jTable3.getValueAt(jTable3.getSelectedRow(), 1).toString());
+                selectItemFromJTable();
             }
             get_item_details_using_itemcode();
             h9.requestFocus();
@@ -1558,8 +1670,11 @@ public final class purchase_order extends javax.swing.JInternalFrame {
                     iname_list.setLocation(l.x, l.y + h7.getHeight());
                     iname_list.setSize(916, 382);
                     iname_list.setVisible(true);
+                    String companyFilter = UserSession.hasSelectedCompany()
+                            ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                            : "";
                     String query = "select distinct ino,iname,cat,manu from item where iname like '" + h7.getText()
-                            + "%' order by ino limit 500";
+                            + "%'" + companyFilter + " order by ino limit 500";
                     ResultSet r = util.doQuery(query);
                     while (r.next()) {
                         s4.addRow(new Object[] { r.getString(1), r.getString(2), r.getString(3), r.getString(4) });
@@ -1613,6 +1728,140 @@ public final class purchase_order extends javax.swing.JInternalFrame {
         save();
     }// GEN-LAST:event_h26ActionPerformed
 
+    private void selectItemFromJTable() {
+        if (jTable3.getRowCount() > 0) {
+            try {
+                String selectedName = jTable3.getValueAt(jTable3.getSelectedRow(), 1).toString();
+                String companyFilter = UserSession.hasSelectedCompany()
+                        ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                        : "";
+                String query = "SELECT ino, iname, barcode, "
+                        + (CompanySettingUtil.getInstance().isDisplayBatch() ? "batch, " : "")
+                        + "IFNULL(size,'') as size, IFNULL(color,'') as color, IFNULL(brand,'') as brand, rprice, wprice FROM item WHERE iname = '"
+                        + selectedName + "'" + companyFilter;
+                ResultSet set = util.doQuery(query);
+
+                List<Object[]> rows = new ArrayList<>();
+                Map<String, String> valueMap = new HashMap<>();
+                while (set.next()) {
+                    List<Object> row = new ArrayList<>();
+                    row.add(set.getString("ino"));
+                    row.add(set.getString("iname"));
+                    row.add(set.getString("barcode"));
+                    if (CompanySettingUtil.getInstance().isDisplayBatch()) {
+                        row.add(set.getString("batch"));
+                    }
+                    row.add(set.getString("size"));
+                    row.add(set.getString("color"));
+                    row.add(set.getString("brand"));
+                    row.add(set.getString("rprice"));
+                    row.add(set.getString("wprice"));
+                    rows.add(row.toArray());
+
+                    valueMap.put("ino", set.getString("ino"));
+                    valueMap.put("iname", set.getString("iname"));
+                }
+                if (rows.size() == 1) {
+                    h7.setText(valueMap.get("ino"));
+                    h8.setText(valueMap.get("iname"));
+                } else if (rows.size() > 1) {
+                    String selectedIno = showSelectionDialog(rows);
+                    if (selectedIno != null) {
+                        h7.setText(selectedIno);
+                    } else {
+                        JOptionPane.showMessageDialog(this, "No item selected.", "Cancelled",
+                                JOptionPane.INFORMATION_MESSAGE);
+                    }
+                }
+            } catch (ClassNotFoundException | SQLException e) {
+                System.out.println(e.getMessage());
+                JOptionPane.showMessageDialog(this, "Error: " + e.getMessage(), "Exception", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private String showSelectionDialog(List<Object[]> data) {
+        List<String> colList = new ArrayList<>();
+        colList.add("Item No");
+        colList.add("Item Name");
+        colList.add("Barcode");
+        if (CompanySettingUtil.getInstance().isDisplayBatch()) {
+            colList.add("Batch");
+        }
+        colList.add("Size");
+        colList.add("Color");
+        colList.add("Brand");
+        colList.add("RPrice");
+        colList.add("WPrice");
+
+        String[] columns = colList.toArray(new String[0]);
+
+        Object[][] tableData = new Object[data.size()][columns.length];
+        for (int i = 0; i < data.size(); i++) {
+            Object[] row = data.get(i);
+            for (int j = 0; j < columns.length; j++) {
+                tableData[i][j] = row[j];
+            }
+        }
+
+        JTable table = new JTable(tableData, columns);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setPreferredSize(new Dimension(700, 300));
+
+        JButton okButton = new JButton("Select");
+        JButton cancelButton = new JButton("Cancel");
+
+        final String[] selectedIno = { null };
+
+        okButton.addActionListener(e -> {
+            int selectedRow = table.getSelectedRow();
+            if (selectedRow >= 0) {
+                selectedIno[0] = table.getValueAt(selectedRow, 0).toString();
+            }
+            SwingUtilities.getWindowAncestor(okButton).dispose();
+        });
+
+        table.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
+                    int selectedRow = table.getSelectedRow();
+                    if (selectedRow >= 0) {
+                        selectedIno[0] = table.getValueAt(selectedRow, 0).toString();
+                        SwingUtilities.invokeLater(() -> {
+                            Window window = SwingUtilities.getWindowAncestor(table);
+                            if (window != null) {
+                                window.dispose();
+                            }
+                        });
+                        evt.consume();
+                    }
+                }
+            }
+        });
+
+        cancelButton.addActionListener(e -> {
+            SwingUtilities.getWindowAncestor(cancelButton).dispose();
+        });
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(okButton);
+        buttonPanel.add(cancelButton);
+
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(scrollPane, BorderLayout.CENTER);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+
+        JDialog dialog = new JDialog((Frame) null, "Select Item", true);
+        dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        dialog.setContentPane(panel);
+        dialog.pack();
+        dialog.setLocationRelativeTo(null);
+        dialog.setVisible(true);
+
+        return selectedIno[0];
+    }
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton alterbutton;
     private javax.swing.JButton applybutton;
@@ -1623,6 +1872,7 @@ public final class purchase_order extends javax.swing.JInternalFrame {
     private javax.swing.JTextField h1;
     private javax.swing.JTextField h10;
     private javax.swing.JTextField h11;
+    private javax.swing.JTextField h12;
     private javax.swing.JTextField h17;
     private javax.swing.JTextField h18;
     private javax.swing.JTextField h19;
@@ -1653,6 +1903,7 @@ public final class purchase_order extends javax.swing.JInternalFrame {
     private javax.swing.JLabel jLabel24;
     private javax.swing.JLabel jLabel25;
     private javax.swing.JLabel jLabel26;
+    private javax.swing.JLabel jLabel27;
     private javax.swing.JLabel jLabel29;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;

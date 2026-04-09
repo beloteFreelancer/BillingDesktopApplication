@@ -22,6 +22,7 @@ import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import menupack.menu_form;
 import menupack.sample2;
+import menupack.UserSession;
 
 /**
  *
@@ -44,8 +45,10 @@ public final class estimate_summary_cust extends javax.swing.JInternalFrame {
         titlelablel.setText("<html><u>Customer Wise Estimate Summary</u></html>");
         setTitle("Customer Wise Estimate Summary");
         this.setSize(1017, 650);
-        ImageIcon icon = new ImageIcon(ClassLoader.getSystemResource("images/icon.png"));
-        this.setFrameIcon(icon);
+        javax.swing.ImageIcon icon = ColorConstants.loadIcon("/images/icon.png");
+        if (icon != null) {
+            this.setFrameIcon(icon);
+        }
     }
 
     void load_list_table() {
@@ -636,9 +639,12 @@ public final class estimate_summary_cust extends javax.swing.JInternalFrame {
                     cname_list.setLocation(l.x, l.y + jLabel12.getHeight());
                     cname_list.setSize(1063, 528);
                     cname_list.setVisible(true);
+                    String custCompanyFilter = UserSession.hasSelectedCompany()
+                            ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                            : "";
                     String query;
                     query = "select cid,ctype,cname,cardno,mobile,city,scode from cust where cname like '"
-                            + h3.getText() + "%' order by cname limit 400";
+                            + h3.getText() + "%'" + custCompanyFilter + " order by cname limit 400";
                     r = util.doQuery(query);
                     while (r.next()) {
                         s3.addRow(new Object[] { r.getString(1), r.getString(2), r.getString(3), r.getString(4),

@@ -11,9 +11,19 @@ public class SelRomJasper {
     private String size;
     private String qty;
     private String mrp;
+    private String disc_pct;
     private String disc_amt;
     private String rate;
     private String amount;
+    private String hsn;
+    private String tax;
+    private String tax_pct;
+    private String tax_amt;
+    private String sub_total;
+    private String total;
+    private String net_rate;
+    private String mfg_date;
+    private String exp_date;
 
     public String getSno() {
         return sno;
@@ -237,6 +247,86 @@ public class SelRomJasper {
 
     public void setField20(String field20) {
         this.field20 = field20;
+    }
+
+    public String getHsn() {
+        return hsn;
+    }
+
+    public void setHsn(String hsn) {
+        this.hsn = hsn;
+    }
+
+    public String getTax() {
+        return tax;
+    }
+
+    public void setTax(String tax) {
+        this.tax = tax;
+    }
+
+    public String getMfg_date() {
+        return mfg_date;
+    }
+
+    public void setMfg_date(String mfg_date) {
+        this.mfg_date = mfg_date;
+    }
+
+    public String getExp_date() {
+        return exp_date;
+    }
+
+    public void setExp_date(String exp_date) {
+        this.exp_date = exp_date;
+    }
+
+    public String getDisc_pct() {
+        return disc_pct;
+    }
+
+    public void setDisc_pct(String disc_pct) {
+        this.disc_pct = disc_pct;
+    }
+
+    public String getTax_pct() {
+        return tax_pct;
+    }
+
+    public void setTax_pct(String tax_pct) {
+        this.tax_pct = tax_pct;
+    }
+
+    public String getTax_amt() {
+        return tax_amt;
+    }
+
+    public void setTax_amt(String tax_amt) {
+        this.tax_amt = tax_amt;
+    }
+
+    public String getSub_total() {
+        return sub_total;
+    }
+
+    public void setSub_total(String sub_total) {
+        this.sub_total = sub_total;
+    }
+
+    public String getTotal() {
+        return total;
+    }
+
+    public void setTotal(String total) {
+        this.total = total;
+    }
+
+    public String getNet_rate() {
+        return net_rate;
+    }
+
+    public void setNet_rate(String net_rate) {
+        this.net_rate = net_rate;
     }
 
 }

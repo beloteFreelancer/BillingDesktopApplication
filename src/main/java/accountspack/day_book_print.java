@@ -53,7 +53,7 @@ public class day_book_print {
             Date nm1 = new SimpleDateFormat("dd/MM/yyyy").parse(dto);
             String dto1 = (new SimpleDateFormat("yyyy/MM/dd").format(nm1));
 
-            String query = "select cname,hmany from setting_bill";
+            String query = "select cname,hmany from company";
             r = util.doQuery(query);
             while (r.next()) {
                 cname = r.getString(1);

@@ -21,11 +21,12 @@ import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import menupack.menu_form;
 import menupack.sample2;
+import menupack.UserSession;
 
 /**
  *
  * @author K.SELVAKUMAR, copyrights K.SELVAKUMAR, +91 99427 32229,
- * mysoft.java@gmail.com
+ *         mysoft.java@gmail.com
  */
 public final class profit_itemwise_barcode extends javax.swing.JInternalFrame {
 
@@ -42,7 +43,8 @@ public final class profit_itemwise_barcode extends javax.swing.JInternalFrame {
         excelbutton.setText("<html><b>Excel</b><br>(Alt+I)</h6><html>");
         generatebutton.setText("<html><b>Generate</b>  (Alt+G)</h6><html>");
         titlelablel.setText("<html><u>Barcode Wise Profit</u></html>");
-        jLabel12.setText("<html><u>Info:</u> Profit Calculations not includes Tax Amount, Transport Amount , Other Charges</html>");
+        jLabel12.setText(
+                "<html><u>Info:</u> Profit Calculations not includes Tax Amount, Transport Amount , Other Charges</html>");
         setTitle("Barcode Wise Profit");
         this.setSize(1017, 650);
         java.net.URL imgUrl = getClass().getResource("/images/icon.png");
@@ -92,9 +94,13 @@ public final class profit_itemwise_barcode extends javax.swing.JInternalFrame {
             Connection conn = util.getConnection();
             PreparedStatement ps;
 
-            query = "select iname from item where barcode=? ";
+            String companyFilter = UserSession.hasSelectedCompany() ? " AND company_id=?" : "";
+            query = "select iname from item where barcode=? " + companyFilter;
             ps = conn.prepareStatement(query);
             ps.setString(1, h4.getText());
+            if (UserSession.hasSelectedCompany()) {
+                ps.setString(2, UserSession.getSelectedCompanyID());
+            }
             r = ps.executeQuery();
             while (r.next()) {
                 h3.setSelectedItem(r.getString(1));
@@ -112,7 +118,7 @@ public final class profit_itemwise_barcode extends javax.swing.JInternalFrame {
                 String cost_rate = String.format("%." + hmany + "f", r.getDouble(5));
                 String profit = String.format("%." + hmany + "f", r.getDouble(6));
 
-                s2.addRow(new Object[]{r.getString(1), r.getString(2), r.getString(3), sub, cost_rate, profit});
+                s2.addRow(new Object[] { r.getString(1), r.getString(2), r.getString(3), sub, cost_rate, profit });
                 selva = true;
             }
             double sub = 0, cost_rate = 0, profit = 0;
@@ -125,8 +131,8 @@ public final class profit_itemwise_barcode extends javax.swing.JInternalFrame {
             String cost_rate1 = String.format("%." + hmany + "f", cost_rate);
             String profit1 = String.format("%." + hmany + "f", profit);
             if (selva == true) {
-                s2.addRow(new Object[]{"", "", "", "", "", ""});
-                s2.addRow(new Object[]{"", "TOTAL:" + (jTable1.getRowCount() - 1), "", sub1, cost_rate1, profit1});
+                s2.addRow(new Object[] { "", "", "", "", "", "" });
+                s2.addRow(new Object[] { "", "TOTAL:" + (jTable1.getRowCount() - 1), "", sub1, cost_rate1, profit1 });
 
                 h1.setEnabled(false);
                 h2.setEnabled(false);
@@ -166,11 +172,15 @@ public final class profit_itemwise_barcode extends javax.swing.JInternalFrame {
     void get_barcode() {
         try {
             h4.setText("");
-            String query = "select barcode from item where iname=?";
+            String companyFilter = UserSession.hasSelectedCompany() ? " AND company_id=?" : "";
+            String query = "select barcode from item where iname=?" + companyFilter;
             Connection conn = util.getConnection();
             PreparedStatement ps = conn.prepareStatement(query);
             Object item = h3.getSelectedItem();
             ps.setString(1, item != null ? item.toString() : "");
+            if (UserSession.hasSelectedCompany()) {
+                ps.setString(2, UserSession.getSelectedCompanyID());
+            }
 
             r = ps.executeQuery();
             while (r.next()) {
@@ -183,10 +193,14 @@ public final class profit_itemwise_barcode extends javax.swing.JInternalFrame {
 
     void get_item_name() {
         try {
-            String query = "select iname from item where barcode=?";
+            String companyFilter = UserSession.hasSelectedCompany() ? " AND company_id=?" : "";
+            String query = "select iname from item where barcode=?" + companyFilter;
             Connection conn = util.getConnection();
             PreparedStatement ps = conn.prepareStatement(query);
             ps.setString(1, h4.getText());
+            if (UserSession.hasSelectedCompany()) {
+                ps.setString(2, UserSession.getSelectedCompanyID());
+            }
 
             r = ps.executeQuery();
             while (r.next()) {
@@ -207,7 +221,8 @@ public final class profit_itemwise_barcode extends javax.swing.JInternalFrame {
     }
 
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated
+    // Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         titlelablel = new javax.swing.JLabel();
@@ -323,16 +338,15 @@ public final class profit_itemwise_barcode extends javax.swing.JInternalFrame {
 
         jTable1.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
-        ));
+                new Object[][] {
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null }
+                },
+                new String[] {
+                        "Title 1", "Title 2", "Title 3", "Title 4"
+                }));
         jTable1.setRowHeight(25);
         jScrollPane1.setViewportView(jTable1);
 
@@ -371,12 +385,12 @@ public final class profit_itemwise_barcode extends javax.swing.JInternalFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closebuttonActionPerformed
+    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_closebuttonActionPerformed
         this.dispose();
         // TODO add your handling code here:
-    }//GEN-LAST:event_closebuttonActionPerformed
+    }// GEN-LAST:event_closebuttonActionPerformed
 
-    private void generatebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_generatebuttonActionPerformed
+    private void generatebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_generatebuttonActionPerformed
         Date d = new Date();
         SimpleDateFormat g = new SimpleDateFormat("dd/MM/yyyy");
 
@@ -388,9 +402,9 @@ public final class profit_itemwise_barcode extends javax.swing.JInternalFrame {
         }
         load_report(h1.getText(), h2.getText());
 
-    }//GEN-LAST:event_generatebuttonActionPerformed
+    }// GEN-LAST:event_generatebuttonActionPerformed
 
-    private void excelbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_excelbuttonActionPerformed
+    private void excelbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_excelbuttonActionPerformed
         if (s2.getRowCount() <= 0) {
             JOptionPane.showMessageDialog(this, "Sorry, No Records Were Found!", "Oops", JOptionPane.ERROR_MESSAGE);
             return;
@@ -409,9 +423,9 @@ public final class profit_itemwise_barcode extends javax.swing.JInternalFrame {
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
-    }//GEN-LAST:event_excelbuttonActionPerformed
+    }// GEN-LAST:event_excelbuttonActionPerformed
 
-    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearbuttonActionPerformed
+    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_clearbuttonActionPerformed
         if (s2.getRowCount() > 0) {
             s2.getDataVector().removeAllElements();
             s2.fireTableDataChanged();
@@ -430,9 +444,9 @@ public final class profit_itemwise_barcode extends javax.swing.JInternalFrame {
         generatebutton.setEnabled(true);
         support.uninstall();
         get_sug1();
-    }//GEN-LAST:event_clearbuttonActionPerformed
+    }// GEN-LAST:event_clearbuttonActionPerformed
 
-    private void jCalendarButton1PropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jCalendarButton1PropertyChange
+    private void jCalendarButton1PropertyChange(java.beans.PropertyChangeEvent evt) {// GEN-FIRST:event_jCalendarButton1PropertyChange
         try {
             if (evt.getNewValue() instanceof Date) {
                 String ses = evt.getNewValue().toString();
@@ -443,9 +457,9 @@ public final class profit_itemwise_barcode extends javax.swing.JInternalFrame {
         } catch (ParseException e) {
             System.out.println(e.getMessage());
         }
-    }//GEN-LAST:event_jCalendarButton1PropertyChange
+    }// GEN-LAST:event_jCalendarButton1PropertyChange
 
-    private void jCalendarButton2PropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jCalendarButton2PropertyChange
+    private void jCalendarButton2PropertyChange(java.beans.PropertyChangeEvent evt) {// GEN-FIRST:event_jCalendarButton2PropertyChange
         try {
             if (evt.getNewValue() instanceof Date) {
                 String ses = evt.getNewValue().toString();
@@ -456,19 +470,19 @@ public final class profit_itemwise_barcode extends javax.swing.JInternalFrame {
         } catch (ParseException e) {
             System.out.println(e.getMessage());
         }
-    }//GEN-LAST:event_jCalendarButton2PropertyChange
+    }// GEN-LAST:event_jCalendarButton2PropertyChange
 
-    private void h3ItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_h3ItemStateChanged
+    private void h3ItemStateChanged(java.awt.event.ItemEvent evt) {// GEN-FIRST:event_h3ItemStateChanged
         get_barcode();
-    }//GEN-LAST:event_h3ItemStateChanged
+    }// GEN-LAST:event_h3ItemStateChanged
 
-    private void h3KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_h3KeyPressed
+    private void h3KeyPressed(java.awt.event.KeyEvent evt) {// GEN-FIRST:event_h3KeyPressed
         get_barcode();
-    }//GEN-LAST:event_h3KeyPressed
+    }// GEN-LAST:event_h3KeyPressed
 
-    private void h4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_h4ActionPerformed
+    private void h4ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h4ActionPerformed
         get_item_name();
-    }//GEN-LAST:event_h4ActionPerformed
+    }// GEN-LAST:event_h4ActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton clearbutton;

@@ -21,6 +21,7 @@ import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import menupack.menu_form;
 import menupack.sample2;
+import menupack.UserSession;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CreationHelper;
@@ -143,13 +144,14 @@ public final class sales_summary extends javax.swing.JInternalFrame {
 
             double tquan = 0, tamount = 0;
             boolean selva = false;
+            String companyFilter = UserSession.hasSelectedCompany() ? " and company_id='" + UserSession.getSelectedCompanyID() + "'" : "";
             String query;
             if (all.isSelected()) {
                 query = "select billno,date_format(dat,'%d/%m/%Y'),pby,items,quans,net,cid,cname from sales where dat between '"
-                        + lk + "' and '" + lk1 + "' order by dat,billno";
+                        + lk + "' and '" + lk1 + "'" + companyFilter + " order by dat,billno";
             } else {
                 query = "select billno,date_format(dat,'%d/%m/%Y'),pby,items,quans,net,cid,cname from sales where dat between '"
-                        + lk + "' and '" + lk1 + "' and pby='" + h3.getSelectedItem() + "' order by dat,billno";
+                        + lk + "' and '" + lk1 + "' and pby='" + h3.getSelectedItem() + "'" + companyFilter + " order by dat,billno";
             }
             r = util.doQuery(query);
             while (r.next()) {
@@ -179,7 +181,7 @@ public final class sales_summary extends javax.swing.JInternalFrame {
                 amount.add("");
 
                 query = "select iname,price,quan,amount,quan,amount from sales_items where billno='" + billno1.get(i)
-                        + "'";
+                        + "'" + companyFilter;
                 r = util.doQuery(query);
                 while (r.next()) {
                     billno.add("");

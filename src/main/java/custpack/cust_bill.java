@@ -13,6 +13,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import menupack.UserSession;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
@@ -203,9 +204,10 @@ public final class cust_bill extends javax.swing.JInternalFrame {
             double paid = 0;
             query_list.add("insert into cust_bill values ('" + sno + "','" + cid + "','" + cname + "','" + billno
                     + "','" + date + "','" + ddate + "','" + amount + "','" + remarks + "','" + username + "','" + last
-                    + "') ");
+                    + "','" + (UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "") + "') ");
             query_list.add("insert into cust_bal values ('" + billno + "','" + date + "','" + ddate + "','" + cid
-                    + "','" + cname + "','" + amount + "','" + paid + "','" + last + "') ");
+                    + "','" + cname + "','" + amount + "','" + paid + "','" + last + "','"
+                    + (UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "") + "') ");
             int a = util.doManipulation_Batch(query_list);
             if (a > 0) {
                 JOptionPane.showMessageDialog(this, "<html><h1>Saved Successfully</h1></html>", "Saved",
@@ -320,7 +322,11 @@ public final class cust_bill extends javax.swing.JInternalFrame {
             DefaultCaret caret = (DefaultCaret) hh.getCaret();
             caret.setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
             hh.setText("");
-            String query = "select cid,cname,add1,add2,add3,city,mobile,climit,cname from cust where cid='" + cid + "'";
+            String custCompanyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select cid,cname,add1,add2,add3,city,mobile,climit,cname from cust where cid='" + cid + "'"
+                    + custCompanyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 hh.append("\n Cust_Id     : " + r.getString(1));
@@ -917,8 +923,11 @@ public final class cust_bill extends javax.swing.JInternalFrame {
                 cname_list.setLocation(l.x, l.y + jLabel23.getHeight());
                 cname_list.setSize(890, 310);
                 cname_list.setVisible(true);
+                String custCompanyFilter = UserSession.hasSelectedCompany()
+                        ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                        : "";
                 String query = "select cid,cname,city from cust where cname like '" + h2.getText()
-                        + "%' order by cname limit 500";
+                        + "%'" + custCompanyFilter + " order by cname limit 500";
                 r = util.doQuery(query);
                 while (r.next()) {
                     s3.addRow(new Object[] { r.getString(1), r.getString(2), r.getString(3) });

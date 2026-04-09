@@ -40,7 +40,7 @@ public class profit_loss_summary {
 
             String cname = "";
             int hmany = 2;
-            String query = "select cname,hmany from setting_bill";
+            String query = "select cname,hmany from company";
             r = util.doQuery(query);
             while (r.next()) {
                 cname = r.getString(1);
@@ -201,7 +201,7 @@ public class profit_loss_summary {
                 selRomJasper.setField4(credit2);
 
                 k.add(selRomJasper);
-            }//array size
+            } // array size
             String tdebit2 = String.format("%." + hmany + "f", tdebit);
             String tcredit2 = String.format("%." + hmany + "f", tcredit);
 
@@ -215,8 +215,7 @@ public class profit_loss_summary {
             String drive = mp.getDrive();
             String folder = mp.getFoler();
             jasperReport = JasperReportCompiler.compileReport("/JasperFiles/Accounts/Profit_Loss.jrxml");
-            JRBeanCollectionDataSource beanColDataSource
-                    = new JRBeanCollectionDataSource(k);
+            JRBeanCollectionDataSource beanColDataSource = new JRBeanCollectionDataSource(k);
             jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, beanColDataSource);
             jasperViewer = new JasperViewer(jasperPrint);
             jasperViewer.setVisible(true);

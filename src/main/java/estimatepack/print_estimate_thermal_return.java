@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import menupack.SelRomJasper;
+import menupack.UserSession;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
@@ -19,7 +20,7 @@ import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 /**
  *
  * @author K.SELVAKUMAR, copyrights K.SELVAKUMAR, +91 99427 32229,
- * mysoft.java@gmail.com
+ *         mysoft.java@gmail.com
  */
 public class print_estimate_thermal_return {
 
@@ -31,7 +32,8 @@ public class print_estimate_thermal_return {
             this.util = util;
             Map<String, Object> parameters = new HashMap<>();
             InputStream is = getClass().getResourceAsStream("/images/icon.png");
-            parameters.put("logo", is);            parameters.put("parameter1", "");
+            parameters.put("logo", is);
+            parameters.put("parameter1", "");
             parameters.put("parameter2", "");
             parameters.put("parameter3", "");
             parameters.put("parameter4", "");
@@ -49,8 +51,13 @@ public class print_estimate_thermal_return {
             parameters.put("parameter24", "");
             parameters.put("parameter25", "");
 
-            String add1 = "", add2 = "", add3 = "", add4 = "", head = "", sms1 = "", sms2 = "", sms3 = "", logoPath = "";
-            String query = "select cname,add1,add2,add3,ehead,sms1,sms2,sms3,hmany,logo_path from setting_bill";
+            String add1 = "", add2 = "", add3 = "", add4 = "", head = "", sms1 = "", sms2 = "", sms3 = "",
+                    logoPath = "", gstno = "";
+            String companyWhere = UserSession.hasSelectedCompany()
+                    ? " WHERE companyID='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select cname,add1,add2,add3,add4,ehead,sms1,sms2,sms3,hmany,logo_path from company"
+                    + companyWhere;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 logoPath = r.getString("logo_path");
@@ -58,11 +65,12 @@ public class print_estimate_thermal_return {
                 add2 = r.getString(2);
                 add3 = r.getString(3);
                 add4 = r.getString(4);
-                head = r.getString(5);
-                sms1 = r.getString(6);
-                sms2 = r.getString(7);
-                sms3 = r.getString(8);
-                hmany = r.getInt(9);
+                gstno = r.getString(5);
+                head = r.getString(6);
+                sms1 = r.getString(7);
+                sms2 = r.getString(8);
+                sms3 = r.getString(9);
+                hmany = r.getInt(10);
             }
             parameters.put("logo_path", logoPath);
             if (!add1.equals(".")) {
@@ -77,12 +85,20 @@ public class print_estimate_thermal_return {
             if (!add4.equals(".")) {
                 parameters.put("parameter4", add4);
             }
+            if (gstno != null && !gstno.isEmpty() && !gstno.equals(".")) {
+                parameters.put("gstno", "GSTIN: " + gstno);
+            }
 
             parameters.put("parameter5", head);
 
-            String date = "", location = "", terminal = "", cashier = "", items = "", quans = "", pby = "", cname = "", mobile = "", time = "", cid = "";
-            double sub = 0, disamt = 0, addamt = 0, net = 0, paid = 0, bal = 0, taxamt = 0, today_points = 0, total_points = 0;
-            query = "select date_format(dat,'%d/%m/%Y'),tim,location,terminal,cashier,items,quans,sub,disamt,addamt,net,pby,paid,bal,cname,mobile,cid,taxamt from ereturn where billno='" + billno + "'";
+            String companyFilter = UserSession.hasSelectedCompany() ? " and company_id='" + UserSession.getSelectedCompanyID() + "'" : "";
+
+            String date = "", location = "", terminal = "", cashier = "", items = "", quans = "", pby = "", cname = "",
+                    mobile = "", time = "", cid = "";
+            double sub = 0, disamt = 0, addamt = 0, net = 0, paid = 0, bal = 0, taxamt = 0, today_points = 0,
+                    total_points = 0;
+            query = "select date_format(dat,'%d/%m/%Y'),tim,location,terminal,cashier,items,quans,sub,disamt,addamt,net,pby,paid,bal,cname,mobile,cid,taxamt from ereturn where billno='"
+                    + billno + "'" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 date = r.getString(1);
@@ -126,7 +142,6 @@ public class print_estimate_thermal_return {
             int quans2 = (int) quans1;
             parameters.put("parameter31", "Total Items: " + items);
             parameters.put("parameter33", "Qty: " + quans2);
-
 
             if (disamt > 0) {
                 String disamt2 = String.format("%." + hmany + "f", disamt);
@@ -199,7 +214,7 @@ public class print_estimate_thermal_return {
                 selRomJasper.setField5("" + amount2);
                 selRomJasper.setField6("" + udes);
                 k.add(selRomJasper);
-            }//while loop ends//adding items ends
+            } // while loop ends//adding items ends
 
             double savings = mrptot - net;
             if (savings > 0) {
@@ -216,6 +231,27 @@ public class print_estimate_thermal_return {
             disable_warnigs.disableAccessWarnings();
             JasperReport jasperReport = null;
             switch (billformat) {
+                // New Standard Names
+                case "Estimate 3-Inch (Thermal)":
+                    jasperReport = JasperReportCompiler.compileReport("/JasperFiles/Thermail_Estimate/Thermal.jrxml");
+                    break;
+                case "Estimate 3-Inch MRP (Thermal)":
+                    jasperReport = JasperReportCompiler
+                            .compileReport("/JasperFiles/Thermail_Estimate/Thermal_MRP.jrxml");
+                    break;
+                case "Estimate 3-Inch Short (Thermal)":
+                    jasperReport = JasperReportCompiler
+                            .compileReport("/JasperFiles/Thermail_Estimate/Thermal_Short_Bill.jrxml");
+                    break;
+                case "Estimate 4-Inch (Thermal)":
+                    jasperReport = JasperReportCompiler
+                            .compileReport("/JasperFiles/Thermail_Estimate/Thermal_4_Inch.jrxml");
+                    break;
+                case "Estimate 4-Inch MRP (Thermal)":
+                    jasperReport = JasperReportCompiler
+                            .compileReport("/JasperFiles/Thermail_Estimate/Thermal_MRP_4_Inch.jrxml");
+                    break;
+                // Legacy Support
                 case "Thermal":
                     jasperReport = JasperReportCompiler.compileReport("/JasperFiles/Thermail_Estimate/Thermal.jrxml");
                     break;
@@ -223,16 +259,20 @@ public class print_estimate_thermal_return {
                     jasperReport = JasperReportCompiler.compileReport("/JasperFiles/Thermail_Estimate/Thermal.jrxml");
                     break;
                 case "Thermal MRP":
-                    jasperReport = JasperReportCompiler.compileReport("/JasperFiles/Thermail_Estimate/Thermal_MRP_4_Inch.jrxml");
+                    jasperReport = JasperReportCompiler
+                            .compileReport("/JasperFiles/Thermail_Estimate/Thermal_MRP_4_Inch.jrxml");
                     break;
                 case "Thermal Short Bill":
-                    jasperReport = JasperReportCompiler.compileReport("/JasperFiles/Thermail_Estimate/Thermal_Short_Bill.jrxml");
+                    jasperReport = JasperReportCompiler
+                            .compileReport("/JasperFiles/Thermail_Estimate/Thermal_Short_Bill.jrxml");
                     break;
                 case "Thermal 4-Inch":
-                    jasperReport = JasperReportCompiler.compileReport("/JasperFiles/Thermail_Estimate/Thermal_4_Inch.jrxml");
+                    jasperReport = JasperReportCompiler
+                            .compileReport("/JasperFiles/Thermail_Estimate/Thermal_4_Inch.jrxml");
                     break;
                 case "Thermal 4-Inch MRP":
-                    jasperReport = JasperReportCompiler.compileReport("/JasperFiles/Thermail_Estimate/Thermal_MRP_4_Inch.jrxml");
+                    jasperReport = JasperReportCompiler
+                            .compileReport("/JasperFiles/Thermail_Estimate/Thermal_MRP_4_Inch.jrxml");
                     break;
                 default:
                     jasperReport = JasperReportCompiler.compileReport("/JasperFiles/Thermail_Estimate/Thermal.jrxml");

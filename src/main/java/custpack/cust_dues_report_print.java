@@ -13,6 +13,7 @@ import java.util.Map;
 import javax.swing.JFrame;
 import menupack.SelRomJasper;
 import menupack.menu_form;
+import menupack.UserSession;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
@@ -32,7 +33,10 @@ public class cust_dues_report_print {
 
             Map<String, Object> parameters = new HashMap<>();
             String cnamez = "";
-            String query = "select cname,hmany from setting_bill";
+            String companyWhere = UserSession.hasSelectedCompany()
+                    ? " WHERE companyID='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select cname,hmany from company" + companyWhere;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 cnamez = r.getString(1);
@@ -49,7 +53,8 @@ public class cust_dues_report_print {
             if (option.equals("Yes")) {
                 query = "select distinct a.cname from cust_bal a,cust b where tot-paid>0 and a.cid=b.cid order by a.cname";
             } else {
-                query = "select distinct a.cname from cust_bal a,cust b where city='" + area + "' and tot-paid>0 and a.cid=b.cid order by a.cname";
+                query = "select distinct a.cname from cust_bal a,cust b where city='" + area
+                        + "' and tot-paid>0 and a.cid=b.cid order by a.cname";
             }
             r = util.doQuery(query);
             while (r.next()) {
@@ -78,7 +83,9 @@ public class cust_dues_report_print {
                 bal.add("");
                 days.add("");
 
-                query2 = "select billno,date_format(dat,'%d/%m/%Y'),tot,paid,datediff(dat,'" + today + "') from cust_bal a,cust b where tot-paid>0 and a.cid=b.cid and a.cname='" + cname2.get(i) + "' order by billno";
+                query2 = "select billno,date_format(dat,'%d/%m/%Y'),tot,paid,datediff(dat,'" + today
+                        + "') from cust_bal a,cust b where tot-paid>0 and a.cid=b.cid and a.cname='" + cname2.get(i)
+                        + "' order by billno";
                 r2 = util.doQuery(query2);
                 while (r2.next()) {
                     cname.add("");
@@ -117,7 +124,7 @@ public class cust_dues_report_print {
                 selRomJasper.setField7(days.get(i).toString());
                 selRomJasper.setField8(cname.get(i).toString());
                 k.add(selRomJasper);
-            }//array size ends
+            } // array size ends
 
             String tot_amt2 = String.format("%." + hmany + "f", ntot);
             String paid_amt2 = String.format("%." + hmany + "f", npaid);
@@ -132,7 +139,8 @@ public class cust_dues_report_print {
             String drive = "";
             String folder = Utils.AppConfig.getAppPath();
 
-            JasperReport jasperReport = JasperReportCompiler.compileReport("/JasperFiles/Reports/Cust_Dues_Report.jrxml");
+            JasperReport jasperReport = JasperReportCompiler
+                    .compileReport("/JasperFiles/Reports/Cust_Dues_Report.jrxml");
             JRBeanCollectionDataSource beanColDataSource = new JRBeanCollectionDataSource(k);
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, beanColDataSource);
 

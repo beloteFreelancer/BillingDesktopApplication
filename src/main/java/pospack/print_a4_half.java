@@ -22,14 +22,13 @@ import javax.print.attribute.standard.MediaSize;
 import javax.print.attribute.standard.MediaSizeName;
 import menupack.AmountInWords;
 import menupack.SelRomJasper;
+import menupack.UserSession;
 import net.sf.jasperreports.engine.JRException;
-import net.sf.jasperreports.engine.JRExporterParameter;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.export.JRPrintServiceExporter;
-import net.sf.jasperreports.engine.export.JRPrintServiceExporterParameter;
 import net.sf.jasperreports.view.JasperViewer;
 
 public class print_a4_half {
@@ -48,7 +47,11 @@ public class print_a4_half {
 
             String add1 = "", add2 = "", add3 = "", add4 = "", add5 = "", sname = "", scode = "", letter = "",
                     head = "", sms1 = "", sms2 = "", sms3 = "", sms4 = "", logoPath = "";
-            String query = "select cname,add1,add2,add3,add4,state,scode,bhead,sms1,sms2,sms3,sms4,letter,hmany,logo_path from setting_bill";
+            String companyWhere = UserSession.hasSelectedCompany()
+                    ? " WHERE companyID='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select cname,add1,add2,add3,add4,state,scode,bhead,sms1,sms2,sms3,sms4,letter,hmany,logo_path from company"
+                    + companyWhere;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 logoPath = r.getString("logo_path");
@@ -244,8 +247,11 @@ public class print_a4_half {
             String iname, udes, hsn, ename;
             double quan, price, amount, disp, disamt, tot, taxp, taxamt1, total, free, mrp;
             double namount = 0, ndisamt = 0, ntot = 0, ntax = 0, ntotal = 0, nfree = 0;
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             query = "select iname1,quan,price,amount,disp,disamt,sub,taxp,taxamt,total,udes,hsn,iname,mrp from sales_items where billno='"
-                    + billno + "'";
+                    + billno + "'" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 SelRomJasper selRomJasper = new SelRomJasper();
@@ -350,22 +356,26 @@ public class print_a4_half {
             parameters.put("parameter43", "");
 
             double tax5 = 0, tax12 = 0, tax18 = 0, tax28 = 0;
-            query = "select sum(taxamt) from sales_items where billno='" + billno + "' and taxp='5' ";
+            query = "select sum(taxamt) from sales_items where billno='" + billno + "'" + companyFilter
+                    + " and taxp='5' ";
             r = util.doQuery(query);
             while (r.next()) {
                 tax5 = r.getDouble(1);
             }
-            query = "select sum(taxamt) from sales_items where billno='" + billno + "' and taxp='12' ";
+            query = "select sum(taxamt) from sales_items where billno='" + billno + "'" + companyFilter
+                    + " and taxp='12' ";
             r = util.doQuery(query);
             while (r.next()) {
                 tax12 = r.getDouble(1);
             }
-            query = "select sum(taxamt) from sales_items where billno='" + billno + "' and taxp='18' ";
+            query = "select sum(taxamt) from sales_items where billno='" + billno + "'" + companyFilter
+                    + " and taxp='18' ";
             r = util.doQuery(query);
             while (r.next()) {
                 tax18 = r.getDouble(1);
             }
-            query = "select sum(taxamt) from sales_items where billno='" + billno + "' and taxp='28' ";
+            query = "select sum(taxamt) from sales_items where billno='" + billno + "'" + companyFilter
+                    + " and taxp='28' ";
             r = util.doQuery(query);
             while (r.next()) {
                 tax28 = r.getDouble(1);

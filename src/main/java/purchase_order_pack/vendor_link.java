@@ -14,6 +14,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
+import menupack.UserSession;
 
 /**
  *
@@ -125,7 +126,10 @@ public final class vendor_link extends javax.swing.JInternalFrame {
                 return;
             }
             String manu = "", cat = "", taxp = "", minstock = "";
-            String query = "select cat,manu,taxp,minstock from item where ino='" + h8.getText() + "'";
+            String companyAnd = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select cat,manu,taxp,minstock from item where ino='" + h8.getText() + "'" + companyAnd;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 cat = r.getString(1);
@@ -633,8 +637,9 @@ public final class vendor_link extends javax.swing.JInternalFrame {
                     cname_list.setLocation(l.x, l.y + h3.getHeight());
                     cname_list.setSize(857, 438);
                     cname_list.setVisible(true);
+                    String companyFilter = UserSession.hasSelectedCompany() ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'" : "";
                     String query = "select distinct cname,city from vendor where cname like '" + h3.getText()
-                            + "%' order by cname limit 300";
+                            + "%'" + companyFilter + " order by cname limit 300";
                     ResultSet r = util.doQuery(query);
                     while (r.next()) {
                         s3.addRow(new Object[] { r.getString(1), r.getString(2) });
@@ -731,8 +736,11 @@ public final class vendor_link extends javax.swing.JInternalFrame {
                     iname_list.setLocation(l.x, l.y + h8.getHeight());
                     iname_list.setSize(916, 382);
                     iname_list.setVisible(true);
+                    String companyAnd = UserSession.hasSelectedCompany()
+                            ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                            : "";
                     String query = "select distinct ino,iname,cat,manu from item where iname like '" + h8.getText()
-                            + "%' order by ino limit 500";
+                            + "%'" + companyAnd + " order by ino limit 500";
                     ResultSet r = util.doQuery(query);
                     while (r.next()) {
                         s4.addRow(new Object[] { r.getString(1), r.getString(2), r.getString(3), r.getString(4) });

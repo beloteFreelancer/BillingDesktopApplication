@@ -19,6 +19,7 @@ import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import menupack.menu_form;
 import menupack.sample2;
+import menupack.UserSession;
 
 /**
  *
@@ -56,7 +57,8 @@ public final class purchase_order_report extends javax.swing.JInternalFrame {
         s2.addColumn("PO Date");
         s2.addColumn("Supplier");
         s2.addColumn("Items");
-        s2.addColumn("Qty");
+        s2.addColumn("Paid Qty");
+        s2.addColumn("Free Qty");
         s2.addColumn("Sub Total");
         s2.addColumn("Tax Amt");
         s2.addColumn("Net Total");
@@ -76,19 +78,21 @@ public final class purchase_order_report extends javax.swing.JInternalFrame {
         jTable1.getColumnModel().getColumn(9).setCellRenderer(dtcr1);
         jTable1.getColumnModel().getColumn(10).setCellRenderer(dtcr1);
         jTable1.getColumnModel().getColumn(11).setCellRenderer(dtcr1);
+        jTable1.getColumnModel().getColumn(12).setCellRenderer(dtcr1);
         jTable1.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         jTable1.getColumnModel().getColumn(0).setPreferredWidth(90);
         jTable1.getColumnModel().getColumn(1).setPreferredWidth(90);
         jTable1.getColumnModel().getColumn(2).setPreferredWidth(250);
         jTable1.getColumnModel().getColumn(3).setPreferredWidth(60);
-        jTable1.getColumnModel().getColumn(4).setPreferredWidth(60);
-        jTable1.getColumnModel().getColumn(5).setPreferredWidth(100);
+        jTable1.getColumnModel().getColumn(4).setPreferredWidth(70);
+        jTable1.getColumnModel().getColumn(5).setPreferredWidth(70);
         jTable1.getColumnModel().getColumn(6).setPreferredWidth(100);
-        jTable1.getColumnModel().getColumn(7).setPreferredWidth(110);
-        jTable1.getColumnModel().getColumn(8).setPreferredWidth(130);
-        jTable1.getColumnModel().getColumn(9).setPreferredWidth(120);
+        jTable1.getColumnModel().getColumn(7).setPreferredWidth(100);
+        jTable1.getColumnModel().getColumn(8).setPreferredWidth(110);
+        jTable1.getColumnModel().getColumn(9).setPreferredWidth(130);
         jTable1.getColumnModel().getColumn(10).setPreferredWidth(120);
-        jTable1.getColumnModel().getColumn(11).setPreferredWidth(180);
+        jTable1.getColumnModel().getColumn(11).setPreferredWidth(120);
+        jTable1.getColumnModel().getColumn(12).setPreferredWidth(180);
         String Ta = "Arial";
         int Bold = 0, size = 14;
         jTable1.getTableHeader().setFont(new Font(Ta, Bold, size));
@@ -103,25 +107,30 @@ public final class purchase_order_report extends javax.swing.JInternalFrame {
             boolean selva = false;
 
             String query;
+            String poCompanyFilter = UserSession.hasSelectedCompany()
+                    ? " AND p.company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             if (all.isSelected()) {
-                query = "select grn,date_format(dat,'%d/%m/%Y'),cname,items,quans,sub,taxamt,net,status,pstatus,user,last from po_entry where dat between '"
-                        + lk + "' and '" + lk1 + "' order by dat,grn";
+                query = "select p.grn,date_format(p.dat,'%d/%m/%Y'),p.cname,p.items,p.quans,IFNULL((select sum(IFNULL(free_qty,0)) from po_items where grn=p.grn),0),p.sub,p.taxamt,p.net,p.status,p.pstatus,p.user,p.last from po_entry p where p.dat between '"
+                        + lk + "' and '" + lk1 + "'" + poCompanyFilter + " order by p.dat,p.grn";
             } else {
-                query = "select grn,date_format(dat,'%d/%m/%Y'),cname,items,quans,sub,taxamt,net,status,pstatus,user,last from po_entry where dat between '"
-                        + lk + "' and '" + lk1 + "' and cname='" + h3.getSelectedItem() + "' order by dat,grn";
+                query = "select p.grn,date_format(p.dat,'%d/%m/%Y'),p.cname,p.items,p.quans,IFNULL((select sum(IFNULL(free_qty,0)) from po_items where grn=p.grn),0),p.sub,p.taxamt,p.net,p.status,p.pstatus,p.user,p.last from po_entry p where p.dat between '"
+                        + lk + "' and '" + lk1 + "' and p.cname='" + h3.getSelectedItem() + "'" + poCompanyFilter
+                        + " order by p.dat,p.grn";
             }
             r = util.doQuery(query);
             while (r.next()) {
-                String sub = String.format("%." + hmany + "f", r.getDouble(6));
-                String taxamt = String.format("%." + hmany + "f", r.getDouble(7));
-                String net = String.format("%." + hmany + "f", r.getDouble(8));
+                String sub = String.format("%." + hmany + "f", r.getDouble(7));
+                String taxamt = String.format("%." + hmany + "f", r.getDouble(8));
+                String net = String.format("%." + hmany + "f", r.getDouble(9));
                 s2.addRow(new Object[] { r.getString(1), r.getString(2), r.getString(3), r.getString(4), r.getString(5),
-                        sub, taxamt, net, r.getString(9), r.getString(10), r.getString(11), r.getString(12) });
+                        r.getString(6), sub, taxamt, net, r.getString(10), r.getString(11), r.getString(12),
+                        r.getString(13) });
                 selva = true;
             }
             double net = 0;
             for (int i = 0; i < jTable1.getRowCount(); i++) {
-                net = net + Double.parseDouble(jTable1.getValueAt(i, 7).toString());
+                net = net + Double.parseDouble(jTable1.getValueAt(i, 8).toString());
             }
             if (selva == true) {
                 h1.setEnabled(false);
@@ -142,7 +151,10 @@ public final class purchase_order_report extends javax.swing.JInternalFrame {
     void get_supplier() {
         try {
             h3.removeAllItems();
-            String query = "select distinct cname from po_entry";
+            String venCompanyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select distinct cname from po_entry" + venCompanyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 h3.addItem(r.getString(1));

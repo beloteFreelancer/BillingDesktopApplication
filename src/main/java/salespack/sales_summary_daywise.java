@@ -19,6 +19,7 @@ import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import menupack.menu_form;
 import menupack.sample2;
+import menupack.UserSession;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CreationHelper;
@@ -99,9 +100,10 @@ public class sales_summary_daywise extends javax.swing.JInternalFrame {
             String lk1 = (new SimpleDateFormat("yyyy/MM/dd").format(nm1));
             boolean selva = false;
 
+            String companyFilter = UserSession.hasSelectedCompany() ? " and company_id='" + UserSession.getSelectedCompanyID() + "'" : "";
             String query;
             query = "select date_format(dat,'%d/%m/%Y'),min(billno),max(billno),count(billno),sum(cash),sum(card),sum(credit),sum(upi),sum(others),sum(net) from sales where dat between '"
-                    + lk + "' and '" + lk1 + "' group by dat order by dat";
+                    + lk + "' and '" + lk1 + "'" + companyFilter + " group by dat order by dat";
             r = util.doQuery(query);
             while (r.next()) {
                 String cash = String.format("%." + hmany + "f", r.getDouble(5));

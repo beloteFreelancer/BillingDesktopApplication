@@ -3,6 +3,7 @@ package Utils;
 import com.selrom.db.DataUtil;
 import java.sql.ResultSet;
 import java.util.*;
+import menupack.UserSession;
 import model.Item;
 
 public class ItemUtil {
@@ -21,7 +22,10 @@ public class ItemUtil {
 
         // Build IN clause from unique keys
         String inClause = frequencyMap.keySet().toString().replace("[", "(").replace("]", ")");
-        String query = "SELECT * FROM item WHERE ino IN " + inClause;
+        String companyFilter = UserSession.hasSelectedCompany()
+                ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                : "";
+        String query = "SELECT * FROM item WHERE ino IN " + inClause + companyFilter;
 
         DataUtil dataUtil = new DataUtil();
         try (ResultSet rs = dataUtil.doQuery(query)) {

@@ -20,14 +20,13 @@ import javax.print.attribute.standard.MediaSize;
 import javax.print.attribute.standard.MediaSizeName;
 import menupack.AmountInWords;
 import menupack.SelRomJasper;
+import menupack.UserSession;
 import net.sf.jasperreports.engine.JRException;
-import net.sf.jasperreports.engine.JRExporterParameter;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.export.JRPrintServiceExporter;
-import net.sf.jasperreports.engine.export.JRPrintServiceExporterParameter;
 import net.sf.jasperreports.engine.util.JRLoader;
 import net.sf.jasperreports.view.JasperViewer;
 
@@ -45,8 +44,13 @@ public class print_a4_2_Copies {
 
             Map<String, Object> parameters = new HashMap<>();
 
-            String add1 = "", add2 = "", add3 = "", add4 = "", add5 = "", sname = "", scode = "", letter = "", head = "", sms1 = "", sms2 = "", sms3 = "", sms4 = "", logoPath = "";
-            String query = "select cname,add1,add2,add3,add4,state,scode,bhead,sms1,sms2,sms3,sms4,letter,hmany,logo_path from setting_bill";
+            String add1 = "", add2 = "", add3 = "", add4 = "", add5 = "", sname = "", scode = "", letter = "",
+                    head = "", sms1 = "", sms2 = "", sms3 = "", sms4 = "", logoPath = "";
+            String companyWhere = UserSession.hasSelectedCompany()
+                    ? " WHERE companyID='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select cname,add1,add2,add3,add4,state,scode,bhead,sms1,sms2,sms3,sms4,letter,hmany,logo_path from company"
+                    + companyWhere;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 logoPath = r.getString("logo_path");
@@ -65,7 +69,8 @@ public class print_a4_2_Copies {
                 letter = r.getString(13);
                 hmany = r.getInt(14);
             }
-            parameters.put("logo_path", logoPath);            parameters.put("parameter1", "" + add1);
+            parameters.put("logo_path", logoPath);
+            parameters.put("parameter1", "" + add1);
             parameters.put("parameter2", "");
             parameters.put("parameter3", "");
             parameters.put("parameter4", "");
@@ -91,7 +96,8 @@ public class print_a4_2_Copies {
 
             String date = "", quans = "", cid = "", tax = "", pby = "";
             double sub = 0, dis = 0, addamt = 0, net = 0, taxamt = 0;
-            query = "select date_format(dat,'%d/%m/%Y'),quans,sub,disamt,addamt,net,cid,taxamt,tax,pby from sales where billno='" + billno + "'";
+            query = "select date_format(dat,'%d/%m/%Y'),quans,sub,disamt,addamt,net,cid,taxamt,tax,pby from sales where billno='"
+                    + billno + "'";
             r = util.doQuery(query);
             while (r.next()) {
                 date = r.getString(1);
@@ -135,7 +141,8 @@ public class print_a4_2_Copies {
             parameters.put("parameter29", "");
             parameters.put("parameter30", "");
             parameters.put("parameter31", "");
-            String cname = "", ad1 = "", ad2 = "", ad3 = "", area = "", mobile = "", phone = "", ctin = "", csname = "", cscode = "";
+            String cname = "", ad1 = "", ad2 = "", ad3 = "", area = "", mobile = "", phone = "", ctin = "", csname = "",
+                    cscode = "";
             query = "select cname,add1,add2,add3,city,mobile,phone,gstno,sname,scode from cust where cid='" + cid + "'";
             r = util.doQuery(query);
             while (r.next()) {
@@ -179,7 +186,7 @@ public class print_a4_2_Copies {
                 parameters.put("parameter16", ": " + area);
             }
 
-            //delivery
+            // delivery
             if (cname.length() > 1) {
                 parameters.put("parameter25", "" + cname);
             }
@@ -202,7 +209,7 @@ public class print_a4_2_Copies {
                 parameters.put("parameter31", "State: " + csname + "   State Code:" + cscode);
             }
 
-            //delivery address ends
+            // delivery address ends
             int quans2 = (int) Double.parseDouble(quans);
             parameters.put("parameter32", "" + quans2);
 
@@ -295,7 +302,11 @@ public class print_a4_2_Copies {
             String iname, udes, hsn;
             double quan, price, amount, disp, disamt, tot, taxp, taxamt1, total;
             double namount = 0, ndisamt = 0, ntot = 0, ntax = 0, ntotal = 0;
-            query = "select iname1,quan,price,amount,disp,disamt,sub,taxp,taxamt,total,udes,hsn from sales_items where billno='" + billno + "'";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            query = "select iname1,quan,price,amount,disp,disamt,sub,taxp,taxamt,total,udes,hsn from sales_items where billno='"
+                    + billno + "'" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 SelRomJasper selRomJasper = new SelRomJasper();

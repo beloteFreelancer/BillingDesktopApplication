@@ -22,13 +22,13 @@ import javax.print.attribute.standard.MediaSizeName;
 import menupack.AmountInWords;
 import menupack.menu_form;
 import net.sf.jasperreports.engine.JREmptyDataSource;
-import net.sf.jasperreports.engine.JRExporterParameter;
 import net.sf.jasperreports.engine.data.JRMapCollectionDataSource;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.export.JRPrintServiceExporter;
-import net.sf.jasperreports.engine.export.JRPrintServiceExporterParameter;
+import net.sf.jasperreports.export.SimpleExporterInput;
+import net.sf.jasperreports.export.SimplePrintServiceExporterConfiguration;
 import net.sf.jasperreports.engine.util.JRLoader;
 import net.sf.jasperreports.view.JasperViewer;
 
@@ -62,7 +62,7 @@ public class voucher_print {
 
             String add1 = "", add2 = "", add3 = "", add4 = "";
 
-            String query = "select cname,add1,add2,add3,hmany from setting_bill";
+            String query = "select cname,add1,add2,add3,hmany from company";
             r = util.doQuery(query);
             while (r.next()) {
                 add1 = r.getString(1);
@@ -138,14 +138,14 @@ public class voucher_print {
             printRequestAttributeSet.add(new Copies(1));
             JRPrintServiceExporter exporter;
             exporter = new JRPrintServiceExporter();
-            exporter.setParameter(JRExporterParameter.JASPER_PRINT, jasperPrint);
-            exporter.setParameter(JRPrintServiceExporterParameter.PRINT_SERVICE, services[selectedService]);
-            exporter.setParameter(JRPrintServiceExporterParameter.PRINT_SERVICE_ATTRIBUTE_SET,
-                    services[selectedService].getAttributes());
-            exporter.setParameter(JRPrintServiceExporterParameter.PRINT_REQUEST_ATTRIBUTE_SET,
-                    printRequestAttributeSet);
-            exporter.setParameter(JRPrintServiceExporterParameter.DISPLAY_PAGE_DIALOG, Boolean.FALSE);
-            exporter.setParameter(JRPrintServiceExporterParameter.DISPLAY_PRINT_DIALOG, Boolean.TRUE);
+            exporter.setExporterInput(new SimpleExporterInput(jasperPrint));
+            SimplePrintServiceExporterConfiguration configuration = new SimplePrintServiceExporterConfiguration();
+            configuration.setPrintService(services[selectedService]);
+            configuration.setPrintServiceAttributeSet(services[selectedService].getAttributes());
+            configuration.setPrintRequestAttributeSet(printRequestAttributeSet);
+            configuration.setDisplayPageDialog(false);
+            configuration.setDisplayPrintDialog(true);
+            exporter.setConfiguration(configuration);
             exporter.exportReport();
         } catch (Exception e) {
             System.out.println(e.getMessage());

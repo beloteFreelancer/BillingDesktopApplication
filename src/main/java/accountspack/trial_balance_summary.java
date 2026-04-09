@@ -39,7 +39,7 @@ public class trial_balance_summary {
             SimpleDateFormat g = new SimpleDateFormat("dd-MM-yyyy");
             String cname = "";
             int hmany = 2;
-            String query = "select cname,hmany from setting_bill";
+            String query = "select cname,hmany from company";
             r = util.doQuery(query);
             while (r.next()) {
                 cname = r.getString(1);
@@ -84,9 +84,9 @@ public class trial_balance_summary {
                     credit.add(bal);
                     debit.add(0);
                 }
-            }//balances is grearthen zero
+            } // balances is grearthen zero
 
-            //Fixed Assets
+            // Fixed Assets
             camt = 0;
             damt = 0;
             query = "select sum(case when t.entry = 'Credit' then t.amount else null end) as Credit, sum(case when t.entry = 'Debit' then t.amount else null end) as Debit from account_voucher t where under='Fixed Assets' ";
@@ -117,10 +117,10 @@ public class trial_balance_summary {
                     credit.add(bal);
                     debit.add(0);
                 }
-            }//balances is grearthen zero
-            //Fixed Assets Ending
+            } // balances is grearthen zero
+              // Fixed Assets Ending
 
-            //Loans Starts
+            // Loans Starts
             camt = 0;
             damt = 0;
             query = "select sum(case when t.entry = 'Credit' then t.amount else null end) as Credit, sum(case when t.entry = 'Debit' then t.amount else null end) as Debit from account_voucher t where under='Loans (Liability)' ";
@@ -152,10 +152,10 @@ public class trial_balance_summary {
                     credit.add(0);
                     debit.add(bal);
                 }
-            }//balances greater than zero
-            //Loans Ends Here
+            } // balances greater than zero
+              // Loans Ends Here
 
-            //Current Liabilities
+            // Current Liabilities
             camt = 0;
             damt = 0;
             query = "select sum(case when t.entry = 'Credit' then t.amount else null end) as Credit, sum(case when t.entry = 'Debit' then t.amount else null end) as Debit from account_voucher t where under='Current Liabilities' ";
@@ -186,10 +186,10 @@ public class trial_balance_summary {
                     credit.add(0);
                     debit.add(bal);
                 }
-            }//balances is greaterthan zero
-            //Current Liabilities Ends Here
+            } // balances is greaterthan zero
+              // Current Liabilities Ends Here
 
-            //Suspense Account Starts
+            // Suspense Account Starts
             camt = 0;
             damt = 0;
             query = "select sum(case when t.entry = 'Credit' then t.amount else null end) as Credit, sum(case when t.entry = 'Debit' then t.amount else null end) as Debit from account_voucher t where under='Suspense Account' ";
@@ -220,10 +220,10 @@ public class trial_balance_summary {
                     credit.add(bal);
                     debit.add(0);
                 }
-            }//balances is grearthen zero
-            //Suspense Account Ends Here
+            } // balances is grearthen zero
+              // Suspense Account Ends Here
 
-            //Incomes Starts Here
+            // Incomes Starts Here
             double sales = 0, preturn = 0, cust_pay = 0, other_income = 0;
             query = "select sum(cash+card+others) from sales";
             r = util.doQuery(query);
@@ -283,7 +283,7 @@ public class trial_balance_summary {
             part.add("Incomes");
             credit.add(other_income);
             debit.add(other_dt);
-            //Incomes Ends Here
+            // Incomes Ends Here
 
             double purchase = 0;
             query = "select sum(net) from purchase";
@@ -344,7 +344,7 @@ public class trial_balance_summary {
             ca_debit = ca_debit + total_expen;
             ca_credit = ca_credit + total_income;
 
-            //Bank Accounts
+            // Bank Accounts
             query = "select sum(case when t.entry = 'Credit' then t.amount else null end) as Credit, sum(case when t.entry = 'Debit' then t.amount else null end) as Debit from account_voucher t where under='Bank Accounts' ";
             r = util.doQuery(query);
             while (r.next()) {
@@ -360,9 +360,9 @@ public class trial_balance_summary {
                 ca_credit = ca_credit + r.getDouble(1);
                 ca_debit = ca_debit + r.getDouble(2);
             }
-            //Bank Accounts
+            // Bank Accounts
 
-            //current assets starts
+            // current assets starts
             if (ca_credit > ca_debit) {
                 double diff = ca_credit - ca_debit;
                 part.add("Current Assets");
@@ -374,9 +374,9 @@ public class trial_balance_summary {
                 credit.add(diff);
                 debit.add(0);
             }
-            //current ends here
+            // current ends here
 
-            //Opening Balance
+            // Opening Balance
             if (open_credit > 0 || open_debit > 0) {
                 if (open_credit > open_debit) {
                     double diff = open_credit - open_debit;
@@ -390,7 +390,7 @@ public class trial_balance_summary {
                     debit.add(0);
                 }
             }
-            //Opening Balance Ends Here
+            // Opening Balance Ends Here
 
             double tdebit = 0, tcredit = 0;
             ArrayList k = new ArrayList();
@@ -420,7 +420,7 @@ public class trial_balance_summary {
                 selRomJasper.setField2(debit2);
                 selRomJasper.setField3(credit2);
                 k.add(selRomJasper);
-            }//array size
+            } // array size
 
             String tdebit2 = String.format("%." + hmany + "f", tdebit);
             String tcredit2 = String.format("%." + hmany + "f", tcredit);
@@ -434,8 +434,7 @@ public class trial_balance_summary {
             String drive = mp.getDrive();
             String folder = mp.getFoler();
             jasperReport = JasperReportCompiler.compileReport("/JasperFiles/Accounts/Trial_Balance.jrxml");
-            JRBeanCollectionDataSource beanColDataSource
-                    = new JRBeanCollectionDataSource(k);
+            JRBeanCollectionDataSource beanColDataSource = new JRBeanCollectionDataSource(k);
             jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, beanColDataSource);
             jasperViewer = new JasperViewer(jasperPrint);
             jasperViewer.setVisible(true);

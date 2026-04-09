@@ -25,6 +25,7 @@ import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import menupack.menu_form;
 import menupack.sample2;
+import menupack.UserSession;
 
 public class expiry_report extends javax.swing.JInternalFrame {
 
@@ -101,7 +102,11 @@ public class expiry_report extends javax.swing.JInternalFrame {
             String date1 = format.format(jDateChooser1.getDate());
             String date2 = format.format(jDateChooser2.getDate());
 
-            String query = "select a.ino, a.iname, a.mrp, b.prate, a.rprice, a.mfg_date, a.exp_date, b.quan from item a, stock b where a.ino=b.ino and a.exp_date between ? and ? order by a.exp_date asc";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND a.company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select a.ino, a.iname, a.mrp, b.prate, a.rprice, a.mfg_date, a.exp_date, b.quan from item a, stock b where a.ino=b.ino"
+                    + companyFilter + " and a.exp_date between ? and ? order by a.exp_date asc";
 
             java.sql.PreparedStatement pstmt = com.selrom.db.Database.getInstance().getConnection()
                     .prepareStatement(query);

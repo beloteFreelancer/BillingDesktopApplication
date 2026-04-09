@@ -22,6 +22,7 @@ import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import menupack.menu_form;
 import menupack.sample2;
+import menupack.UserSession;
 
 /**
  *
@@ -89,8 +90,12 @@ public class ven_bill_report extends javax.swing.JInternalFrame {
             boolean selva = false;
             double sub;
 
+            String venCompanyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             String query;
-            query = "select sno,cname,billno,date_format(dat,'%d/%m/%Y'),date_format(ddate,'%d/%m/%Y'),amount,remarks,user,last from ven_bill where dat between ? and ? order by dat,sno";
+            query = "select sno,cname,billno,date_format(dat,'%d/%m/%Y'),date_format(ddate,'%d/%m/%Y'),amount,remarks,user,last from ven_bill where dat between ? and ?"
+                    + venCompanyFilter + " order by dat,sno";
             Connection conn = util.getConnection();
             PreparedStatement ps = conn.prepareStatement(query);
             ps.setString(1, lk);

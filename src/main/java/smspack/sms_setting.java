@@ -43,14 +43,14 @@ public final class sms_setting extends javax.swing.JInternalFrame {
                 h6.setSelectedItem(r.getString(6));
                 h7.setText(r.getString(7));
                 h8.setText(r.getString(8));
-                // Replace any "BBS" references with "Swayam" in SMS footers
+                // Replace any "BBS" references with "BBS" in SMS footers
                 String smsfoot1 = r.getString(9);
                 String smsfoot2 = r.getString(10);
                 if (smsfoot1 != null) {
-                    smsfoot1 = smsfoot1.replace("BBS", "Swayam").replace("bbs", "Swayam");
+                    smsfoot1 = smsfoot1.replace("BBS", "BBS").replace("bbs", "BBS");
                 }
                 if (smsfoot2 != null) {
-                    smsfoot2 = smsfoot2.replace("BBS", "Swayam").replace("bbs", "Swayam");
+                    smsfoot2 = smsfoot2.replace("BBS", "BBS").replace("bbs", "BBS");
                 }
                 h9.setText(smsfoot1);
                 h10.setText(smsfoot2);

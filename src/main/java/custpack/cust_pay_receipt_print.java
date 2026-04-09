@@ -7,6 +7,7 @@ import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import javax.print.PrintService;
@@ -19,14 +20,15 @@ import javax.print.attribute.standard.MediaSize;
 import javax.print.attribute.standard.MediaSizeName;
 import menupack.AmountInWords;
 import menupack.menu_form;
-import net.sf.jasperreports.engine.JREmptyDataSource;
+import menupack.UserSession;
 import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.data.JRMapCollectionDataSource;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
-import net.sf.jasperreports.engine.JRExporterParameter;
 import net.sf.jasperreports.engine.export.JRPrintServiceExporter;
-import net.sf.jasperreports.engine.export.JRPrintServiceExporterParameter;
+import net.sf.jasperreports.export.SimpleExporterInput;
+import net.sf.jasperreports.export.SimplePrintServiceExporterConfiguration;
 import net.sf.jasperreports.engine.util.JRLoader;
 import net.sf.jasperreports.view.JasperViewer;
 
@@ -56,7 +58,10 @@ public class cust_pay_receipt_print {
             parameters.put("parameter6", "");
 
             String line1 = "", line2 = "", line3 = "", line4 = "", line5 = "";
-            String query = "select cname,add1,add2,add3,add4,hmany from setting_bill";
+            String companyWhere = UserSession.hasSelectedCompany()
+                    ? " WHERE companyID='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select cname,add1,add2,add3,add4,hmany from company" + companyWhere;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 line1 = r.getString(1);
@@ -127,13 +132,25 @@ public class cust_pay_receipt_print {
             parameters.put("parameter15", "" + paid2);
             parameters.put("parameter16", "" + cbal2);
 
+            ArrayList billData = new ArrayList();
+            query = "select billno, amount from cust_pay where sno='" + sno + "'";
+            r = util.doQuery(query);
+            while (r.next()) {
+                HashMap row = new HashMap();
+                row.put("billno", r.getString(1));
+                double amt = r.getDouble(2);
+                row.put("amount", String.format("%." + hmany + "f", amt));
+                billData.add(row);
+            }
+
             disable_warnigs.disableAccessWarnings();
             menupack.menu_form me = new menu_form();
             String drive = "";
             String folder = Utils.AppConfig.getAppPath();
             jasperReport = JasperReportCompiler.compileReport("/JasperFiles/Payment_Receipt/A4-Half_Receipt.jrxml");
 
-            jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, new JREmptyDataSource());
+            jasperPrint = JasperFillManager.fillReport(jasperReport, parameters,
+                    new JRMapCollectionDataSource(billData));
             PrinterJob job = PrinterJob.getPrinterJob();
             PrintService[] services = PrintServiceLookup.lookupPrintServices(null, null);
             int selectedService = 0;
@@ -144,18 +161,17 @@ public class cust_pay_receipt_print {
             }
             job.setPrintService(services[selectedService]);
             PrintRequestAttributeSet printRequestAttributeSet = new HashPrintRequestAttributeSet();
-            MediaSizeName mediaSizeName = MediaSize.findMedia(4, 4, MediaPrintableArea.INCH);
-            printRequestAttributeSet.add(mediaSizeName);
+            printRequestAttributeSet.add(MediaSizeName.ISO_A4);
             printRequestAttributeSet.add(new Copies(1));
             JRPrintServiceExporter exporter = new JRPrintServiceExporter();
-            exporter.setParameter(JRExporterParameter.JASPER_PRINT, jasperPrint);
-            exporter.setParameter(JRPrintServiceExporterParameter.PRINT_SERVICE, services[selectedService]);
-            exporter.setParameter(JRPrintServiceExporterParameter.PRINT_SERVICE_ATTRIBUTE_SET,
-                    services[selectedService].getAttributes());
-            exporter.setParameter(JRPrintServiceExporterParameter.PRINT_REQUEST_ATTRIBUTE_SET,
-                    printRequestAttributeSet);
-            exporter.setParameter(JRPrintServiceExporterParameter.DISPLAY_PAGE_DIALOG, Boolean.FALSE);
-            exporter.setParameter(JRPrintServiceExporterParameter.DISPLAY_PRINT_DIALOG, Boolean.TRUE);
+            exporter.setExporterInput(new SimpleExporterInput(jasperPrint));
+            SimplePrintServiceExporterConfiguration configuration = new SimplePrintServiceExporterConfiguration();
+            configuration.setPrintService(services[selectedService]);
+            configuration.setPrintServiceAttributeSet(services[selectedService].getAttributes());
+            configuration.setPrintRequestAttributeSet(printRequestAttributeSet);
+            configuration.setDisplayPageDialog(false);
+            configuration.setDisplayPrintDialog(true);
+            exporter.setConfiguration(configuration);
             exporter.exportReport();
 
         } catch (PrinterException | ClassNotFoundException | SQLException | JRException e) {

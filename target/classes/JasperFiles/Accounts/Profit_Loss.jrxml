@@ -107,26 +107,26 @@
     </columnHeader>
     <detail>
         <band height="20" splitType="Stretch">
-            <textField isStretchWithOverflow="true" isBlankWhenNull="true">
+            <textField textAdjust="StretchHeight" isBlankWhenNull="true">
                 <reportElement x="0" y="0" width="80" height="20"/>
                 <textElement textAlignment="Center"/>
                 <textFieldExpression><![CDATA[$F{field1}]]></textFieldExpression>
             </textField>
-            <textField isStretchWithOverflow="true" isBlankWhenNull="true">
+            <textField textAdjust="StretchHeight" isBlankWhenNull="true">
                 <reportElement x="80" y="0" width="100" height="20"/>
                 <textElement textAlignment="Center"/>
                 <textFieldExpression><![CDATA[$F{field2}]]></textFieldExpression>
             </textField>
-            <textField isStretchWithOverflow="true" isBlankWhenNull="true">
+            <textField textAdjust="StretchHeight" isBlankWhenNull="true">
                 <reportElement x="180" y="0" width="175" height="20"/>
                 <textFieldExpression><![CDATA[$F{field3}]]></textFieldExpression>
             </textField>
-            <textField isStretchWithOverflow="true" isBlankWhenNull="true">
+            <textField textAdjust="StretchHeight" isBlankWhenNull="true">
                 <reportElement x="355" y="0" width="100" height="20"/>
                 <textElement textAlignment="Right"/>
                 <textFieldExpression><![CDATA[$F{field4}]]></textFieldExpression>
             </textField>
-            <textField isStretchWithOverflow="true" isBlankWhenNull="true">
+            <textField textAdjust="StretchHeight" isBlankWhenNull="true">
                 <reportElement x="455" y="0" width="100" height="20"/>
                 <textElement textAlignment="Right"/>
                 <textFieldExpression><![CDATA[$F{field5}]]></textFieldExpression>

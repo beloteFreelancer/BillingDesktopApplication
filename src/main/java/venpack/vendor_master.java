@@ -8,6 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
+import menupack.UserSession;
 import Utils.ColorConstants;
 
 /**
@@ -40,12 +41,13 @@ public final class vendor_master extends javax.swing.JInternalFrame {
     void get_sug1() {
         try {
             int count = 0;
-            String query = "select distinct cname from vendor";
+            String companyFilter = UserSession.hasSelectedCompany() ? " where company_id='" + UserSession.getSelectedCompanyID() + "'" : "";
+            String query = "select distinct cname from vendor" + companyFilter;
             ResultSet set = util.doQuery(query);
             while (set.next()) {
                 count = count + 1;
             }
-            query = "select distinct cname from vendor";
+            query = "select distinct cname from vendor" + companyFilter;
             set = util.doQuery(query);
             String f[] = new String[count];
             int index = 0;
@@ -63,12 +65,13 @@ public final class vendor_master extends javax.swing.JInternalFrame {
     void get_sug2() {
         try {
             int count = 0;
-            String query = "select distinct city from vendor";
+            String companyFilter = UserSession.hasSelectedCompany() ? " where company_id='" + UserSession.getSelectedCompanyID() + "'" : "";
+            String query = "select distinct city from vendor" + companyFilter;
             ResultSet set = util.doQuery(query);
             while (set.next()) {
                 count = count + 1;
             }
-            query = "select distinct city from vendor";
+            query = "select distinct city from vendor" + companyFilter;
             set = util.doQuery(query);
             String f[] = new String[count];
             int index = 0;
@@ -86,12 +89,13 @@ public final class vendor_master extends javax.swing.JInternalFrame {
     void get_sug3() {
         try {
             int count = 0;
-            String query = "select distinct sname from vendor";
+            String companyFilter = UserSession.hasSelectedCompany() ? " where company_id='" + UserSession.getSelectedCompanyID() + "'" : "";
+            String query = "select distinct sname from vendor" + companyFilter;
             ResultSet set = util.doQuery(query);
             while (set.next()) {
                 count = count + 1;
             }
-            query = "select distinct sname from vendor";
+            query = "select distinct sname from vendor" + companyFilter;
             set = util.doQuery(query);
             String f[] = new String[count];
             int index = 0;
@@ -109,12 +113,13 @@ public final class vendor_master extends javax.swing.JInternalFrame {
     void get_sug4() {
         try {
             int count = 0;
-            String query = "select distinct scode from vendor";
+            String companyFilter = UserSession.hasSelectedCompany() ? " where company_id='" + UserSession.getSelectedCompanyID() + "'" : "";
+            String query = "select distinct scode from vendor" + companyFilter;
             ResultSet set = util.doQuery(query);
             while (set.next()) {
                 count = count + 1;
             }
-            query = "select distinct scode from vendor";
+            query = "select distinct scode from vendor" + companyFilter;
             set = util.doQuery(query);
             String f[] = new String[count];
             int index = 0;
@@ -186,8 +191,9 @@ public final class vendor_master extends javax.swing.JInternalFrame {
             String duedays = h11.getText();
             String remarks = h12.getText();
             String email = h13.getText();
+            String companyFilter = UserSession.hasSelectedCompany() ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'" : "";
             boolean selva = false;
-            String query = "select distinct cname from vendor where cname='" + cname + "'";
+            String query = "select distinct cname from vendor where cname='" + cname + "'" + companyFilter;
             ResultSet set = util.doQuery(query);
             while (set.next()) {
                 selva = true;
@@ -198,7 +204,7 @@ public final class vendor_master extends javax.swing.JInternalFrame {
             }
             query = "insert into vendor values ('" + cname + "','" + add1 + "','" + add2 + "','" + add3 + "','" + area
                     + "','" + mobile + "','" + phone + "','" + gstno + "','" + sname + "','" + scode + "','" + duedays
-                    + "','" + remarks + "','" + email + "')";
+                    + "','" + remarks + "','" + email + "','" + (UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "") + "')";
             int count = util.doManipulation(query);
             if (count > 0) {
                 JOptionPane.showMessageDialog(this, "Saved Successfully", "Saved", JOptionPane.PLAIN_MESSAGE);
@@ -267,8 +273,9 @@ public final class vendor_master extends javax.swing.JInternalFrame {
             String duedays = h11.getText();
             String remarks = h12.getText();
             String email = h13.getText();
+            String companyFilter = UserSession.hasSelectedCompany() ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'" : "";
             boolean selva = false;
-            String query = "select distinct cname from vendor where cname='" + cname + "'";
+            String query = "select distinct cname from vendor where cname='" + cname + "'" + companyFilter;
             ResultSet set = util.doQuery(query);
             while (set.next()) {
                 selva = true;
@@ -281,7 +288,7 @@ public final class vendor_master extends javax.swing.JInternalFrame {
             query = "update vendor set add1='" + add1 + "',add2='" + add2 + "',add3='" + add3 + "',city='" + area
                     + "',mobile='" + mobile + "',phone='" + phone + "',gstno='" + gstno + "',sname='" + sname
                     + "',scode='" + scode + "',duedays='" + duedays + "',remarks='" + remarks + "',email='" + email
-                    + "' where cname='" + cname + "' ";
+                    + "' where cname='" + cname + "'" + companyFilter;
             int count = util.doManipulation(query);
             if (count > 0) {
                 JOptionPane.showMessageDialog(this, "Updated Successfully", "Updated", JOptionPane.PLAIN_MESSAGE);
@@ -324,8 +331,9 @@ public final class vendor_master extends javax.swing.JInternalFrame {
 
     void view() {
         try {
+            String companyFilter = UserSession.hasSelectedCompany() ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'" : "";
             String query = "select distinct cname,add1,add2,add3,city,mobile,phone,gstno,sname,scode,duedays,remarks from vendor where cname='"
-                    + h1.getSelectedItem() + "' ";
+                    + h1.getSelectedItem() + "'" + companyFilter;
             ResultSet set1 = util.doQuery(query);
             boolean selva = false;
             while (set1.next()) {
@@ -363,8 +371,9 @@ public final class vendor_master extends javax.swing.JInternalFrame {
             if (as == JOptionPane.NO_OPTION) {
                 return;
             }
+            String companyFilter = UserSession.hasSelectedCompany() ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'" : "";
             boolean selva = false;
-            String query = "select distinct cname from vendor where cname='" + h1.getSelectedItem() + "'";
+            String query = "select distinct cname from vendor where cname='" + h1.getSelectedItem() + "'" + companyFilter;
             ResultSet set = util.doQuery(query);
             while (set.next()) {
                 selva = true;
@@ -373,7 +382,7 @@ public final class vendor_master extends javax.swing.JInternalFrame {
                 JOptionPane.showMessageDialog(this, "No Records Were Found!", "No Records", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            query = "delete from vendor where cname='" + h1.getSelectedItem() + "'";
+            query = "delete from vendor where cname='" + h1.getSelectedItem() + "'" + companyFilter;
             int count = util.doManipulation(query);
             if (count > 0) {
                 JOptionPane.showMessageDialog(this, "Deleted Successfully", "Deleted", JOptionPane.PLAIN_MESSAGE);

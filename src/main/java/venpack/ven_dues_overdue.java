@@ -18,6 +18,7 @@ import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import menupack.menu_form;
 import menupack.sample2;
+import menupack.UserSession;
 
 /**
  *
@@ -83,7 +84,11 @@ public final class ven_dues_overdue extends javax.swing.JInternalFrame {
             String today = g.format(d);
             query = "select billno,date_format(dat,'%d/%m/%Y'),date_format(ddate,'%d/%m/%Y'),datediff(ddate,'" + today
                     + "'),a.cname,tot-paid,mobile from ven_bal a,vendor b where ddate < '" + today
-                    + "' and tot-paid>0 and a.cname=b.cname order by ddate,billno";
+                    + "' and tot-paid>0 and a.cname=b.cname"
+                    + (UserSession.hasSelectedCompany()
+                            ? " and a.company_id='" + UserSession.getSelectedCompanyID() + "'"
+                            : "")
+                    + " order by ddate,billno";
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 double tot = r.getDouble(6);

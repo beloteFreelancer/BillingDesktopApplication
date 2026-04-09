@@ -44,7 +44,7 @@ public class Cashbook_Summary {
             String dto1 = (new SimpleDateFormat("yyyy/MM/dd").format(nm1));
 
             String cname = "";
-            String query = "select cname,hmany from setting_bill";
+            String query = "select cname,hmany from company";
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 cname = r.getString(1);
@@ -73,13 +73,15 @@ public class Cashbook_Summary {
                 cust_pay = r.getDouble(1);
             }
             double other_income = 0;
-            query = "select sum(amount) from account_voucher where dat< '" + dfrom1 + "' and entry='Credit' and pby='Cash' ";
+            query = "select sum(amount) from account_voucher where dat< '" + dfrom1
+                    + "' and entry='Credit' and pby='Cash' ";
             r = util.doQuery(query);
             while (r.next()) {
                 other_income = r.getDouble(1);
             }
             double con_credit = 0;
-            query = "select sum(amount) from account_transfer where dat < '" + dfrom1 + "' and category='Bank Ac to Cash Ac'  ";
+            query = "select sum(amount) from account_transfer where dat < '" + dfrom1
+                    + "' and category='Bank Ac to Cash Ac'  ";
             r = util.doQuery(query);
             while (r.next()) {
                 con_credit = r.getDouble(1);
@@ -105,13 +107,15 @@ public class Cashbook_Summary {
                 ven_pay = r.getDouble(1);
             }
             double other_expense = 0;
-            query = "select sum(amount) from account_voucher where dat< '" + dfrom1 + "' and entry='Debit' and pby='Cash' ";
+            query = "select sum(amount) from account_voucher where dat< '" + dfrom1
+                    + "' and entry='Debit' and pby='Cash' ";
             r = util.doQuery(query);
             while (r.next()) {
                 other_expense = r.getDouble(1);
             }
             double con_debit = 0;
-            query = "select sum(amount) from account_transfer where dat < '" + dfrom1 + "' and category='Cash Ac to Bank Ac'  ";
+            query = "select sum(amount) from account_transfer where dat < '" + dfrom1
+                    + "' and category='Cash Ac to Bank Ac'  ";
             r = util.doQuery(query);
             while (r.next()) {
                 con_debit = r.getDouble(1);
@@ -146,7 +150,8 @@ public class Cashbook_Summary {
                 }
             }
 
-            query = "select sum(net) from preturn where dat between '" + dfrom1 + "' and '" + dto1 + "' and pby='Cash' ";
+            query = "select sum(net) from preturn where dat between '" + dfrom1 + "' and '" + dto1
+                    + "' and pby='Cash' ";
             r = util.doQuery(query);
             while (r.next()) {
                 double amt = r.getDouble(1);
@@ -157,7 +162,8 @@ public class Cashbook_Summary {
                 }
 
             }
-            query = "select sum(amount) from cust_pay where dat between '" + dfrom1 + "' and '" + dto1 + "' and pby='Cash' ";
+            query = "select sum(amount) from cust_pay where dat between '" + dfrom1 + "' and '" + dto1
+                    + "' and pby='Cash' ";
             r = util.doQuery(query);
             while (r.next()) {
                 double amt = r.getDouble(1);
@@ -168,7 +174,8 @@ public class Cashbook_Summary {
                 }
             }
 
-            query = "select sum(net) from purchase where dat between '" + dfrom1 + "' and '" + dto1 + "' and pby='Cash' ";
+            query = "select sum(net) from purchase where dat between '" + dfrom1 + "' and '" + dto1
+                    + "' and pby='Cash' ";
             r = util.doQuery(query);
             while (r.next()) {
                 double amt = r.getDouble(1);
@@ -190,7 +197,8 @@ public class Cashbook_Summary {
                 }
             }
 
-            query = "select sum(amount) from ven_pay where dat between '" + dfrom1 + "' and '" + dto1 + "' and pby='Cash' ";
+            query = "select sum(amount) from ven_pay where dat between '" + dfrom1 + "' and '" + dto1
+                    + "' and pby='Cash' ";
             r = util.doQuery(query);
             while (r.next()) {
                 double amt = r.getDouble(1);
@@ -201,7 +209,8 @@ public class Cashbook_Summary {
                 }
             }
 
-            query = "select t.account,sum(case when t.entry = 'Credit' then t.amount else null end) as Credit, sum(case when t.entry = 'Debit' then t.amount else null end) as Debit from account_voucher t  where dat between '" + dfrom1 + "' and '" + dto1 + "' and pby='Cash' GROUP BY t.account;";
+            query = "select t.account,sum(case when t.entry = 'Credit' then t.amount else null end) as Credit, sum(case when t.entry = 'Debit' then t.amount else null end) as Debit from account_voucher t  where dat between '"
+                    + dfrom1 + "' and '" + dto1 + "' and pby='Cash' GROUP BY t.account;";
             r = util.doQuery(query);
             while (r.next()) {
                 double camt = r.getDouble(2);
@@ -213,7 +222,8 @@ public class Cashbook_Summary {
                 }
             }
 
-            query = "select sum(amount) from account_transfer where dat between '" + dfrom1 + "' and '" + dto1 + "' and category='Cash Ac to Bank Ac'  ";
+            query = "select sum(amount) from account_transfer where dat between '" + dfrom1 + "' and '" + dto1
+                    + "' and category='Cash Ac to Bank Ac'  ";
             r = util.doQuery(query);
             while (r.next()) {
                 double amt = r.getDouble(1);
@@ -224,7 +234,8 @@ public class Cashbook_Summary {
                 }
             }
 
-            query = "select sum(amount) from account_transfer where dat between '" + dfrom1 + "' and '" + dto1 + "' and category='Bank Ac to Cash Ac'  ";
+            query = "select sum(amount) from account_transfer where dat between '" + dfrom1 + "' and '" + dto1
+                    + "' and category='Bank Ac to Cash Ac'  ";
             r = util.doQuery(query);
             while (r.next()) {
                 double amt = r.getDouble(1);
@@ -263,7 +274,7 @@ public class Cashbook_Summary {
                 selRomJasper.setField4(debit2);
                 selRomJasper.setField5(credit2);
                 k.add(selRomJasper);
-            }//array size ends
+            } // array size ends
 
             String tdebit2 = String.format("%." + hmany + "f", tdebit);
             String tcredit2 = String.format("%." + hmany + "f", tcredit);
@@ -302,7 +313,8 @@ public class Cashbook_Summary {
             String drive = "";
             String folder = Utils.AppConfig.getAppPath();
 
-            JasperReport jasperReport = JasperReportCompiler.compileReport("/JasperFiles/Accounts/Cash_Book_Summary.jrxml");
+            JasperReport jasperReport = JasperReportCompiler
+                    .compileReport("/JasperFiles/Accounts/Cash_Book_Summary.jrxml");
             JRBeanCollectionDataSource beanColDataSource = new JRBeanCollectionDataSource(k);
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, beanColDataSource);
 

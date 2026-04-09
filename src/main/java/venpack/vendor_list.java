@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
+import menupack.UserSession;
 import menupack.menu_form;
 import menupack.sample2;
 
@@ -82,11 +83,12 @@ public class vendor_list extends javax.swing.JInternalFrame {
 
             boolean selva = false;
             String query;
+            String companyFilter = UserSession.hasSelectedCompany() ? " company_id='" + UserSession.getSelectedCompanyID() + "'" : "";
             if (all.isSelected()) {
-                query = "select distinct cname,add1,add2,add3,city,mobile,phone,email,gstno,sname,scode,duedays,remarks from vendor order by cname";
+                query = "select distinct cname,add1,add2,add3,city,mobile,phone,email,gstno,sname,scode,duedays,remarks from vendor" + (companyFilter.isEmpty() ? "" : " where" + companyFilter) + " order by cname";
             } else {
                 query = "select distinct cname,add1,add2,add3,city,mobile,phone,email,gstno,sname,scode,duedays,remarks from vendor where city='"
-                        + h3.getSelectedItem() + "' order by cname";
+                        + h3.getSelectedItem() + "'" + (companyFilter.isEmpty() ? "" : " AND" + companyFilter) + " order by cname";
             }
             r = util.doQuery(query);
             while (r.next()) {

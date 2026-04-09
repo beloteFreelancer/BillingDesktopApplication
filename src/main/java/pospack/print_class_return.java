@@ -39,6 +39,10 @@ public class print_class_return {
             case "Thermal GST Summary":
                 new print_thermal_summary_return().Report(util, billno, drive, folder, billformat);
                 break;
+            case "Sales Half Page":
+            case "A4-Half":
+                new print_a4().Report(util, billno, drive, folder, billformat);
+                break;
             default:
                 new print_thermal_return().Report(util, billno, drive, folder, billformat);
                 break;

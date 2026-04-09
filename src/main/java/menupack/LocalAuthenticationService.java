@@ -111,7 +111,13 @@ public class LocalAuthenticationService {
                 ps.setDate(10, dto.getVdate() != null ? new java.sql.Date(dto.getVdate().getTime()) : null);
                 ps.setString(11, dto.getLicenseToken());
                 ps.setString(12, dto.getEncPass());
-                ps.setDate(13, dto.getUserValidDate() != null ? new java.sql.Date(dto.getUserValidDate().getTime()) : null);
+                // Encrypt user_valid_date before storing
+                if (dto.getUserValidDate() != null) {
+                    String dateStr = new java.text.SimpleDateFormat("yyyy-MM-dd").format(dto.getUserValidDate());
+                    ps.setString(13, AES.encrypt(dateStr, secretKey));
+                } else {
+                    ps.setString(13, null);
+                }
 
                 ps.executeUpdate();
             }
@@ -326,7 +332,18 @@ public class LocalAuthenticationService {
             dto.setEncMother(rs.getString("mname"));
             dto.setLicenseToken(rs.getString("log"));
             dto.setEncPass(rs.getString("pass"));
-            dto.setUserValidDate(rs.getDate("user_valid_date"));
+            // Decrypt user_valid_date from encrypted storage
+            String encValidDate = rs.getString("user_valid_date");
+            if (encValidDate != null && !encValidDate.trim().isEmpty()) {
+                String decValidDate = AES.decrypt(encValidDate, secretKey);
+                if (decValidDate != null) {
+                    try {
+                        dto.setUserValidDate(new java.text.SimpleDateFormat("yyyy-MM-dd").parse(decValidDate));
+                    } catch (Exception e) {
+                        System.out.println("Error parsing decrypted user_valid_date: " + e.getMessage());
+                    }
+                }
+            }
             dto.setVdate(rs.getDate("vdate"));
             dto.setEno(rs.getString("eno"));
 

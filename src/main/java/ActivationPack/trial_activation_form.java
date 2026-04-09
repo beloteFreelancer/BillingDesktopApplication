@@ -260,6 +260,7 @@ public final class trial_activation_form extends javax.swing.JFrame {
             String mother = get_mother_board_id();
             String bname = h7.getText();
             c.setAutoCommit(false);
+            
             t = c.prepareStatement("insert into customers1 values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             t.setObject(1, h1.getText());
             t.setObject(2, date);
@@ -291,7 +292,7 @@ public final class trial_activation_form extends javax.swing.JFrame {
 
                 query1 = "insert into setting_user values ('" + status + "','" + date + "','" + version + "','"
                         + hard + "','" + mother + "','" + cid + "','" + bname + "','" + key1 + "','" + eno + "',"
-                        + "NULL,NULL,NULL,NULL,'" + g.format(new Date()) + "')";
+                        + "NULL,NULL,NULL,NULL,'" + AES.encrypt(g.format(new Date()), secretKey) + "')";
                 int a = util.doManipulation(query1);
 
                 if (a > 0) {
@@ -586,7 +587,7 @@ public final class trial_activation_form extends javax.swing.JFrame {
 
         h4.setEditable(false);
         h4.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        h4.setText("Swayam Bill BOOK");
+        h4.setText(" Swayam Billing Software");
         jPanel1.add(h4);
         h4.setBounds(120, 80, 240, 30);
 

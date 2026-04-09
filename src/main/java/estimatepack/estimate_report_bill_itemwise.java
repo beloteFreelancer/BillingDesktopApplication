@@ -1,5 +1,7 @@
 package estimatepack;
 
+import menupack.UserSession;
+import Utils.ColorConstants;
 import com.selrom.db.DataUtil;
 import java.awt.Font;
 import java.awt.Point;
@@ -24,7 +26,7 @@ import menupack.sample2;
 /**
  *
  * @author K.SELVAKUMAR, copyrights K.SELVAKUMAR, +91 99427 32229,
- * mysoft.java@gmail.com
+ *         mysoft.java@gmail.com
  */
 public final class estimate_report_bill_itemwise extends javax.swing.JInternalFrame {
 
@@ -42,8 +44,10 @@ public final class estimate_report_bill_itemwise extends javax.swing.JInternalFr
         titlelablel.setText("<html><u>Bill Wise Items Estimate</u></html>");
         setTitle("Bill Wise Items Estimate");
         this.setSize(1017, 650);
-        ImageIcon icon = new ImageIcon(ClassLoader.getSystemResource("images/icon.png"));
-        this.setFrameIcon(icon);
+        javax.swing.ImageIcon icon = ColorConstants.loadIcon("/images/icon.png");
+        if (icon != null) {
+            this.setFrameIcon(icon);
+        }
     }
 
     void load_list_table() {
@@ -96,10 +100,16 @@ public final class estimate_report_bill_itemwise extends javax.swing.JInternalFr
             String lk1 = (new SimpleDateFormat("yyyy/MM/dd").format(nm1));
             boolean selva = false;
             String query;
-            query = "select distinct a.billno,date_format(a.dat,'%d/%m/%Y'),quan,price,amount,a.cid,cname,mobile from estimate a,estimate_items b where a.dat between '" + lk + "' and '" + lk1 + "' and ino='" + h3.getText() + "' and a.billno=b.billno order by a.dat,a.billno";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " and a.company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            query = "select distinct a.billno,date_format(a.dat,'%d/%m/%Y'),quan,price,amount,a.cid,cname,mobile,a.dat from estimate a,estimate_items b where a.dat between '"
+                    + lk + "' and '" + lk1 + "' and ino='" + h3.getText() + "' and a.billno=b.billno" + companyFilter
+                    + " order by a.dat,a.billno";
             r = util.doQuery(query);
             while (r.next()) {
-                s2.addRow(new Object[]{r.getString(1), r.getString(2), r.getString(3), r.getString(4), r.getString(5), r.getString(6), r.getString(7), r.getString(8)});
+                s2.addRow(new Object[] { r.getString(1), r.getString(2), r.getString(3), r.getString(4), r.getString(5),
+                        r.getString(6), r.getString(7), r.getString(8) });
                 selva = true;
             }
 
@@ -120,7 +130,10 @@ public final class estimate_report_bill_itemwise extends javax.swing.JInternalFr
     void get_customer_name() {
         try {
             h4.setText("");
-            String query = "select iname from item where ino='" + h3.getText() + "'";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " and company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select iname from item where ino='" + h3.getText() + "'" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 h4.setText(r.getString(1));
@@ -159,7 +172,8 @@ public final class estimate_report_bill_itemwise extends javax.swing.JInternalFr
     }
 
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated
+    // Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         iname_list = new javax.swing.JDialog();
@@ -194,16 +208,15 @@ public final class estimate_report_bill_itemwise extends javax.swing.JInternalFr
 
         jTable3.setFont(new java.awt.Font("Arial Unicode MS", 0, 14)); // NOI18N
         jTable3.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
-        ));
+                new Object[][] {
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null }
+                },
+                new String[] {
+                        "Title 1", "Title 2", "Title 3", "Title 4"
+                }));
         jTable3.setRowHeight(25);
         jTable3.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -330,16 +343,15 @@ public final class estimate_report_bill_itemwise extends javax.swing.JInternalFr
 
         jTable1.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
-        ));
+                new Object[][] {
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null }
+                },
+                new String[] {
+                        "Title 1", "Title 2", "Title 3", "Title 4"
+                }));
         jTable1.setRowHeight(25);
         jScrollPane1.setViewportView(jTable1);
 
@@ -368,11 +380,11 @@ public final class estimate_report_bill_itemwise extends javax.swing.JInternalFr
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closebuttonActionPerformed
+    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_closebuttonActionPerformed
         this.dispose();
-    }//GEN-LAST:event_closebuttonActionPerformed
+    }// GEN-LAST:event_closebuttonActionPerformed
 
-    private void generatebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_generatebuttonActionPerformed
+    private void generatebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_generatebuttonActionPerformed
         Date d = new Date();
         SimpleDateFormat g = new SimpleDateFormat("dd/MM/yyyy");
 
@@ -384,9 +396,9 @@ public final class estimate_report_bill_itemwise extends javax.swing.JInternalFr
         }
         load_report(h1.getText(), h2.getText());
 
-    }//GEN-LAST:event_generatebuttonActionPerformed
+    }// GEN-LAST:event_generatebuttonActionPerformed
 
-    private void excelbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_excelbuttonActionPerformed
+    private void excelbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_excelbuttonActionPerformed
         if (s2.getRowCount() <= 0) {
             JOptionPane.showMessageDialog(this, "Sorry, No Records Were Found!", "Oops", JOptionPane.ERROR_MESSAGE);
             return;
@@ -420,9 +432,9 @@ public final class estimate_report_bill_itemwise extends javax.swing.JInternalFr
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
-    }//GEN-LAST:event_excelbuttonActionPerformed
+    }// GEN-LAST:event_excelbuttonActionPerformed
 
-    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearbuttonActionPerformed
+    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_clearbuttonActionPerformed
         if (s2.getRowCount() > 0) {
             s2.getDataVector().removeAllElements();
             s2.fireTableDataChanged();
@@ -438,9 +450,9 @@ public final class estimate_report_bill_itemwise extends javax.swing.JInternalFr
         h4.setEnabled(true);
         h4.setText("");
         generatebutton.setEnabled(true);
-    }//GEN-LAST:event_clearbuttonActionPerformed
+    }// GEN-LAST:event_clearbuttonActionPerformed
 
-    private void jCalendarButton1PropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jCalendarButton1PropertyChange
+    private void jCalendarButton1PropertyChange(java.beans.PropertyChangeEvent evt) {// GEN-FIRST:event_jCalendarButton1PropertyChange
         try {
             if (evt.getNewValue() instanceof Date) {
                 String ses = evt.getNewValue().toString();
@@ -451,9 +463,9 @@ public final class estimate_report_bill_itemwise extends javax.swing.JInternalFr
         } catch (ParseException e) {
             System.out.println(e.getMessage());
         }
-    }//GEN-LAST:event_jCalendarButton1PropertyChange
+    }// GEN-LAST:event_jCalendarButton1PropertyChange
 
-    private void jCalendarButton2PropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jCalendarButton2PropertyChange
+    private void jCalendarButton2PropertyChange(java.beans.PropertyChangeEvent evt) {// GEN-FIRST:event_jCalendarButton2PropertyChange
         try {
             if (evt.getNewValue() instanceof Date) {
                 String ses = evt.getNewValue().toString();
@@ -464,14 +476,14 @@ public final class estimate_report_bill_itemwise extends javax.swing.JInternalFr
         } catch (ParseException e) {
             System.out.println(e.getMessage());
         }
-    }//GEN-LAST:event_jCalendarButton2PropertyChange
+    }// GEN-LAST:event_jCalendarButton2PropertyChange
 
-    private void h3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_h3ActionPerformed
+    private void h3ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h3ActionPerformed
 
         get_customer_name();
-    }//GEN-LAST:event_h3ActionPerformed
+    }// GEN-LAST:event_h3ActionPerformed
 
-    private void h3KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_h3KeyPressed
+    private void h3KeyPressed(java.awt.event.KeyEvent evt) {// GEN-FIRST:event_h3KeyPressed
 
         iname_list.requestFocus();
         jTable3.requestFocus();
@@ -492,10 +504,14 @@ public final class estimate_report_bill_itemwise extends javax.swing.JInternalFr
                     iname_list.setLocation(l.x, l.y + jLabel12.getHeight());
                     iname_list.setSize(800, 528);
                     iname_list.setVisible(true);
-                    String query = "select ino,iname,cat from item where iname like '" + h3.getText() + "%' order by ino limit 500";
+                    String companyFilter = UserSession.hasSelectedCompany()
+                            ? " and company_id='" + UserSession.getSelectedCompanyID() + "'"
+                            : "";
+                    String query = "select ino,iname,cat from item where iname like '" + h3.getText() + "%'"
+                            + companyFilter + " order by ino limit 500";
                     r = util.doQuery(query);
                     while (r.next()) {
-                        s3.addRow(new Object[]{r.getString(1), r.getString(2), r.getString(3)});
+                        s3.addRow(new Object[] { r.getString(1), r.getString(2), r.getString(3) });
                     }
                 } catch (ClassNotFoundException | SQLException e) {
                     System.out.println(e.getMessage());
@@ -504,9 +520,9 @@ public final class estimate_report_bill_itemwise extends javax.swing.JInternalFr
             default:
                 break;
         }
-    }//GEN-LAST:event_h3KeyPressed
+    }// GEN-LAST:event_h3KeyPressed
 
-    private void jTable3MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable3MouseClicked
+    private void jTable3MouseClicked(java.awt.event.MouseEvent evt) {// GEN-FIRST:event_jTable3MouseClicked
         if (jTable3.getRowCount() > 0) {
             h3.setText(jTable3.getValueAt(jTable3.getSelectedRow(), 0).toString());
             h4.setText(jTable3.getValueAt(jTable3.getSelectedRow(), 1).toString());
@@ -514,9 +530,9 @@ public final class estimate_report_bill_itemwise extends javax.swing.JInternalFr
         }
         h3.requestFocus();
         iname_list.dispose();
-    }//GEN-LAST:event_jTable3MouseClicked
+    }// GEN-LAST:event_jTable3MouseClicked
 
-    private void jTable3KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTable3KeyPressed
+    private void jTable3KeyPressed(java.awt.event.KeyEvent evt) {// GEN-FIRST:event_jTable3KeyPressed
 
         if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
             if (jTable3.getRowCount() > 0) {
@@ -530,15 +546,15 @@ public final class estimate_report_bill_itemwise extends javax.swing.JInternalFr
             iname_list.dispose();
             h3.requestFocus();
         }
-    }//GEN-LAST:event_jTable3KeyPressed
+    }// GEN-LAST:event_jTable3KeyPressed
 
-    private void jScrollPane3FocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jScrollPane3FocusLost
+    private void jScrollPane3FocusLost(java.awt.event.FocusEvent evt) {// GEN-FIRST:event_jScrollPane3FocusLost
         iname_list.dispose();
-    }//GEN-LAST:event_jScrollPane3FocusLost
+    }// GEN-LAST:event_jScrollPane3FocusLost
 
-    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
+    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton4ActionPerformed
         iname_list.dispose();
-    }//GEN-LAST:event_jButton4ActionPerformed
+    }// GEN-LAST:event_jButton4ActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton clearbutton;

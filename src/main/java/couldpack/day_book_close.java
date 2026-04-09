@@ -16,6 +16,7 @@ import javax.mail.MessagingException;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import menupack.menu_form;
+import menupack.UserSession;
 import smspack.SMS_Sender_Single;
 
 /**
@@ -54,17 +55,54 @@ public class day_book_close extends javax.swing.JInternalFrame {
 
     }
 
-    void backup_database() {
+    String lastBackupFile = "";
+
+    boolean backup_database() {
         try {
             Date d = new Date();
             SimpleDateFormat g = new SimpleDateFormat("yyyy-MM-dd_hh.mma");
-            String file_name = "Selrom_Retail_" + g.format(d);
 
-            // Backup H2 database file
-            String backup_file_name = Utils.AppConfig.getAppPath() + "/" + file_name + ".mv.db";
-            // Assuming DB file is ./Swayam_main.mv.db
-            java.nio.file.Files.copy(java.nio.file.Paths.get("./Swayam_main.mv.db"),
-                    java.nio.file.Paths.get(backup_file_name), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            // Use company name in backup file name
+            String companyName = menupack.UserSession.hasSelectedCompany()
+                    ? menupack.UserSession.getSelectedCompanyName().replaceAll("[^a-zA-Z0-9_\\-]", "_")
+                    : "Backup";
+            String file_name = companyName + "_" + g.format(d);
+
+            // Backup MySQL database using mysqldump
+            String backup_file_name = Utils.AppConfig.getAppPath() + "/" + file_name + ".sql";
+            lastBackupFile = backup_file_name;
+            java.util.Properties dbProps = com.selrom.db.Database.getInstance().loadConfig();
+            String dbUrl = dbProps.getProperty("db.url");
+            String dbUser = dbProps.getProperty("db.username");
+            String dbPass = dbProps.getProperty("db.password");
+
+            // Extract host, port and database name from JDBC URL
+            // Format: jdbc:mysql://host:port/dbname?params
+            String urlPart = dbUrl.replace("jdbc:mysql://", "");
+            int qIdx = urlPart.indexOf('?');
+            if (qIdx > 0)
+                urlPart = urlPart.substring(0, qIdx);
+            int slashIdx = urlPart.indexOf('/');
+            String hostPort = (slashIdx > 0) ? urlPart.substring(0, slashIdx) : "localhost:3306";
+            String dbName = (slashIdx > 0) ? urlPart.substring(slashIdx + 1) : urlPart;
+            String host = hostPort.contains(":") ? hostPort.substring(0, hostPort.indexOf(':')) : hostPort;
+            String port = hostPort.contains(":") ? hostPort.substring(hostPort.indexOf(':') + 1) : "3306";
+
+            ProcessBuilder pb = new ProcessBuilder(
+                    "mysqldump",
+                    "-h", host,
+                    "-P", port,
+                    "-u", dbUser,
+                    "--password=" + dbPass,
+                    "--result-file=" + backup_file_name,
+                    dbName);
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                System.out.println("mysqldump exited with code: " + exitCode);
+                return false;
+            }
             System.out.println("Backup Completed");
 
             String[] attachFiles = new String[1];
@@ -84,8 +122,10 @@ public class day_book_close extends javax.swing.JInternalFrame {
                         user, pass, user);
             }
             System.out.println("Email Send Successfully");
-        } catch (IOException | ClassNotFoundException | SQLException | MessagingException e) {
+            return true;
+        } catch (IOException | ClassNotFoundException | SQLException | MessagingException | InterruptedException e) {
             System.out.println("Exception: " + e.getMessage());
+            return false;
         }
     }
 
@@ -178,13 +218,19 @@ public class day_book_close extends javax.swing.JInternalFrame {
                 message = message + purchase;
 
                 double sup_bal = 0, cust_bal = 0;
-                query = "select sum(tot-paid) from cust_bal";
+                String balCompanyFilter = UserSession.hasSelectedCompany()
+                        ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                        : "";
+                String balCompanyFilterAnd = UserSession.hasSelectedCompany()
+                        ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                        : "";
+                query = "select sum(tot-paid) from cust_bal" + balCompanyFilter;
                 r = util.doQuery(query);
                 while (r.next()) {
                     cust_bal = r.getDouble(1);
                 }
 
-                query = "select sum(tot-paid) from ven_bal";
+                query = "select sum(tot-paid) from ven_bal" + balCompanyFilter;
                 r = util.doQuery(query);
                 while (r.next()) {
                     sup_bal = r.getDouble(1);
@@ -192,7 +238,8 @@ public class day_book_close extends javax.swing.JInternalFrame {
 
                 billno = 0;
                 net = 0;
-                query = "select  count(billno),sum(tot-paid) from cust_bal where tot-paid>0 and ddate<" + date;
+                query = "select  count(billno),sum(tot-paid) from cust_bal where tot-paid>0 and ddate<" + date
+                        + balCompanyFilterAnd;
                 r = util.doQuery(query);
                 while (r.next()) {
                     billno = r.getInt(1);
@@ -201,7 +248,8 @@ public class day_book_close extends javax.swing.JInternalFrame {
 
                 int billno2 = 0;
                 double net2 = 0;
-                query = "select  count(billno),sum(tot-paid) from ven_bal where tot-paid>0 and ddate<" + date;
+                query = "select  count(billno),sum(tot-paid) from ven_bal where tot-paid>0 and ddate<" + date
+                        + balCompanyFilterAnd;
                 r = util.doQuery(query);
                 while (r.next()) {
                     billno2 = r.getInt(1);
@@ -223,8 +271,14 @@ public class day_book_close extends javax.swing.JInternalFrame {
                         + " </html>";
                 message = message + dues;
 
+                String companyFilter = UserSession.hasSelectedCompany()
+                        ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                        : "";
+                String companyFilterAnd = UserSession.hasSelectedCompany()
+                        ? " AND a.company_id='" + UserSession.getSelectedCompanyID() + "'"
+                        : "";
                 double pvalue = 0, ret_value = 0, whole_value = 0;
-                query = "select sum(quan*prate),sum(quan*rprice),sum(quan*wprice) from stock";
+                query = "select sum(quan*prate),sum(quan*rprice),sum(quan*wprice) from stock" + companyFilter;
                 r = util.doQuery(query);
                 while (r.next()) {
                     pvalue = r.getDouble(1);
@@ -236,7 +290,8 @@ public class day_book_close extends javax.swing.JInternalFrame {
                 String whole_value1 = String.format("%." + hmany + "f", whole_value);
 
                 billno = 0;
-                query = "select count(b.ino) from item a,stock b where a.ino=b.ino and quan<minstock";
+                query = "select count(b.ino) from item a,stock b where a.ino=b.ino and quan<minstock"
+                        + companyFilterAnd;
                 r = util.doQuery(query);
                 while (r.next()) {
                     billno = r.getInt(1);
@@ -494,10 +549,18 @@ public class day_book_close extends javax.swing.JInternalFrame {
             return;
         }
         send_sms_statement();
-        backup_database();
+        boolean backupOk = backup_database();
         send_email_statement();
-        JOptionPane.showMessageDialog(this, "<html><h1>Completed Successfully</h1></html>", "Completed",
-                JOptionPane.PLAIN_MESSAGE);
+        if (backupOk) {
+            JOptionPane.showMessageDialog(this,
+                    "<html><h2>Day End Process Completed Successfully</h2><br>Backup saved to:<br>" + lastBackupFile
+                            + "</html>",
+                    "Completed", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(this,
+                    "<html><h2>Day End Process Completed</h2><br><font color='red'>Backup failed. Please check mysqldump is installed.</font></html>",
+                    "Warning", JOptionPane.WARNING_MESSAGE);
+        }
     }// GEN-LAST:event_clearbutton1ActionPerformed
 
     private void clearbutton2ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_clearbutton2ActionPerformed
@@ -512,10 +575,16 @@ public class day_book_close extends javax.swing.JInternalFrame {
         if (as1 == JOptionPane.NO_OPTION) {
             return;
         }
-        backup_database();
-        JOptionPane.showMessageDialog(this,
-                "<html><h1>Backup Stored at: '" + backup_drive + ":\\" + backup_folder + "'</h1></html>",
-                "Completed Successfully", JOptionPane.PLAIN_MESSAGE);
+        boolean backupOk = backup_database();
+        if (backupOk) {
+            JOptionPane.showMessageDialog(this,
+                    "<html><h2>Backup Completed Successfully!</h2><br>File: " + lastBackupFile + "</html>",
+                    "Backup Completed", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(this,
+                    "<html><h2>Backup Failed</h2><br>Please check if mysqldump is installed and accessible.</html>",
+                    "Backup Error", JOptionPane.ERROR_MESSAGE);
+        }
     }// GEN-LAST:event_clearbutton2ActionPerformed
 
     private void clearbutton3ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_clearbutton3ActionPerformed

@@ -1,4 +1,5 @@
 package ActivationPack;
+
 import com.selrom.db.DataUtil;
 import java.awt.Color;
 import java.awt.Toolkit;
@@ -7,38 +8,43 @@ import java.net.URL;
 import java.net.URLConnection;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
+
 /**
  *
  * @author Selrom Software
  */
- public final class trial_version_expired extends javax.swing.JFrame {
- DataUtil util=null;
-  void get_defaults()
-  {
-  setSize(457, 241);
-  setLocationRelativeTo(getRootPane()); 
-  setResizable(false);   
-  setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource("/images/icon.png")));
-  }
-  public static String check_internet_connect()
-  {
-  String connection="Yes";    
-  try
-  {
-   URL url=new URL("http://google.com");
-   URLConnection con=url.openConnection();
-   con.getInputStream();    
-  }catch(IOException e){System.out.println(e); connection="No";}
-  return connection;
-  }
-    public trial_version_expired() 
-    {
-    initComponents();
-    util=new DataUtil();
-    get_defaults();
+public final class trial_version_expired extends javax.swing.JFrame {
+    DataUtil util = null;
+
+    void get_defaults() {
+        setSize(457, 241);
+        setLocationRelativeTo(getRootPane());
+        setResizable(false);
+        setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource("/images/icon.png")));
     }
+
+    public static String check_internet_connect() {
+        String connection = "Yes";
+        try {
+            URL url = new URL("http://google.com");
+            URLConnection con = url.openConnection();
+            con.getInputStream();
+        } catch (IOException e) {
+            System.out.println(e);
+            connection = "No";
+        }
+        return connection;
+    }
+
+    public trial_version_expired() {
+        initComponents();
+        util = new DataUtil();
+        get_defaults();
+    }
+
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated
+    // Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         jPanel1 = new javax.swing.JPanel();
@@ -100,7 +106,7 @@ import javax.swing.UIManager;
 
         jLabel1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabel1.setForeground(new java.awt.Color(51, 0, 102));
-        jLabel1.setText("+91 9786432229, 9786032229, 9655132229");
+        jLabel1.setText("+91 9845972853,8496803966");
         jPanel1.add(jLabel1);
         jLabel1.setBounds(30, 180, 410, 30);
 
@@ -122,36 +128,33 @@ import javax.swing.UIManager;
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 457, Short.MAX_VALUE)
-        );
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 457, Short.MAX_VALUE));
         layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 241, Short.MAX_VALUE)
-        );
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 241, Short.MAX_VALUE));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-    this.dispose();
-    }//GEN-LAST:event_jButton1ActionPerformed
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton1ActionPerformed
+        this.dispose();
+    }// GEN-LAST:event_jButton1ActionPerformed
 
-    private void updatebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updatebuttonActionPerformed
-    String connection=check_internet_connect();
-    if(connection.equals("Yes"))
-    {
-    new activation_form().setVisible(true);this.dispose();    
-    }
-    else 
-    {
-    JOptionPane.showMessageDialog(this, "Internet connection is required for activation!","No Internet Connection",JOptionPane.ERROR_MESSAGE);
-    }
-    
-    }//GEN-LAST:event_updatebuttonActionPerformed
+    private void updatebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_updatebuttonActionPerformed
+        String connection = check_internet_connect();
+        if (connection.equals("Yes")) {
+            new activation_form().setVisible(true);
+            this.dispose();
+        } else {
+            JOptionPane.showMessageDialog(this, "Internet connection is required for activation!",
+                    "No Internet Connection", JOptionPane.ERROR_MESSAGE);
+        }
+
+    }// GEN-LAST:event_updatebuttonActionPerformed
 
     public static void main(String args[]) {
-      
+
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
@@ -159,15 +162,16 @@ import javax.swing.UIManager;
                     break;
                 }
             }
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(trial_version_expired.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException
+                | javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(trial_version_expired.class.getName())
+                    .log(java.util.logging.Level.SEVERE, null, ex);
         }
         UIManager.put("nimbusFocus", new Color(153, 0, 153, 255));
         UIManager.put("nimbusSelectionBackground", new Color(153, 0, 153, 255));
         UIManager.put("nimbusBase", new Color(153, 0, 153, 225));
-        UIManager.put("control", new Color(255, 255, 255, 255)); 
-        java.awt.EventQueue.invokeLater(() -> 
-        {
+        UIManager.put("control", new Color(255, 255, 255, 255));
+        java.awt.EventQueue.invokeLater(() -> {
             new trial_version_expired().setVisible(true);
         });
     }

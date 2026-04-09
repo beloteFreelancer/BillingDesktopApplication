@@ -12,6 +12,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import menupack.UserSession;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -211,8 +212,8 @@ public class cust_bills_bulk_upload extends javax.swing.JInternalFrame {
                 Date nm1 = new SimpleDateFormat("dd.MM.yyyy").parse(due_date);
                 String ddate = (new SimpleDateFormat("yyyy-MM-dd").format(nm1));
 
-                query_list.add("insert into cust_bill values ('" + sno + "','" + cid + "','" + cname + "','" + billno + "','" + date + "','" + ddate + "','" + amount + "','" + remarks + "','" + username + "','" + last + "')");
-                query_list.add("insert into cust_bal values ('" + billno + "','" + date + "','" + ddate + "','" + cid + "','" + cname + "','" + amount + "','" + paid + "','" + last + "' ) ");
+                query_list.add("insert into cust_bill values ('" + sno + "','" + cid + "','" + cname + "','" + billno + "','" + date + "','" + ddate + "','" + amount + "','" + remarks + "','" + username + "','" + last + "','" + (UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "") + "')");
+                query_list.add("insert into cust_bal values ('" + billno + "','" + date + "','" + ddate + "','" + cid + "','" + cname + "','" + amount + "','" + paid + "','" + last + "','" + (UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "") + "') ");
                 sno = sno + 1;
             }
             int aa = util.doManipulation_Batch(query_list);

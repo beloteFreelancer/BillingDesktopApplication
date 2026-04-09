@@ -165,9 +165,12 @@ CREATE TABLE IF NOT EXISTS `cust` (
   `scode` varchar(5) NOT NULL,
   `climit` double NOT NULL,
   `duedays` int NOT NULL,
+  `interest_rate` double NOT NULL DEFAULT 0,
   `remarks` varchar(250) NOT NULL,
   `email` varchar(100) NOT NULL,
-  PRIMARY KEY (`cid`)
+  `company_id` varchar(50) NOT NULL DEFAULT '',
+  `dl` varchar(50) NOT NULL DEFAULT '',
+  PRIMARY KEY (`cid`, `company_id`)
 );
 CREATE TABLE IF NOT EXISTS `cust_bal` (
   `billno` varchar(20) NOT NULL DEFAULT '',
@@ -177,7 +180,8 @@ CREATE TABLE IF NOT EXISTS `cust_bal` (
   `cname` varchar(100) NOT NULL,
   `tot` double NOT NULL,
   `paid` double NOT NULL,
-  `last` varchar(25) NOT NULL DEFAULT ''
+  `last` varchar(25) NOT NULL DEFAULT '',
+  `company_id` varchar(50) DEFAULT NULL
 );
 CREATE TABLE IF NOT EXISTS `cust_bill` (
   `sno` int NOT NULL,
@@ -189,7 +193,8 @@ CREATE TABLE IF NOT EXISTS `cust_bill` (
   `amount` double NOT NULL DEFAULT '0',
   `user` varchar(15) NOT NULL DEFAULT '0',
   `last` varchar(25) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`sno`)
+  `company_id` varchar(50) NOT NULL DEFAULT '',
+  PRIMARY KEY (`sno`, `company_id`)
 );
 CREATE TABLE IF NOT EXISTS `cust_pay` (
   `sno` int NOT NULL,
@@ -205,7 +210,8 @@ CREATE TABLE IF NOT EXISTS `cust_pay` (
   `user` varchar(15) NOT NULL,
   `last` varchar(25) NOT NULL,
   `dis` double NOT NULL,
-  `tot` double NOT NULL
+  `tot` double NOT NULL,
+  `company_id` varchar(50) DEFAULT NULL
 );
 CREATE TABLE IF NOT EXISTS `cust_points` (
   `cid` int NOT NULL,
@@ -223,6 +229,22 @@ CREATE TABLE IF NOT EXISTS `cust_points1` (
   `user` varchar(15) NOT NULL,
   `last` varchar(25) NOT NULL,
   PRIMARY KEY (`sno`)
+);
+CREATE TABLE IF NOT EXISTS `points_redemption` (
+  `redemption_id` int NOT NULL AUTO_INCREMENT,
+  `dat` date NOT NULL,
+  `tim` varchar(15) NOT NULL,
+  `cid` int NOT NULL,
+  `cname` varchar(100) NOT NULL,
+  `mobile` varchar(15) NOT NULL,
+  `points_redeemed` double NOT NULL,
+  `cash_amount` decimal(10,2) NOT NULL,
+  `conversion_rate` decimal(5,2) NOT NULL,
+  `redemption_type` varchar(20) DEFAULT 'CASH',
+  `user` varchar(15) NOT NULL,
+  `last` varchar(25) NOT NULL,
+  `company_id` varchar(50) DEFAULT '',
+  PRIMARY KEY (`redemption_id`)
 );
 CREATE TABLE IF NOT EXISTS `ereturn` (
   `billno` int NOT NULL,
@@ -258,7 +280,8 @@ CREATE TABLE IF NOT EXISTS `ereturn` (
   `mobile` varchar(10) NOT NULL,
   `user` varchar(15) NOT NULL,
   `last` varchar(25) NOT NULL,
-  PRIMARY KEY (`billno`)
+  `company_id` varchar(50) NOT NULL DEFAULT '',
+  PRIMARY KEY (`billno`, `company_id`)
 );
 CREATE TABLE IF NOT EXISTS `ereturn_items` (
   `billno` int NOT NULL,
@@ -326,7 +349,8 @@ CREATE TABLE IF NOT EXISTS `estimate` (
   `today_points` double NOT NULL DEFAULT '0',
   `total_points` double NOT NULL DEFAULT '0',
   `cost_rate` double NOT NULL DEFAULT '0',
-  PRIMARY KEY (`billno`)
+  `company_id` varchar(50) NOT NULL DEFAULT '',
+  PRIMARY KEY (`billno`, `company_id`)
 );
 CREATE TABLE IF NOT EXISTS `estimate_hold` (
   `billno` int NOT NULL,
@@ -375,7 +399,11 @@ CREATE TABLE IF NOT EXISTS `estimate_items` (
   `prate` double NOT NULL DEFAULT '0',
   `rprice` double NOT NULL DEFAULT '0',
   `wprice` double NOT NULL DEFAULT '0',
-  `remarks` varchar(80) DEFAULT NULL
+  `remarks` varchar(80) DEFAULT NULL,
+  `size` varchar(50) DEFAULT NULL,
+  `color` varchar(50) DEFAULT NULL,
+  `brand` varchar(100) DEFAULT NULL,
+  `company_id` varchar(50) NOT NULL DEFAULT ''
 );
 CREATE TABLE IF NOT EXISTS `item` (
   `ino` int NOT NULL,
@@ -400,10 +428,14 @@ CREATE TABLE IF NOT EXISTS `item` (
   `subconv` double DEFAULT NULL,
   `batch` varchar(50) DEFAULT NULL,
   `size` varchar(50) DEFAULT NULL,
+  `color` varchar(50) DEFAULT NULL,
+  `brand` varchar(100) DEFAULT NULL,
   `exp_date` date DEFAULT NULL,
   `mfg_date` date DEFAULT NULL,
-  PRIMARY KEY (`ino`),
-  UNIQUE KEY `item_barcode` (`barcode`)
+  `tax_inclusion` varchar(30) NOT NULL DEFAULT 'Inclusive of Tax',
+  `company_id` varchar(50) NOT NULL DEFAULT '',
+  PRIMARY KEY (`ino`, `company_id`),
+  UNIQUE KEY `item_barcode_company` (`barcode`, `company_id`)
 );
 CREATE TABLE IF NOT EXISTS `packing` (
   `sno` int NOT NULL,
@@ -507,7 +539,8 @@ CREATE TABLE IF NOT EXISTS `po_entry` (
   `term1` varchar(200) NOT NULL DEFAULT '',
   `term2` varchar(200) NOT NULL DEFAULT '',
   `term3` varchar(200) NOT NULL DEFAULT '',
-  `term4` varchar(200) NOT NULL DEFAULT ''
+  `term4` varchar(200) NOT NULL DEFAULT '',
+  `company_id` varchar(50) DEFAULT NULL
 );
 CREATE TABLE IF NOT EXISTS `po_items` (
   `grn` int NOT NULL,
@@ -519,6 +552,7 @@ CREATE TABLE IF NOT EXISTS `po_items` (
   `minstock` double NOT NULL DEFAULT '0',
   `stock` double NOT NULL DEFAULT '0',
   `quan` double NOT NULL DEFAULT '0',
+  `free_qty` double NOT NULL DEFAULT '0',
   `price` double NOT NULL DEFAULT '0',
   `amount` double NOT NULL DEFAULT '0',
   `taxp` int NOT NULL DEFAULT '0',
@@ -548,7 +582,8 @@ CREATE TABLE IF NOT EXISTS `preturn` (
   `user` varchar(15) NOT NULL,
   `last` varchar(25) NOT NULL,
   `ttype` varchar(20) NOT NULL,
-  PRIMARY KEY (`grn`)
+  `company_id` varchar(50) NOT NULL DEFAULT '',
+  PRIMARY KEY (`grn`, `company_id`)
 );
 CREATE TABLE IF NOT EXISTS `preturn_items` (
   `grn` int NOT NULL,
@@ -600,7 +635,8 @@ CREATE TABLE IF NOT EXISTS `purchase` (
   `last` varchar(25) NOT NULL,
   `ttype` varchar(20) NOT NULL,
   `po_no` varchar(15) NOT NULL,
-  PRIMARY KEY (`grn`)
+  `company_id` varchar(50) NOT NULL DEFAULT '',
+  PRIMARY KEY (`grn`, `company_id`)
 );
 CREATE TABLE IF NOT EXISTS `purchase_items` (
   `grn` int NOT NULL,
@@ -616,6 +652,7 @@ CREATE TABLE IF NOT EXISTS `purchase_items` (
   `wprice` double NOT NULL,
   `price` double NOT NULL,
   `quan` double NOT NULL,
+  `free_qty` double NOT NULL DEFAULT '0',
   `amount` double NOT NULL,
   `disp` double NOT NULL,
   `disamt` double NOT NULL,
@@ -667,7 +704,9 @@ CREATE TABLE IF NOT EXISTS `sales` (
   `today_points` double NOT NULL DEFAULT '0',
   `total_points` double NOT NULL DEFAULT '0',
   `cost_rate` double NOT NULL DEFAULT '0',
-  PRIMARY KEY (`billno`)
+  `company_id` varchar(50) NOT NULL DEFAULT '',
+  `loyalty_points` varchar(10) DEFAULT '0.00',
+  PRIMARY KEY (`billno`, `company_id`)
 );
 CREATE TABLE IF NOT EXISTS `sales_hold` (
   `billno` int NOT NULL,
@@ -717,9 +756,13 @@ CREATE TABLE IF NOT EXISTS `sales_items` (
   `prate` double NOT NULL DEFAULT '0',
   `rprice` double NOT NULL DEFAULT '0',
   `wprice` double NOT NULL DEFAULT '0',
-  `remarks` varchar(80) DEFAULT NULL
+  `remarks` varchar(80) DEFAULT NULL,
+  `size` varchar(50) DEFAULT NULL,
+  `color` varchar(50) DEFAULT NULL,
+  `brand` varchar(100) DEFAULT NULL,
+  `company_id` varchar(50) NOT NULL DEFAULT ''
 );
-CREATE TABLE IF NOT EXISTS `setting_bill` (
+CREATE TABLE IF NOT EXISTS `company` (
   `cname` varchar(250) NOT NULL,
   `add1` varchar(250) NOT NULL,
   `add2` varchar(250) NOT NULL,
@@ -764,8 +807,20 @@ CREATE TABLE IF NOT EXISTS `setting_bill` (
   `exp` tinyint(1) DEFAULT NULL,
   `mfg` tinyint(1) DEFAULT NULL,
   `weighing_button` varchar(5) NOT NULL DEFAULT 'Yes',
-  `logo_path` varchar(255) DEFAULT NULL,
-  CONSTRAINT `setting_bill_chk_1` CHECK ((`batch` in ('Batch','Size')))
+  `logo_path` varchar(500) DEFAULT NULL,
+  `companyID` varchar(50) DEFAULT NULL,
+  `shop_type` varchar(30) DEFAULT 'General',
+  `bank_name` varchar(150) DEFAULT '',
+  `bank_acc_no` varchar(50) DEFAULT '',
+  `bank_ifsc` varchar(20) DEFAULT '',
+  `bank_branch` varchar(150) DEFAULT '',
+  `bank_holder` varchar(150) DEFAULT '',
+  `sales_terms` text DEFAULT NULL,
+  `estimate_terms` text DEFAULT NULL,
+  `estimate_stock_minus` varchar(5) NOT NULL DEFAULT 'No',
+  `privacy_mode` varchar(5) NOT NULL DEFAULT 'No',
+  `dl` varchar(100) NOT NULL DEFAULT '',
+  CONSTRAINT `company_chk_1` CHECK ((`batch` in ('Batch','Size')))
 );
 CREATE TABLE IF NOT EXISTS `setting_email` (
   `user` varchar(100) NOT NULL,
@@ -779,6 +834,9 @@ CREATE TABLE IF NOT EXISTS `setting_points` (
   `points_option` varchar(5) NOT NULL,
   `hmuch` int NOT NULL DEFAULT '0',
   `pfor` int NOT NULL DEFAULT '0',
+  `min_redemption` int NOT NULL DEFAULT '100',
+  `conversion_rate` decimal(5,2) NOT NULL DEFAULT '1.00',
+  `redemption_enabled` varchar(5) NOT NULL DEFAULT 'Yes',
   PRIMARY KEY (`points_option`)
 );
 CREATE TABLE IF NOT EXISTS `setting_sms` (
@@ -807,8 +865,8 @@ CREATE TABLE IF NOT EXISTS `setting_user` (
   `vdate` date DEFAULT NULL,
   `log` varchar(5000) DEFAULT NULL,
   `pass` varchar(100) DEFAULT NULL,
-  `user_valid_date` date DEFAULT NULL,
-  `create_date` date DEFAULT NULL,
+  `user_valid_date` varchar(500) DEFAULT NULL,
+  `create_date` varchar(500) DEFAULT NULL,
   PRIMARY KEY (`uname`),
   UNIQUE KEY `status` (`status`),
   UNIQUE KEY `cname` (`cname`)
@@ -854,7 +912,8 @@ CREATE TABLE IF NOT EXISTS `sreturn` (
   `mobile` varchar(10) NOT NULL,
   `user` varchar(15) NOT NULL,
   `last` varchar(25) NOT NULL,
-  PRIMARY KEY (`billno`)
+  `company_id` varchar(50) NOT NULL DEFAULT '',
+  PRIMARY KEY (`billno`, `company_id`)
 );
 CREATE TABLE IF NOT EXISTS `sreturn_items` (
   `billno` int NOT NULL,
@@ -940,8 +999,9 @@ CREATE TABLE IF NOT EXISTS `stock` (
   `quan` double NOT NULL,
   `cat` varchar(100) NOT NULL,
   `entry` varchar(12) NOT NULL,
-  UNIQUE KEY `ino` (`ino`),
-  UNIQUE KEY `stock_barcode` (`barcode`)
+  `company_id` varchar(50) NOT NULL DEFAULT '',
+  UNIQUE KEY `stock_ino_company` (`ino`,`company_id`),
+  UNIQUE KEY `stock_barcode_company` (`barcode`,`company_id`)
 );
 CREATE TABLE IF NOT EXISTS `stock_alter` (
   `sno` int NOT NULL,
@@ -980,7 +1040,8 @@ CREATE TABLE IF NOT EXISTS `stock_entry` (
   `last` varchar(25) NOT NULL,
   `ttype` varchar(25) NOT NULL,
   `dis1` double NOT NULL DEFAULT '0',
-  PRIMARY KEY (`grn`)
+  `company_id` varchar(50) NOT NULL DEFAULT '',
+  PRIMARY KEY (`grn`, `company_id`)
 );
 CREATE TABLE IF NOT EXISTS `stock_entry_items` (
   `grn` int NOT NULL,
@@ -1024,8 +1085,9 @@ CREATE TABLE IF NOT EXISTS `users` (
 );
 CREATE TABLE IF NOT EXISTS `users_permissions` (
   `user` varchar(15) NOT NULL,
-  `fname` varchar(25) NOT NULL,
-  `option1` varchar(5) NOT NULL
+  `fname` varchar(50) NOT NULL,
+  `option1` varchar(5) NOT NULL,
+  UNIQUE KEY `uk_user_fname` (`user`, `fname`)
 );
 CREATE TABLE IF NOT EXISTS `ven_bal` (
   `billno` varchar(20) NOT NULL DEFAULT '',
@@ -1034,7 +1096,8 @@ CREATE TABLE IF NOT EXISTS `ven_bal` (
   `cname` varchar(100) NOT NULL,
   `tot` double NOT NULL,
   `paid` double NOT NULL,
-  `last` varchar(25) NOT NULL DEFAULT ''
+  `last` varchar(25) NOT NULL DEFAULT '',
+  `company_id` varchar(50) DEFAULT NULL
 );
 CREATE TABLE IF NOT EXISTS `ven_bill` (
   `sno` int NOT NULL,
@@ -1046,7 +1109,8 @@ CREATE TABLE IF NOT EXISTS `ven_bill` (
   `remarks` varchar(150) NOT NULL DEFAULT '0',
   `user` varchar(15) NOT NULL DEFAULT '0',
   `last` varchar(25) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`sno`)
+  `company_id` varchar(50) NOT NULL DEFAULT '',
+  PRIMARY KEY (`sno`, `company_id`)
 );
 CREATE TABLE IF NOT EXISTS `ven_pay` (
   `sno` int NOT NULL,
@@ -1059,7 +1123,8 @@ CREATE TABLE IF NOT EXISTS `ven_pay` (
   `pby` varchar(10) NOT NULL,
   `remarks` varchar(100) NOT NULL,
   `user` varchar(15) NOT NULL,
-  `last` varchar(25) NOT NULL
+  `last` varchar(25) NOT NULL,
+  `company_id` varchar(50) NOT NULL DEFAULT ''
 );
 CREATE TABLE IF NOT EXISTS `vendor` (
   `cname` varchar(100) NOT NULL DEFAULT '',
@@ -1075,7 +1140,8 @@ CREATE TABLE IF NOT EXISTS `vendor` (
   `duedays` int NOT NULL DEFAULT '0',
   `remarks` varchar(250) NOT NULL DEFAULT '0',
   `email` varchar(100) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`cname`)
+  `company_id` varchar(50) NOT NULL DEFAULT '',
+  PRIMARY KEY (`cname`, `company_id`)
 );
 CREATE TABLE IF NOT EXISTS `vendor_link` (
   `cname` varchar(100) NOT NULL,
@@ -1118,3 +1184,71 @@ INSERT IGNORE INTO `user_features` (`sno`, `fname`) VALUES
 (16, 'Loyalty'),
 (17, 'Backup'),
 (18, 'Home Page Display');
+CREATE TABLE IF NOT EXISTS `invoice_columns` (
+  `doc_type` varchar(20) NOT NULL,
+  `col_key` varchar(30) NOT NULL,
+  `company_id` varchar(50) NOT NULL DEFAULT '',
+  `col_header` varchar(50) NOT NULL,
+  `col_visible` tinyint(1) NOT NULL DEFAULT '1',
+  `col_order` int NOT NULL DEFAULT '0',
+  PRIMARY KEY (`doc_type`, `col_key`, `company_id`)
+);
+INSERT IGNORE INTO `invoice_columns` (`doc_type`, `col_key`, `col_header`, `col_visible`, `col_order`) VALUES
+('invoice',  'sno',          '#',        1, 1),
+('invoice',  'product_name', 'ITEMS',    1, 2),
+('invoice',  'qty',          'QTY',      1, 3),
+('invoice',  'mrp',          'MRP',      1, 4),
+('invoice',  'net_rate',     'NET RATE', 1, 5),
+('invoice',  'price',        'PRICE',    0, 6),
+('invoice',  'disc',         'DISC %',   0, 7),
+('invoice',  'disc_amt',     'DISC AMT', 1, 8),
+('invoice',  'sub_total',    'SUB TOTAL',1, 9),
+('invoice',  'tax_pct',      'TAX %',    0, 10),
+('invoice',  'tax_amt',      'TAX AMT',  1, 11),
+('invoice',  'amount',       'AMOUNT',   0, 12),
+('invoice',  'hsn',          'HSN',      1, 13),
+('invoice',  'mfg_date',     'MFG DATE', 0, 14),
+('invoice',  'exp_date',     'EXP DATE', 0, 15),
+('invoice',  'total',        'TOTAL',    1, 16),
+('estimate', 'sno',          '#',        1, 1),
+('estimate', 'product_name', 'ITEMS',    1, 2),
+('estimate', 'qty',          'QTY',      1, 3),
+('estimate', 'mrp',          'MRP',      1, 4),
+('estimate', 'net_rate',     'NET RATE', 1, 5),
+('estimate', 'price',        'PRICE',    0, 6),
+('estimate', 'disc',         'DISC %',   1, 7),
+('estimate', 'disc_amt',     'DISC AMT', 1, 8),
+('estimate', 'sub_total',    'SUB TOTAL',1, 9),
+('estimate', 'tax_pct',      'TAX %',    0, 10),
+('estimate', 'tax_amt',      'TAX AMT',  1, 11),
+('estimate', 'amount',       'AMOUNT',   0, 12),
+('estimate', 'hsn',          'HSN',      0, 13),
+('estimate', 'mfg_date',     'MFG DATE', 0, 14),
+('estimate', 'exp_date',     'EXP DATE', 0, 15),
+('estimate', 'total',        'TOTAL',    1, 16),
+-- purchase entry columns
+('purchase', 'mrp',          'MRP',          1,  1),
+('purchase', 'rprice',       'Retail Price', 1,  2),
+('purchase', 'wprice',       'Wholesale Pr', 0,  3),
+('purchase', 'disc',         'Disc %',       1,  4),
+('purchase', 'disc_amt',     'Disc Amt',     1,  5),
+('purchase', 'sub_total',    'Sub Total',    1,  6),
+('purchase', 'tax_pct',      'Tax %',        1,  7),
+('purchase', 'tax_amt',      'Tax Amt',      1,  8),
+('purchase', 'hsn',          'HSN',          1,  9),
+('purchase', 'tax_type',     'Tax Type',     1, 10),
+('purchase', 'category',     'Category',     1, 11),
+('purchase', 'manufacturer', 'Manufacturer', 1, 12),
+('purchase', 'size',         'SIZE',         0, 13),
+('purchase', 'color',        'COLOR',        0, 14),
+('purchase', 'brand',        'BRAND',        0, 15),
+-- purchase order columns
+('po',       'mrp',          'MRP',            1, 1),
+('po',       'reorder_level','Re-Order Level', 1, 2),
+('po',       'stock_hand',   'Stock-in-Hand',  1, 3),
+('po',       'tax_pct',      'Tax %',          1, 4),
+('po',       'tax_amt',      'Tax Amt',        1, 5),
+('po',       'total',        'Total',          1, 6),
+('po',       'size',         'SIZE',           0, 7),
+('po',       'color',        'COLOR',          0, 8),
+('po',       'brand',        'BRAND',          0, 9);

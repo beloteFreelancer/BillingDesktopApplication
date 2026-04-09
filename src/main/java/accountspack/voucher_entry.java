@@ -16,7 +16,7 @@ import menupack.menu_form;
 /**
  *
  * @author K.SELVAKUMAR, copyrights K.SELVAKUMAR, +91 99427 32229,
- * mysoft.java@gmail.com
+ *         mysoft.java@gmail.com
  */
 public final class voucher_entry extends javax.swing.JInternalFrame {
 
@@ -155,8 +155,10 @@ public final class voucher_entry extends javax.swing.JInternalFrame {
                 h5.requestFocus();
                 return;
             }
-            if (h8.getSelectedItem() == null || h8.getSelectedItem().toString().equals(".") || h8.getSelectedItem().toString().equals("")) {
-                JOptionPane.showMessageDialog(this, "Please Select Account Group !", "Account Group", JOptionPane.ERROR_MESSAGE);
+            if (h8.getSelectedItem() == null || h8.getSelectedItem().toString().equals(".")
+                    || h8.getSelectedItem().toString().equals("")) {
+                JOptionPane.showMessageDialog(this, "Please Select Account Group !", "Account Group",
+                        JOptionPane.ERROR_MESSAGE);
                 h8.requestFocus();
                 return;
             }
@@ -191,7 +193,7 @@ public final class voucher_entry extends javax.swing.JInternalFrame {
             String what = h4.getSelectedItem().toString();
             String amount = h5.getText();
             String ano = ".";
-            if(pby.equalsIgnoreCase("Bank")){
+            if (pby.equalsIgnoreCase("Bank")) {
                 ano = h7.getSelectedItem().toString();
             } else {
                 ano = ".";
@@ -217,10 +219,13 @@ public final class voucher_entry extends javax.swing.JInternalFrame {
             while (set.next()) {
                 under = set.getString(1);
             }
-            query = "insert into account_voucher values ('" + billno + "','" + date + "','" + whom + "','" + what + "','" + amount + "','" + pby + "','" + ano + "','" + account + "','" + entry + "','" + remarks + "','" + user + "','" + last + "','" + under + "')";
+            query = "insert into account_voucher values ('" + billno + "','" + date + "','" + whom + "','" + what
+                    + "','" + amount + "','" + pby + "','" + ano + "','" + account + "','" + entry + "','" + remarks
+                    + "','" + user + "','" + last + "','" + under + "')";
             int count = util.doManipulation(query);
             if (count > 0) {
-                int bb = JOptionPane.showConfirmDialog(this, "<html><h1>You Want to Print Voucher ?</h1></html>", "Saved Successfully", JOptionPane.YES_OPTION);
+                int bb = JOptionPane.showConfirmDialog(this, "<html><h1>You Want to Print Voucher ?</h1></html>",
+                        "Saved Successfully", JOptionPane.YES_OPTION);
                 if (bb == JOptionPane.YES_OPTION) {
                     new voucher_print().Report(h1.getText(), util);
                 }
@@ -264,11 +269,13 @@ public final class voucher_entry extends javax.swing.JInternalFrame {
             }
 
             if (utype.equalsIgnoreCase("User")) {
-                JOptionPane.showMessageDialog(this, "Login as 'Administrator' to Alter!", "Permission Restricted", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Login as 'Administrator' to Alter!", "Permission Restricted",
+                        JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            int as = JOptionPane.showConfirmDialog(this, "Want to Alter Voucher Entry ?", "Are You Sure", JOptionPane.YES_NO_OPTION);
+            int as = JOptionPane.showConfirmDialog(this, "Want to Alter Voucher Entry ?", "Are You Sure",
+                    JOptionPane.YES_NO_OPTION);
             if (as == JOptionPane.NO_OPTION) {
                 return;
             }
@@ -284,7 +291,7 @@ public final class voucher_entry extends javax.swing.JInternalFrame {
             String what = h4.getSelectedItem().toString();
             String amount = h5.getText();
             String ano = ".";
-            if(pby.equalsIgnoreCase("Bank")){
+            if (pby.equalsIgnoreCase("Bank")) {
                 ano = h7.getSelectedItem().toString();
             } else {
                 ano = ".";
@@ -310,10 +317,14 @@ public final class voucher_entry extends javax.swing.JInternalFrame {
             while (set.next()) {
                 under = set.getString(1);
             }
-            query = "update account_voucher set dat='" + date + "',whom='" + whom + "',what='" + what + "',amount='" + amount + "',pby='" + pby + "',ano='" + ano + "',account='" + account + "',entry='" + entry + "',remarks='" + remarks + "',user='" + user + "',last='" + last + "',under='" + under + "' where billno='" + billno + "' ";
+            query = "update account_voucher set dat='" + date + "',whom='" + whom + "',what='" + what + "',amount='"
+                    + amount + "',pby='" + pby + "',ano='" + ano + "',account='" + account + "',entry='" + entry
+                    + "',remarks='" + remarks + "',user='" + user + "',last='" + last + "',under='" + under
+                    + "' where billno='" + billno + "' ";
             int count = util.doManipulation(query);
             if (count > 0) {
-                int bb = JOptionPane.showConfirmDialog(this, "<html><h1>You Want to Print Voucher ?</h1></html>", "Saved Successfully", JOptionPane.YES_OPTION);
+                int bb = JOptionPane.showConfirmDialog(this, "<html><h1>You Want to Print Voucher ?</h1></html>",
+                        "Saved Successfully", JOptionPane.YES_OPTION);
                 if (bb == JOptionPane.YES_OPTION) {
                     new voucher_print().Report(h1.getText(), util);
                 }
@@ -358,7 +369,8 @@ public final class voucher_entry extends javax.swing.JInternalFrame {
 
     void view(String billno) {
         try {
-            String query = "select billno,date_format(dat,'%d/%m/%Y'),whom,what,amount,pby,ano,account,entry,remarks from account_voucher where billno='" + billno + "' ";
+            String query = "select billno,date_format(dat,'%d/%m/%Y'),whom,what,amount,pby,ano,account,entry,remarks from account_voucher where billno='"
+                    + billno + "' ";
             ResultSet set1 = util.doQuery(query);
             boolean selva = false;
             while (set1.next()) {
@@ -374,7 +386,7 @@ public final class voucher_entry extends javax.swing.JInternalFrame {
                 String payMode = set1.getString(6);
                 h6.setSelectedItem(payMode);
 
-                if(payMode.equalsIgnoreCase("Bank")){
+                if (payMode.equalsIgnoreCase("Bank")) {
                     // Show fields
                     jLabelAcNo.setVisible(true); // Replace acLabel with your actual Label variable
                     h7.setVisible(true);
@@ -413,7 +425,8 @@ public final class voucher_entry extends javax.swing.JInternalFrame {
     void delete(String billno) {
         try {
             if (utype.equalsIgnoreCase("User")) {
-                JOptionPane.showMessageDialog(this, "Login as 'Administrator' to Delete!", "Permission Restricted", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Login as 'Administrator' to Delete!", "Permission Restricted",
+                        JOptionPane.ERROR_MESSAGE);
                 return;
             }
             int as = JOptionPane.showConfirmDialog(this, "Want to Delete ?", "Are You Sure", JOptionPane.YES_NO_OPTION);
@@ -469,7 +482,8 @@ public final class voucher_entry extends javax.swing.JInternalFrame {
     }
 
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated
+    // Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         closebutton = new javax.swing.JButton();
@@ -749,28 +763,28 @@ public final class voucher_entry extends javax.swing.JInternalFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void savebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_savebuttonActionPerformed
+    private void savebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_savebuttonActionPerformed
         save();
-    }//GEN-LAST:event_savebuttonActionPerformed
+    }// GEN-LAST:event_savebuttonActionPerformed
 
-    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closebuttonActionPerformed
+    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_closebuttonActionPerformed
         this.dispose();
-    }//GEN-LAST:event_closebuttonActionPerformed
+    }// GEN-LAST:event_closebuttonActionPerformed
 
-    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearbuttonActionPerformed
+    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_clearbuttonActionPerformed
         clear();
-    }//GEN-LAST:event_clearbuttonActionPerformed
+    }// GEN-LAST:event_clearbuttonActionPerformed
 
-    private void viewbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_viewbuttonActionPerformed
+    private void viewbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_viewbuttonActionPerformed
         String ino = JOptionPane.showInputDialog(this, "Enter Voucher No ?", "Voucher No", JOptionPane.PLAIN_MESSAGE);
         if (ino == null || "".equals(ino)) {
             JOptionPane.showMessageDialog(this, "Invalid Voucher No!", "Invalid", JOptionPane.ERROR_MESSAGE);
             return;
         }
         view(ino);
-    }//GEN-LAST:event_viewbuttonActionPerformed
+    }// GEN-LAST:event_viewbuttonActionPerformed
 
-    private void h6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_h6ActionPerformed
+    private void h6ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h6ActionPerformed
         String mode = h6.getSelectedItem().toString();
 
         if (mode.equalsIgnoreCase("Bank")) {
@@ -782,17 +796,17 @@ public final class voucher_entry extends javax.swing.JInternalFrame {
             h7.setVisible(false);
             h7.removeAllItems();
         }
-    }//GEN-LAST:event_h6ActionPerformed
+    }// GEN-LAST:event_h6ActionPerformed
 
-    private void printbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_printbuttonActionPerformed
+    private void printbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_printbuttonActionPerformed
         try {
             new voucher_print().Report(h1.getText(), util);
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
-    }//GEN-LAST:event_printbuttonActionPerformed
+    }// GEN-LAST:event_printbuttonActionPerformed
 
-    private void jCalendarButton2PropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jCalendarButton2PropertyChange
+    private void jCalendarButton2PropertyChange(java.beans.PropertyChangeEvent evt) {// GEN-FIRST:event_jCalendarButton2PropertyChange
 
         try {
             if (evt.getNewValue() instanceof Date) {
@@ -806,17 +820,17 @@ public final class voucher_entry extends javax.swing.JInternalFrame {
         } catch (ParseException e) {
             System.out.println(e.getMessage());
         }
-    }//GEN-LAST:event_jCalendarButton2PropertyChange
+    }// GEN-LAST:event_jCalendarButton2PropertyChange
 
-    private void deletebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deletebuttonActionPerformed
+    private void deletebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_deletebuttonActionPerformed
         delete(h1.getText());
-    }//GEN-LAST:event_deletebuttonActionPerformed
+    }// GEN-LAST:event_deletebuttonActionPerformed
 
-    private void h1FocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_h1FocusGained
+    private void h1FocusGained(java.awt.event.FocusEvent evt) {// GEN-FIRST:event_h1FocusGained
         h3.requestFocus();
-    }//GEN-LAST:event_h1FocusGained
+    }// GEN-LAST:event_h1FocusGained
 
-    private void prebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_prebuttonActionPerformed
+    private void prebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_prebuttonActionPerformed
 
         try {
             String billno = h1.getText();
@@ -824,7 +838,8 @@ public final class voucher_entry extends javax.swing.JInternalFrame {
             if (billno.equalsIgnoreCase("--")) {
                 query = "select max(billno) from account_voucher";
             } else {
-                query = "select billno from account_voucher where billno < '" + billno + "' order by billno desc limit 1";
+                query = "select billno from account_voucher where billno < '" + billno
+                        + "' order by billno desc limit 1";
             }
 
             ResultSet set1 = util.doQuery(query);
@@ -842,9 +857,9 @@ public final class voucher_entry extends javax.swing.JInternalFrame {
         } catch (HeadlessException | ClassNotFoundException | SQLException e) {
             System.out.println(e.toString());
         }
-    }//GEN-LAST:event_prebuttonActionPerformed
+    }// GEN-LAST:event_prebuttonActionPerformed
 
-    private void nextbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nextbuttonActionPerformed
+    private void nextbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_nextbuttonActionPerformed
         try {
 
             String billno = h1.getText();
@@ -852,7 +867,8 @@ public final class voucher_entry extends javax.swing.JInternalFrame {
                 JOptionPane.showMessageDialog(this, "No Records Were Found!", "No Records", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            String query = "select distinct billno from account_voucher where billno > '" + billno + "' order by billno limit 1";
+            String query = "select distinct billno from account_voucher where billno > '" + billno
+                    + "' order by billno limit 1";
             ResultSet set1 = util.doQuery(query);
             boolean selva = false;
             String search_billno = "";
@@ -868,11 +884,11 @@ public final class voucher_entry extends javax.swing.JInternalFrame {
         } catch (HeadlessException | ClassNotFoundException | SQLException e) {
             System.out.println(e.getMessage());
         }
-    }//GEN-LAST:event_nextbuttonActionPerformed
+    }// GEN-LAST:event_nextbuttonActionPerformed
 
-    private void alterbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_alterbuttonActionPerformed
+    private void alterbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_alterbuttonActionPerformed
         update();
-    }//GEN-LAST:event_alterbuttonActionPerformed
+    }// GEN-LAST:event_alterbuttonActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton alterbutton;

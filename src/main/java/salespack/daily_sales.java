@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.swing.JFrame;
 import menupack.SelRomJasper;
+import menupack.UserSession;
 import menupack.menu_form;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperFillManager;
@@ -53,8 +54,13 @@ public class daily_sales {
             Map<String, Object> parameters = new HashMap<>();
 
             String sname = "";
-            String query = "select distinct cname,hmany from setting_bill";
+            String companyNameFilter = "";
+            if (UserSession.hasSelectedCompany()) {
+                companyNameFilter = " where companyID='" + UserSession.getSelectedCompanyID() + "'";
+            }
+            String query = "select distinct cname,hmany from company" + companyNameFilter;
             r = util.doQuery(query);
+            if (r == null) return;
             while (r.next()) {
                 sname = r.getString(1);
                 hmany = r.getInt(2);
@@ -67,7 +73,8 @@ public class daily_sales {
             double tcash = 0, tcard = 0, tcredit = 0, tothers = 0, tnet = 0;
             long tbills = 0;
             ArrayList k = new ArrayList();
-            query = "select location,terminal,count(billno),sum(cash),sum(card),sum(credit),sum(others),sum(net),sum(bal) from sales where dat between '" + lk + "' and '" + lk1 + "' group by location,terminal order by location,terminal";
+            query = "select location,terminal,count(billno),sum(cash),sum(card),sum(credit),sum(others),sum(net),sum(bal) from sales where dat between '"
+                    + lk + "' and '" + lk1 + "' group by location,terminal order by location,terminal";
             r = util.doQuery(query);
             while (r.next()) {
                 SelRomJasper selRomJasper = new SelRomJasper();
@@ -103,7 +110,7 @@ public class daily_sales {
 
                 k.add(selRomJasper);
             }
-            //sales ends
+            // sales ends
             String tcash2 = String.format("%." + hmany + "f", tcash);
             String tcard2 = String.format("%." + hmany + "f", tcard);
             String tcredit2 = String.format("%." + hmany + "f", tcredit);
@@ -121,8 +128,7 @@ public class daily_sales {
 
             jasperReport = JasperReportCompiler.compileReport("/JasperFiles/Reports/Daily_Sales.jrxml");
 
-            JRBeanCollectionDataSource beanColDataSource
-                    = new JRBeanCollectionDataSource(k);
+            JRBeanCollectionDataSource beanColDataSource = new JRBeanCollectionDataSource(k);
             jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, beanColDataSource);
             jasperViewer = new JasperViewer(jasperPrint);
             jasperViewer.setVisible(true);

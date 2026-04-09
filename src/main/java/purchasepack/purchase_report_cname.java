@@ -22,6 +22,7 @@ import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import menupack.menu_form;
 import menupack.sample2;
+import menupack.UserSession;
 
 /**
  *
@@ -120,7 +121,8 @@ public final class purchase_report_cname extends javax.swing.JInternalFrame {
             boolean selva = false;
             double sub, disamt, net, gross, taxamt, frieght, other;
             String query;
-            query = "select distinct grn,date_format(dat,'%d/%m/%Y'),cname,billno,date_format(bdate,'%d/%m/%Y'),items,quans,sub,dis,gross,tax,fright,other,net,pby,user,last from purchase where bdate between ? and ? and cname=? order by bdate,grn";
+            String companyFilter = UserSession.hasSelectedCompany() ? " and company_id='" + UserSession.getSelectedCompanyID() + "'" : "";
+            query = "select distinct grn,date_format(dat,'%d/%m/%Y'),cname,billno,date_format(bdate,'%d/%m/%Y'),items,quans,sub,dis,gross,tax,fright,other,net,pby,user,last,bdate from purchase where bdate between ? and ? and cname=?" + companyFilter + " order by bdate,grn";
             Connection conn = util.getConnection();
             PreparedStatement ps = conn.prepareStatement(query);
             ps.setString(1, lk);
@@ -190,7 +192,8 @@ public final class purchase_report_cname extends javax.swing.JInternalFrame {
     void get_supplier() {
         try {
             h3.removeAllItems();
-            String query = "select distinct cname from purchase";
+            String companyFilter = UserSession.hasSelectedCompany() ? " where company_id='" + UserSession.getSelectedCompanyID() + "'" : "";
+            String query = "select distinct cname from purchase" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 h3.addItem(r.getString(1));

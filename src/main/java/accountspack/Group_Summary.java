@@ -38,7 +38,7 @@ public class Group_Summary {
             SimpleDateFormat g = new SimpleDateFormat("dd-MM-yyyy");
 
             String cname = "";
-            String query = "select cname,hmany from setting_bill";
+            String query = "select cname,hmany from company";
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 cname = r.getString(1);
@@ -50,7 +50,8 @@ public class Group_Summary {
 
             ArrayList k = new ArrayList();
             double ncredit = 0, ndebit = 0;
-            query = "select date_format(dat,'%d/%m/%Y'),billno,what,amount,entry from account_voucher where account='" + account + "' order by dat,billno";
+            query = "select date_format(dat,'%d/%m/%Y'),billno,what,amount,entry from account_voucher where account='"
+                    + account + "' order by dat,billno";
             r = util.doQuery(query);
             while (r.next()) {
                 SelRomJasper selRomJasper = new SelRomJasper();
@@ -74,7 +75,7 @@ public class Group_Summary {
                 selRomJasper.setField5(credit);
 
                 k.add(selRomJasper);
-            }//while loop ends
+            } // while loop ends
             String ncredit2 = String.format("%." + hmany + "f", ncredit);
             String ndebit2 = String.format("%." + hmany + "f", ndebit);
 

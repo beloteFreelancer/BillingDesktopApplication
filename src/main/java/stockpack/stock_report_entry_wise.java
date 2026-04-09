@@ -15,6 +15,7 @@ import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import menupack.menu_form;
 import menupack.sample2;
+import menupack.UserSession;
 
 /**
  *
@@ -80,12 +81,16 @@ public class stock_report_entry_wise extends javax.swing.JInternalFrame {
             double prate, mrp, srate, wrate;
             String query;
 
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " and company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             if (h3.getSelectedItem().equals("Purchase")) {
-                query = "select ino,iname,sum(quan),sum(quan*prate),sum(quan*mrp),sum(quan*rprice),sum(quan*wprice) from stock where quan>0 and entry='purchase' group by ino order by ino";
+                query = "select ino,iname,sum(quan),sum(quan*prate),sum(quan*mrp),sum(quan*rprice),sum(quan*wprice) from stock where quan>0 and entry='purchase'" + companyFilter + " group by ino, iname order by ino";
             } else {
-                query = "select ino,iname,sum(quan),sum(quan*prate),sum(quan*mrp),sum(quan*rprice),sum(quan*wprice) from stock where quan>0 and entry='stock' group by ino order by ino";
+                query = "select ino,iname,sum(quan),sum(quan*prate),sum(quan*mrp),sum(quan*rprice),sum(quan*wprice) from stock where quan>0 and entry='stock'" + companyFilter + " group by ino, iname order by ino";
             }
             r = util.doQuery(query);
+            if (r == null) return;
             while (r.next()) {
                 prate = r.getDouble(4);
                 mrp = r.getDouble(5);

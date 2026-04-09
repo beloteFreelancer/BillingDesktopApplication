@@ -23,6 +23,7 @@ import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import menupack.menu_form;
 import menupack.sample2;
+import menupack.UserSession;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CreationHelper;
@@ -145,9 +146,10 @@ public final class sales_summary_cust extends javax.swing.JInternalFrame {
 
             double tquan = 0, tamount = 0;
             boolean selva = false;
+            String companyFilter = UserSession.hasSelectedCompany() ? " and company_id='" + UserSession.getSelectedCompanyID() + "'" : "";
             String query;
             query = "select billno,date_format(dat,'%d/%m/%Y'),pby,items,quans,net,cid,cname from sales where dat between '"
-                    + lk + "' and '" + lk1 + "' and cid='" + h3.getText() + "' order by dat,billno";
+                    + lk + "' and '" + lk1 + "' and cid='" + h3.getText() + "'" + companyFilter + " order by dat,billno";
             r = util.doQuery(query);
             while (r.next()) {
                 billno1.add(r.getString(1));
@@ -176,7 +178,7 @@ public final class sales_summary_cust extends javax.swing.JInternalFrame {
                 amount.add("");
 
                 query = "select iname,price,quan,amount,quan,amount from sales_items where billno='" + billno1.get(i)
-                        + "'";
+                        + "'" + companyFilter;
                 r = util.doQuery(query);
                 while (r.next()) {
                     billno.add("");
@@ -233,7 +235,10 @@ public final class sales_summary_cust extends javax.swing.JInternalFrame {
     void get_customer_name() {
         try {
             h4.setText("");
-            String query = "select cname from cust where cid='" + h3.getText() + "'";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select cname from cust where cid='" + h3.getText() + "'" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 h4.setText(r.getString(1));
@@ -676,9 +681,12 @@ public final class sales_summary_cust extends javax.swing.JInternalFrame {
                     cname_list.setLocation(l.x, l.y + jLabel12.getHeight());
                     cname_list.setSize(1063, 528);
                     cname_list.setVisible(true);
+                    String custCompanyFilter = UserSession.hasSelectedCompany()
+                            ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                            : "";
                     String query;
                     query = "select cid,ctype,cname,cardno,mobile,city,scode from cust where cname like '"
-                            + h3.getText() + "%' order by cname limit 400";
+                            + h3.getText() + "%'" + custCompanyFilter + " order by cname limit 400";
                     r = util.doQuery(query);
                     while (r.next()) {
                         s3.addRow(new Object[] { r.getString(1), r.getString(2), r.getString(3), r.getString(4),

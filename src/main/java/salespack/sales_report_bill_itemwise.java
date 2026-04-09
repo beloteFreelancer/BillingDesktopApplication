@@ -23,6 +23,7 @@ import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import menupack.menu_form;
 import menupack.sample2;
+import menupack.UserSession;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CreationHelper;
@@ -109,10 +110,11 @@ public final class sales_report_bill_itemwise extends javax.swing.JInternalFrame
             DecimalFormat df1 = new DecimalFormat("#.#");
 
             boolean selva = false;
+            String companyFilter = UserSession.hasSelectedCompany() ? " and a.company_id='" + UserSession.getSelectedCompanyID() + "'" : "";
             String query;
             query = "select distinct a.billno,date_format(a.dat,'%d/%m/%Y'),quan,price,amount,a.cid,cname,mobile,a.dat from sales a,sales_items b where a.dat between '"
                     + lk + "' and '" + lk1 + "' and ino='" + h3.getText()
-                    + "' and a.billno=b.billno order by a.dat,a.billno";
+                    + "' and a.billno=b.billno" + companyFilter + " order by a.dat,a.billno";
             r = util.doQuery(query);
             if (r == null) {
                 return;
@@ -140,7 +142,10 @@ public final class sales_report_bill_itemwise extends javax.swing.JInternalFrame
     void get_customer_name() {
         try {
             h4.setText("");
-            String query = "select iname from item where ino='" + h3.getText() + "'";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select iname from item where ino='" + h3.getText() + "'" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 h4.setText(r.getString(1));
@@ -566,8 +571,11 @@ public final class sales_report_bill_itemwise extends javax.swing.JInternalFrame
                     iname_list.setLocation(l.x, l.y + jLabel12.getHeight());
                     iname_list.setSize(800, 528);
                     iname_list.setVisible(true);
+                    String companyFilter2 = UserSession.hasSelectedCompany()
+                            ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                            : "";
                     String query = "select ino,iname,cat from item where iname like '" + h3.getText()
-                            + "%' order by ino limit 500";
+                            + "%'" + companyFilter2 + " order by ino limit 500";
                     r = util.doQuery(query);
                     while (r.next()) {
                         s3.addRow(new Object[] { r.getString(1), r.getString(2), r.getString(3) });

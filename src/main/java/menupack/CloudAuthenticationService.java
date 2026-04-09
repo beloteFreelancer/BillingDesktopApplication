@@ -106,7 +106,18 @@ public class CloudAuthenticationService {
                     dto.setEno(rs.getString("eno"));
 
                     dto.setVdate(rs.getDate("vdate"));
-                    dto.setUserValidDate(rs.getDate("user_valid_date"));
+                    // Decrypt user_valid_date from encrypted storage
+                    String encValidDate = rs.getString("user_valid_date");
+                    if (encValidDate != null && !encValidDate.trim().isEmpty()) {
+                        String decValidDate = AES.decrypt(encValidDate, secretKey);
+                        if (decValidDate != null) {
+                            try {
+                                dto.setUserValidDate(new java.text.SimpleDateFormat("yyyy-MM-dd").parse(decValidDate));
+                            } catch (Exception e) {
+                                System.out.println("Error parsing decrypted cloud user_valid_date: " + e.getMessage());
+                            }
+                        }
+                    }
                     dto.setDate(rs.getDate("dat"));
 
                     // Re-bind license to THIS machine for Local Storage.

@@ -13,6 +13,31 @@ public class print_class_estimate_return {
 
     void get_print(DataUtil util, String billno, String drive, String folder, String billformat) {
         switch (billformat) {
+            // New Standard Names
+            case "Estimate 3-Inch (Thermal)":
+                new print_estimate_thermal_return().Report(util, billno, drive, folder, billformat);
+                break;
+            case "Estimate 3-Inch MRP (Thermal)":
+                new print_estimate_thermal_return().Report(util, billno, drive, folder, billformat);
+                break;
+            case "Estimate 3-Inch Short (Thermal)":
+                new print_estimate_thermal_return().Report(util, billno, drive, folder, billformat);
+                break;
+            case "Estimate 4-Inch (Thermal)":
+                new print_estimate_thermal_return().Report(util, billno, drive, folder, billformat);
+                break;
+            case "Estimate 4-Inch MRP (Thermal)":
+                new print_estimate_thermal_return().Report(util, billno, drive, folder, billformat);
+                break;
+            case "Estimate A4":
+                new print_estimate_a4_return().Report(util, billno, drive, folder, billformat);
+                break;
+            case "Estimate A5":
+            case "Estimate Half Page":
+                new print_estimate_a4_return().Report(util, billno, drive, folder, billformat);
+                break;
+
+            // Legacy Support
             case "Thermal":
                 new print_estimate_thermal_return().Report(util, billno, drive, folder, billformat);
                 break;

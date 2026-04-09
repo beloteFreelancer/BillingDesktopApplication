@@ -43,7 +43,7 @@ public class RP {
             String dto1 = (new SimpleDateFormat("yyyy/MM/dd").format(nm1));
 
             String cname = "";
-            String query = "select cname,hmany from setting_bill";
+            String query = "select cname,hmany from company";
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 cname = r.getString(1);
@@ -62,7 +62,8 @@ public class RP {
                 sales_other = r.getDouble(3);
             }
             double credit_cash = 0, credit_bank = 0, credit_others = 0;
-            query = "select Sum(CASE WHEN t.pby = 'Cash' THEN t.amount ELSE NULL END) AS Cash, Sum(CASE WHEN t.pby = 'Bank' THEN t.amount ELSE NULL END) AS Bank, Sum(CASE WHEN t.pby = 'Others' THEN t.amount ELSE NULL END) AS Others from account_voucher t where t.dat < '" + dfrom1 + "' and t.entry='Credit' ";
+            query = "select Sum(CASE WHEN t.pby = 'Cash' THEN t.amount ELSE NULL END) AS Cash, Sum(CASE WHEN t.pby = 'Bank' THEN t.amount ELSE NULL END) AS Bank, Sum(CASE WHEN t.pby = 'Others' THEN t.amount ELSE NULL END) AS Others from account_voucher t where t.dat < '"
+                    + dfrom1 + "' and t.entry='Credit' ";
             r = util.doQuery(query);
             while (r.next()) {
                 credit_cash = r.getDouble(1);
@@ -71,7 +72,8 @@ public class RP {
             }
 
             double cpay_cash = 0, cpay_bank = 0, cpay_other = 0;
-            query = "select Sum(CASE WHEN t.pby = 'Cash' THEN t.amount ELSE NULL END) AS Cash, Sum(CASE WHEN t.pby = 'Bank' THEN t.amount ELSE NULL END) AS Bank, Sum(CASE WHEN t.pby = 'Others' THEN t.amount ELSE NULL END) AS Others from cust_pay t where t.dat < '" + dfrom1 + "' ";
+            query = "select Sum(CASE WHEN t.pby = 'Cash' THEN t.amount ELSE NULL END) AS Cash, Sum(CASE WHEN t.pby = 'Bank' THEN t.amount ELSE NULL END) AS Bank, Sum(CASE WHEN t.pby = 'Others' THEN t.amount ELSE NULL END) AS Others from cust_pay t where t.dat < '"
+                    + dfrom1 + "' ";
             r = util.doQuery(query);
             while (r.next()) {
                 cpay_cash = r.getDouble(1);
@@ -80,7 +82,8 @@ public class RP {
             }
 
             double pret_cash = 0, pret_bank = 0, pret_other = 0;
-            query = "select Sum(CASE WHEN t.pby = 'Cash' THEN t.net ELSE NULL END) AS Cash, Sum(CASE WHEN t.pby = 'Bank' THEN t.net ELSE NULL END) AS Bank, Sum(CASE WHEN t.pby = 'Others' THEN t.net ELSE NULL END) AS Others from preturn t where t.dat < '" + dfrom1 + "' ";
+            query = "select Sum(CASE WHEN t.pby = 'Cash' THEN t.net ELSE NULL END) AS Cash, Sum(CASE WHEN t.pby = 'Bank' THEN t.net ELSE NULL END) AS Bank, Sum(CASE WHEN t.pby = 'Others' THEN t.net ELSE NULL END) AS Others from preturn t where t.dat < '"
+                    + dfrom1 + "' ";
             r = util.doQuery(query);
             while (r.next()) {
                 pret_cash = r.getDouble(1);
@@ -88,10 +91,12 @@ public class RP {
                 pret_other = r.getDouble(3);
             }
             double cash_income = sales_cash + cpay_cash + credit_cash + pret_cash;
-            double bank_income = sales_card + sales_other + cpay_bank + cpay_other + credit_bank + credit_others + pret_bank + pret_other;
+            double bank_income = sales_card + sales_other + cpay_bank + cpay_other + credit_bank + credit_others
+                    + pret_bank + pret_other;
 
             double pur_cash = 0, pur_bank = 0, pur_other = 0;
-            query = "select Sum(CASE WHEN t.pby = 'Cash' THEN t.net ELSE NULL END) AS Cash, Sum(CASE WHEN t.pby = 'Bank' THEN t.net ELSE NULL END) AS Bank, Sum(CASE WHEN t.pby = 'Others' THEN t.net ELSE NULL END) AS Others from purchase t where t.dat < '" + dfrom1 + "' ";
+            query = "select Sum(CASE WHEN t.pby = 'Cash' THEN t.net ELSE NULL END) AS Cash, Sum(CASE WHEN t.pby = 'Bank' THEN t.net ELSE NULL END) AS Bank, Sum(CASE WHEN t.pby = 'Others' THEN t.net ELSE NULL END) AS Others from purchase t where t.dat < '"
+                    + dfrom1 + "' ";
             r = util.doQuery(query);
             while (r.next()) {
                 pur_cash = r.getDouble(1);
@@ -99,7 +104,8 @@ public class RP {
                 pur_other = r.getDouble(3);
             }
             double debit_cash = 0, debit_bank = 0, debit_others = 0;
-            query = "select Sum(CASE WHEN t.pby = 'Cash' THEN t.amount ELSE NULL END) AS Cash, Sum(CASE WHEN t.pby = 'Bank' THEN t.amount ELSE NULL END) AS Bank, Sum(CASE WHEN t.pby = 'Others' THEN t.amount ELSE NULL END) AS Others from account_voucher t where t.dat < '" + dfrom1 + "' and t.entry='Debit' ";
+            query = "select Sum(CASE WHEN t.pby = 'Cash' THEN t.amount ELSE NULL END) AS Cash, Sum(CASE WHEN t.pby = 'Bank' THEN t.amount ELSE NULL END) AS Bank, Sum(CASE WHEN t.pby = 'Others' THEN t.amount ELSE NULL END) AS Others from account_voucher t where t.dat < '"
+                    + dfrom1 + "' and t.entry='Debit' ";
             r = util.doQuery(query);
             while (r.next()) {
                 debit_cash = r.getDouble(1);
@@ -107,7 +113,8 @@ public class RP {
                 debit_others = r.getDouble(3);
             }
             double spay_cash = 0, spay_bank = 0, spay_other = 0;
-            query = "select Sum(CASE WHEN t.pby = 'Cash' THEN t.amount ELSE NULL END) AS Cash, Sum(CASE WHEN t.pby = 'Bank' THEN t.amount ELSE NULL END) AS Bank, Sum(CASE WHEN t.pby = 'Others' THEN t.amount ELSE NULL END) AS Others from ven_pay t where t.dat < '" + dfrom1 + "' ";
+            query = "select Sum(CASE WHEN t.pby = 'Cash' THEN t.amount ELSE NULL END) AS Cash, Sum(CASE WHEN t.pby = 'Bank' THEN t.amount ELSE NULL END) AS Bank, Sum(CASE WHEN t.pby = 'Others' THEN t.amount ELSE NULL END) AS Others from ven_pay t where t.dat < '"
+                    + dfrom1 + "' ";
             r = util.doQuery(query);
             while (r.next()) {
                 spay_cash = r.getDouble(1);
@@ -123,7 +130,8 @@ public class RP {
                 sret_other = r.getDouble(3);
             }
             double stock_cash = 0, stock_bank = 0, stock_other = 0;
-            query = "select Sum(CASE WHEN t.pby = 'Cash' THEN t.net ELSE NULL END) AS Cash, Sum(CASE WHEN t.pby = 'Bank' THEN t.net ELSE NULL END) AS Bank, Sum(CASE WHEN t.pby = 'Others' THEN t.net ELSE NULL END) AS Others from stock_entry t where t.dat < '" + dfrom1 + "' ";
+            query = "select Sum(CASE WHEN t.pby = 'Cash' THEN t.net ELSE NULL END) AS Cash, Sum(CASE WHEN t.pby = 'Bank' THEN t.net ELSE NULL END) AS Bank, Sum(CASE WHEN t.pby = 'Others' THEN t.net ELSE NULL END) AS Others from stock_entry t where t.dat < '"
+                    + dfrom1 + "' ";
             r = util.doQuery(query);
             while (r.next()) {
                 stock_cash = r.getDouble(1);
@@ -132,7 +140,8 @@ public class RP {
             }
 
             double cash_expense = pur_cash + spay_cash + debit_cash + sret_cash + stock_cash;
-            double bank_expense = pur_bank + pur_other + spay_bank + spay_other + debit_bank + debit_others + sret_card + sret_other + stock_bank + stock_other;
+            double bank_expense = pur_bank + pur_other + spay_bank + spay_other + debit_bank + debit_others + sret_card
+                    + sret_other + stock_bank + stock_other;
 
             double cash_open = cash_income - cash_expense;
             double bank_open = bank_income - bank_expense;
@@ -154,8 +163,9 @@ public class RP {
             pcash.add("" + 0);
             pbank.add("" + 0);
 
-            //receipt 1
-            query = "select sum(cash),sum(card),sum(others) from sales where dat between '" + dfrom1 + "' and '" + dto1 + "'";
+            // receipt 1
+            query = "select sum(cash),sum(card),sum(others) from sales where dat between '" + dfrom1 + "' and '" + dto1
+                    + "'";
             r = util.doQuery(query);
             while (r.next()) {
                 double cash, card, others;
@@ -175,10 +185,11 @@ public class RP {
                 }
 
             }
-            //receipt 1 ends
+            // receipt 1 ends
 
-            //receipt 2
-            query = "select Sum(CASE WHEN t.pby = 'Cash' THEN t.amount ELSE NULL END) AS Cash, Sum(CASE WHEN t.pby = 'Bank' THEN t.amount ELSE NULL END) AS Bank, Sum(CASE WHEN t.pby = 'Others' THEN t.amount ELSE NULL END) AS Others from cust_pay t where t.dat between '" + dfrom1 + "' and '" + dto1 + "'";
+            // receipt 2
+            query = "select Sum(CASE WHEN t.pby = 'Cash' THEN t.amount ELSE NULL END) AS Cash, Sum(CASE WHEN t.pby = 'Bank' THEN t.amount ELSE NULL END) AS Bank, Sum(CASE WHEN t.pby = 'Others' THEN t.amount ELSE NULL END) AS Others from cust_pay t where t.dat between '"
+                    + dfrom1 + "' and '" + dto1 + "'";
             r = util.doQuery(query);
             while (r.next()) {
                 double cash, bank, others;
@@ -197,10 +208,11 @@ public class RP {
                     pbank.add("" + 0);
                 }
             }
-            //receipt 2 ends
+            // receipt 2 ends
 
-            //receipt 3
-            query = "select t.account,Sum(CASE WHEN t.pby = 'Cash' THEN t.amount ELSE NULL END) AS Cash, Sum(CASE WHEN t.pby = 'Bank' THEN t.amount ELSE NULL END) AS Bank, Sum(CASE WHEN t.pby = 'Others' THEN t.amount ELSE NULL END) AS Others from account_voucher t where t.dat between '" + dfrom1 + "' and '" + dto1 + "' and t.entry='Credit' group by t.account";
+            // receipt 3
+            query = "select t.account,Sum(CASE WHEN t.pby = 'Cash' THEN t.amount ELSE NULL END) AS Cash, Sum(CASE WHEN t.pby = 'Bank' THEN t.amount ELSE NULL END) AS Bank, Sum(CASE WHEN t.pby = 'Others' THEN t.amount ELSE NULL END) AS Others from account_voucher t where t.dat between '"
+                    + dfrom1 + "' and '" + dto1 + "' and t.entry='Credit' group by t.account";
             r = util.doQuery(query);
             while (r.next()) {
                 double cash, bank, others;
@@ -216,10 +228,11 @@ public class RP {
                 pcash.add("" + 0);
                 pbank.add("" + 0);
             }
-            //receipt 3 ends
+            // receipt 3 ends
 
-            //receipt 4
-            query = "select Sum(CASE WHEN t.pby = 'Cash' THEN t.net ELSE NULL END) AS Cash, Sum(CASE WHEN t.pby = 'Bank' THEN t.net ELSE NULL END) AS Bank, Sum(CASE WHEN t.pby = 'Others' THEN t.net ELSE NULL END) AS Others from preturn t where t.dat between '" + dfrom1 + "' and '" + dto1 + "' ";
+            // receipt 4
+            query = "select Sum(CASE WHEN t.pby = 'Cash' THEN t.net ELSE NULL END) AS Cash, Sum(CASE WHEN t.pby = 'Bank' THEN t.net ELSE NULL END) AS Bank, Sum(CASE WHEN t.pby = 'Others' THEN t.net ELSE NULL END) AS Others from preturn t where t.dat between '"
+                    + dfrom1 + "' and '" + dto1 + "' ";
             r = util.doQuery(query);
             while (r.next()) {
                 double cash, bank, others;
@@ -239,9 +252,10 @@ public class RP {
                 }
             }
 
-            //receipt 4 ends
-            //pay 1
-            query = "select Sum(CASE WHEN t.pby = 'Cash' THEN t.net ELSE NULL END) AS Cash, Sum(CASE WHEN t.pby = 'Bank' THEN t.net ELSE NULL END) AS Bank, Sum(CASE WHEN t.pby = 'Others' THEN t.net ELSE NULL END) AS Others from purchase t where t.dat between '" + dfrom1 + "' and '" + dto1 + "' ";
+            // receipt 4 ends
+            // pay 1
+            query = "select Sum(CASE WHEN t.pby = 'Cash' THEN t.net ELSE NULL END) AS Cash, Sum(CASE WHEN t.pby = 'Bank' THEN t.net ELSE NULL END) AS Bank, Sum(CASE WHEN t.pby = 'Others' THEN t.net ELSE NULL END) AS Others from purchase t where t.dat between '"
+                    + dfrom1 + "' and '" + dto1 + "' ";
             r = util.doQuery(query);
             while (r.next()) {
                 double cash, bank, others;
@@ -261,9 +275,10 @@ public class RP {
                 }
             }
 
-            //pay1 ends
-            //pay 2
-            query = "select Sum(CASE WHEN t.pby = 'Cash' THEN t.amount ELSE NULL END) AS Cash, Sum(CASE WHEN t.pby = 'Bank' THEN t.amount ELSE NULL END) AS Bank, Sum(CASE WHEN t.pby = 'Others' THEN t.amount ELSE NULL END) AS Others from ven_pay t where t.dat between '" + dfrom1 + "' and '" + dto1 + "'";
+            // pay1 ends
+            // pay 2
+            query = "select Sum(CASE WHEN t.pby = 'Cash' THEN t.amount ELSE NULL END) AS Cash, Sum(CASE WHEN t.pby = 'Bank' THEN t.amount ELSE NULL END) AS Bank, Sum(CASE WHEN t.pby = 'Others' THEN t.amount ELSE NULL END) AS Others from ven_pay t where t.dat between '"
+                    + dfrom1 + "' and '" + dto1 + "'";
             r = util.doQuery(query);
             while (r.next()) {
                 double cash, bank, others;
@@ -282,10 +297,11 @@ public class RP {
                     pbank.add("" + bank);
                 }
             }
-            //pay2 ends
+            // pay2 ends
 
-            //pay 3
-            query = "select t.account,Sum(CASE WHEN t.pby = 'Cash' THEN t.amount ELSE NULL END) AS Cash, Sum(CASE WHEN t.pby = 'Bank' THEN t.amount ELSE NULL END) AS Bank, Sum(CASE WHEN t.pby = 'Others' THEN t.amount ELSE NULL END) AS Others from account_voucher t where t.dat between '" + dfrom1 + "' and '" + dto1 + "' and t.entry='Debit' group by t.account";
+            // pay 3
+            query = "select t.account,Sum(CASE WHEN t.pby = 'Cash' THEN t.amount ELSE NULL END) AS Cash, Sum(CASE WHEN t.pby = 'Bank' THEN t.amount ELSE NULL END) AS Bank, Sum(CASE WHEN t.pby = 'Others' THEN t.amount ELSE NULL END) AS Others from account_voucher t where t.dat between '"
+                    + dfrom1 + "' and '" + dto1 + "' and t.entry='Debit' group by t.account";
             r = util.doQuery(query);
             while (r.next()) {
                 double cash, bank, others;
@@ -301,10 +317,11 @@ public class RP {
                 pcash.add("" + cash);
                 pbank.add("" + bank);
             }
-            //pay3 ends
+            // pay3 ends
 
-            //pay 4
-            query = "select sum(cash),sum(card),sum(others) from sreturn where dat between '" + dfrom1 + "' and '" + dto1 + "' ";
+            // pay 4
+            query = "select sum(cash),sum(card),sum(others) from sreturn where dat between '" + dfrom1 + "' and '"
+                    + dto1 + "' ";
             r = util.doQuery(query);
             while (r.next()) {
                 double cash, bank, others;
@@ -324,10 +341,11 @@ public class RP {
                 }
 
             }
-            //pay4 ends
+            // pay4 ends
 
-            //pay 5
-            query = "select Sum(CASE WHEN t.pby = 'Cash' THEN t.net ELSE NULL END) AS Cash, Sum(CASE WHEN t.pby = 'Bank' THEN t.net ELSE NULL END) AS Bank, Sum(CASE WHEN t.pby = 'Others' THEN t.net ELSE NULL END) AS Others from stock_entry t where t.dat between '" + dfrom1 + "' and '" + dto1 + "' ";
+            // pay 5
+            query = "select Sum(CASE WHEN t.pby = 'Cash' THEN t.net ELSE NULL END) AS Cash, Sum(CASE WHEN t.pby = 'Bank' THEN t.net ELSE NULL END) AS Bank, Sum(CASE WHEN t.pby = 'Others' THEN t.net ELSE NULL END) AS Others from stock_entry t where t.dat between '"
+                    + dfrom1 + "' and '" + dto1 + "' ";
             r = util.doQuery(query);
             while (r.next()) {
                 double cash, bank, others;
@@ -348,7 +366,7 @@ public class RP {
 
             }
 
-            //pay5 ends
+            // pay5 ends
             ArrayList k = new ArrayList();
             double rcash2 = 0, rbank2 = 0, pcash2 = 0, pbank2 = 0;
             for (int i = 0; i < rpart.size(); i++) {
@@ -402,7 +420,7 @@ public class RP {
                 selRomJasper.setField7(pay_bank);
 
                 k.add(selRomJasper);
-            }//array size ends
+            } // array size ends
 
             String ncash = String.format("%." + hmany + "f", rcash2);
             String nbank = String.format("%." + hmany + "f", rbank2);

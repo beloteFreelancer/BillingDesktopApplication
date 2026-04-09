@@ -17,11 +17,13 @@ import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import menupack.menu_form;
+import menupack.UserSession;
+import Utils.ColorConstants;
 
 /**
  *
  * @author K.SELVAKUMAR, copyrights K.SELVAKUMAR, +91 99427 32229,
- * mysoft.java@gmail.com
+ *         mysoft.java@gmail.com
  */
 public final class items_list extends javax.swing.JInternalFrame {
 
@@ -40,8 +42,10 @@ public final class items_list extends javax.swing.JInternalFrame {
         deletebutton.setText("<html><b>Delete</b><br>(Alt+D)</h6><html>");
         setTitle("Items List");
         this.setSize(1237, 648);
-        ImageIcon icon = new ImageIcon(ClassLoader.getSystemResource("images/icon.png"));
-        this.setFrameIcon(icon);
+        javax.swing.ImageIcon icon = ColorConstants.loadIcon("/images/icon.png");
+        if (icon != null) {
+            this.setFrameIcon(icon);
+        }
     }
 
     public class sample2 extends DefaultTableModel {
@@ -61,6 +65,7 @@ public final class items_list extends javax.swing.JInternalFrame {
             return column != 0;
         }
     }
+
     sample2 s2 = new sample2();
 
     final void load_list_table() {
@@ -114,7 +119,10 @@ public final class items_list extends javax.swing.JInternalFrame {
             }
             r = util.doQuery(query);
             while (r.next()) {
-                s2.addRow(new Object[]{r.getString(1), r.getString(2), r.getString(3), r.getString(4), r.getString(5), r.getString(6), r.getString(7), r.getString(8), r.getString(9), r.getString(10), r.getString(11), r.getString(12), r.getString(13), r.getString(14), r.getString(15), r.getString(16), r.getString(17)});
+                s2.addRow(new Object[] { r.getString(1), r.getString(2), r.getString(3), r.getString(4), r.getString(5),
+                        r.getString(6), r.getString(7), r.getString(8), r.getString(9), r.getString(10),
+                        r.getString(11), r.getString(12), r.getString(13), r.getString(14), r.getString(15),
+                        r.getString(16), r.getString(17) });
             }
             totl.setText(" Total Records: " + jTable1.getRowCount());
         } catch (ClassNotFoundException | SQLException e) {
@@ -127,17 +135,20 @@ public final class items_list extends javax.swing.JInternalFrame {
             h3.removeAllItems();
             h4.removeAllItems();
             h6.removeAllItems();
-            String query = "select distinct cat from item";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select distinct cat from item" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 h3.addItem(r.getString(1));
             }
-            query = "select distinct manu from item";
+            query = "select distinct manu from item" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 h4.addItem(r.getString(1));
             }
-            query = "select distinct rack from item";
+            query = "select distinct rack from item" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 h6.addItem(r.getString(1));
@@ -156,7 +167,8 @@ public final class items_list extends javax.swing.JInternalFrame {
     }
 
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated
+    // Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         titlelablel = new javax.swing.JLabel();
@@ -193,7 +205,7 @@ public final class items_list extends javax.swing.JInternalFrame {
         titlelablel.setBounds(10, 0, 400, 30);
 
         generatebutton.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        generatebutton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/searchh.png"))); // NOI18N
+        generatebutton.setIcon(ColorConstants.loadIcon("/icons/searchh.png")); // NOI18N
         generatebutton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 generatebuttonActionPerformed(evt);
@@ -203,7 +215,7 @@ public final class items_list extends javax.swing.JInternalFrame {
         generatebutton.setBounds(510, 80, 40, 30);
 
         excelbutton.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        excelbutton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/excel45.png"))); // NOI18N
+        excelbutton.setIcon(ColorConstants.loadIcon("/icons/excel45.png")); // NOI18N
         excelbutton.setMnemonic('i');
         excelbutton.setText("Excel");
         excelbutton.addActionListener(new java.awt.event.ActionListener() {
@@ -215,7 +227,7 @@ public final class items_list extends javax.swing.JInternalFrame {
         excelbutton.setBounds(840, 560, 130, 50);
 
         clearbutton.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        clearbutton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/clear45.png"))); // NOI18N
+        clearbutton.setIcon(ColorConstants.loadIcon("/icons/clear45.png")); // NOI18N
         clearbutton.setMnemonic('c');
         clearbutton.setText("Clear");
         clearbutton.addActionListener(new java.awt.event.ActionListener() {
@@ -227,7 +239,7 @@ public final class items_list extends javax.swing.JInternalFrame {
         clearbutton.setBounds(970, 560, 130, 50);
 
         closebutton.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        closebutton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/close45.png"))); // NOI18N
+        closebutton.setIcon(ColorConstants.loadIcon("/icons/close45.png")); // NOI18N
         closebutton.setMnemonic('o');
         closebutton.setText("Close");
         closebutton.addActionListener(new java.awt.event.ActionListener() {
@@ -263,7 +275,7 @@ public final class items_list extends javax.swing.JInternalFrame {
         totl.setBounds(0, 530, 1220, 30);
 
         viewbutton.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        viewbutton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/view45.png"))); // NOI18N
+        viewbutton.setIcon(ColorConstants.loadIcon("/icons/view45.png")); // NOI18N
         viewbutton.setMnemonic('v');
         viewbutton.setText("View");
         viewbutton.addActionListener(new java.awt.event.ActionListener() {
@@ -290,7 +302,7 @@ public final class items_list extends javax.swing.JInternalFrame {
         jLabel8.setBounds(670, 50, 90, 30);
 
         generatebutton2.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        generatebutton2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/searchh.png"))); // NOI18N
+        generatebutton2.setIcon(ColorConstants.loadIcon("/icons/searchh.png")); // NOI18N
         generatebutton2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 generatebutton2ActionPerformed(evt);
@@ -300,7 +312,7 @@ public final class items_list extends javax.swing.JInternalFrame {
         generatebutton2.setBounds(1180, 80, 40, 30);
 
         generatebutton4.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        generatebutton4.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/searchh.png"))); // NOI18N
+        generatebutton4.setIcon(ColorConstants.loadIcon("/icons/searchh.png")); // NOI18N
         generatebutton4.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 generatebutton4ActionPerformed(evt);
@@ -310,7 +322,7 @@ public final class items_list extends javax.swing.JInternalFrame {
         generatebutton4.setBounds(510, 50, 40, 30);
 
         generatebutton5.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        generatebutton5.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/searchh.png"))); // NOI18N
+        generatebutton5.setIcon(ColorConstants.loadIcon("/icons/searchh.png")); // NOI18N
         generatebutton5.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 generatebutton5ActionPerformed(evt);
@@ -325,16 +337,15 @@ public final class items_list extends javax.swing.JInternalFrame {
 
         jTable1.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
-        ));
+                new Object[][] {
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null }
+                },
+                new String[] {
+                        "Title 1", "Title 2", "Title 3", "Title 4"
+                }));
         jTable1.setRowHeight(25);
         jScrollPane2.setViewportView(jTable1);
 
@@ -352,7 +363,7 @@ public final class items_list extends javax.swing.JInternalFrame {
         h6.setBounds(760, 80, 420, 30);
 
         allbutton.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        allbutton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/search45.png"))); // NOI18N
+        allbutton.setIcon(ColorConstants.loadIcon("/icons/search45.png")); // NOI18N
         allbutton.setMnemonic('v');
         allbutton.setText("View All");
         allbutton.addActionListener(new java.awt.event.ActionListener() {
@@ -364,7 +375,7 @@ public final class items_list extends javax.swing.JInternalFrame {
         allbutton.setBounds(300, 560, 150, 50);
 
         deletebutton.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        deletebutton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/delete45.png"))); // NOI18N
+        deletebutton.setIcon(ColorConstants.loadIcon("/icons/delete45.png")); // NOI18N
         deletebutton.setMnemonic('d');
         deletebutton.setText("Delete");
         deletebutton.addActionListener(new java.awt.event.ActionListener() {
@@ -376,7 +387,7 @@ public final class items_list extends javax.swing.JInternalFrame {
         deletebutton.setBounds(710, 560, 130, 50);
 
         updatebutton.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        updatebutton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/upload45.png"))); // NOI18N
+        updatebutton.setIcon(ColorConstants.loadIcon("/icons/upload45.png")); // NOI18N
         updatebutton.setMnemonic('u');
         updatebutton.setText("Update");
         updatebutton.addActionListener(new java.awt.event.ActionListener() {
@@ -390,12 +401,16 @@ public final class items_list extends javax.swing.JInternalFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void generatebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_generatebuttonActionPerformed
-        String query = "select ino,barcode,iname,iname1,prate,taxp,mrp,rprice,wprice,cat,manu,hsn,udes,minstock,maxstock,rack,disp from item where barcode='" + h5.getText() + "' order by ino";
+    private void generatebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_generatebuttonActionPerformed
+        String companyFilter = UserSession.hasSelectedCompany()
+                ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                : "";
+        String query = "select ino,barcode,iname,iname1,prate,taxp,mrp,rprice,wprice,cat,manu,hsn,udes,minstock,maxstock,rack,disp from item where barcode='"
+                + h5.getText() + "'" + companyFilter + " order by ino";
         load_report(query);
-    }//GEN-LAST:event_generatebuttonActionPerformed
+    }// GEN-LAST:event_generatebuttonActionPerformed
 
-    private void excelbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_excelbuttonActionPerformed
+    private void excelbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_excelbuttonActionPerformed
         if (s2.getRowCount() <= 0) {
             JOptionPane.showMessageDialog(this, "Sorry, No Records Were Found!", "Oops", JOptionPane.ERROR_MESSAGE);
             return;
@@ -432,9 +447,9 @@ public final class items_list extends javax.swing.JInternalFrame {
             System.out.println(e.getMessage());
         }
 
-    }//GEN-LAST:event_excelbuttonActionPerformed
+    }// GEN-LAST:event_excelbuttonActionPerformed
 
-    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearbuttonActionPerformed
+    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_clearbuttonActionPerformed
         if (s2.getRowCount() > 0) {
             s2.getDataVector().removeAllElements();
             s2.fireTableDataChanged();
@@ -445,17 +460,17 @@ public final class items_list extends javax.swing.JInternalFrame {
         cnamel.setText("");
         totl.setText("");
 
-    }//GEN-LAST:event_clearbuttonActionPerformed
+    }// GEN-LAST:event_clearbuttonActionPerformed
 
-    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closebuttonActionPerformed
+    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_closebuttonActionPerformed
         this.dispose();
-    }//GEN-LAST:event_closebuttonActionPerformed
+    }// GEN-LAST:event_closebuttonActionPerformed
 
-    private void h3ItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_h3ItemStateChanged
+    private void h3ItemStateChanged(java.awt.event.ItemEvent evt) {// GEN-FIRST:event_h3ItemStateChanged
 
-    }//GEN-LAST:event_h3ItemStateChanged
+    }// GEN-LAST:event_h3ItemStateChanged
 
-    private void viewbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_viewbuttonActionPerformed
+    private void viewbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_viewbuttonActionPerformed
         item_master oe = new item_master(util);
         JDesktopPane desktop_pane = getDesktopPane();
         desktop_pane.add(oe);
@@ -467,29 +482,45 @@ public final class items_list extends javax.swing.JInternalFrame {
         Dimension jInternalFrameSize = oe.getSize();
         oe.setLocation((desktopSize.width - jInternalFrameSize.width) / 2,
                 (desktopSize.height - jInternalFrameSize.height) / 2);
-    }//GEN-LAST:event_viewbuttonActionPerformed
+    }// GEN-LAST:event_viewbuttonActionPerformed
 
-    private void generatebutton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_generatebutton2ActionPerformed
-        String query = "select ino,barcode,iname,iname1,prate,taxp,mrp,rprice,wprice,cat,manu,hsn,udes,minstock,maxstock,rack,disp from item where rack='" + h6.getSelectedItem() + "' order by ino";
+    private void generatebutton2ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_generatebutton2ActionPerformed
+        String companyFilter = UserSession.hasSelectedCompany()
+                ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                : "";
+        String query = "select ino,barcode,iname,iname1,prate,taxp,mrp,rprice,wprice,cat,manu,hsn,udes,minstock,maxstock,rack,disp from item where rack='"
+                + h6.getSelectedItem() + "'" + companyFilter + " order by ino";
         load_report(query);
-    }//GEN-LAST:event_generatebutton2ActionPerformed
+    }// GEN-LAST:event_generatebutton2ActionPerformed
 
-    private void generatebutton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_generatebutton4ActionPerformed
-        String query = "select ino,barcode,iname,iname1,prate,taxp,mrp,rprice,wprice,cat,manu,hsn,udes,minstock,maxstock,rack,disp from item where cat='" + h3.getSelectedItem() + "' order by ino";
+    private void generatebutton4ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_generatebutton4ActionPerformed
+        String companyFilter = UserSession.hasSelectedCompany()
+                ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                : "";
+        String query = "select ino,barcode,iname,iname1,prate,taxp,mrp,rprice,wprice,cat,manu,hsn,udes,minstock,maxstock,rack,disp from item where cat='"
+                + h3.getSelectedItem() + "'" + companyFilter + " order by ino";
         load_report(query);
-    }//GEN-LAST:event_generatebutton4ActionPerformed
+    }// GEN-LAST:event_generatebutton4ActionPerformed
 
-    private void generatebutton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_generatebutton5ActionPerformed
-        String query = "select ino,barcode,iname,iname1,prate,taxp,mrp,rprice,wprice,cat,manu,hsn,udes,minstock,maxstock,rack,disp from item where manu='" + h4.getSelectedItem() + "' order by ino";
+    private void generatebutton5ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_generatebutton5ActionPerformed
+        String companyFilter = UserSession.hasSelectedCompany()
+                ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                : "";
+        String query = "select ino,barcode,iname,iname1,prate,taxp,mrp,rprice,wprice,cat,manu,hsn,udes,minstock,maxstock,rack,disp from item where manu='"
+                + h4.getSelectedItem() + "'" + companyFilter + " order by ino";
         load_report(query);
-    }//GEN-LAST:event_generatebutton5ActionPerformed
+    }// GEN-LAST:event_generatebutton5ActionPerformed
 
-    private void allbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_allbuttonActionPerformed
-        String query = "select ino,barcode,iname,iname1,prate,taxp,mrp,rprice,wprice,cat,manu,hsn,udes,minstock,maxstock,rack,disp from item order by ino";
+    private void allbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_allbuttonActionPerformed
+        String companyFilter = UserSession.hasSelectedCompany()
+                ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                : "";
+        String query = "select ino,barcode,iname,iname1,prate,taxp,mrp,rprice,wprice,cat,manu,hsn,udes,minstock,maxstock,rack,disp from item"
+                + companyFilter + " order by ino";
         load_report(query);
-    }//GEN-LAST:event_allbuttonActionPerformed
+    }// GEN-LAST:event_allbuttonActionPerformed
 
-    private void deletebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deletebuttonActionPerformed
+    private void deletebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_deletebuttonActionPerformed
         try {
             if (s2.getRowCount() <= 0) {
                 JOptionPane.showMessageDialog(this, "No Records Were Found!", "Invalid", JOptionPane.ERROR_MESSAGE);
@@ -501,8 +532,11 @@ public final class items_list extends javax.swing.JInternalFrame {
             }
             ArrayList query_batch = new ArrayList();
             String ino = jTable1.getValueAt(jTable1.getSelectedRow(), 0).toString();
-            query_batch.add("delete from item where ino='" + ino + "' ");
-            query_batch.add("delete from stock where ino='" + ino + "' ");
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " and company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            query_batch.add("delete from item where ino='" + ino + "'" + companyFilter);
+            query_batch.add("delete from stock where ino='" + ino + "'" + companyFilter);
             int count = util.doManipulation_Batch(query_batch);
             if (count > 0) {
                 JOptionPane.showMessageDialog(this, "Deleted Successfully", "Deleted", JOptionPane.PLAIN_MESSAGE);
@@ -512,9 +546,9 @@ public final class items_list extends javax.swing.JInternalFrame {
         } catch (HeadlessException | ClassNotFoundException | SQLException e) {
             System.out.println(e);
         }
-    }//GEN-LAST:event_deletebuttonActionPerformed
+    }// GEN-LAST:event_deletebuttonActionPerformed
 
-    private void updatebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updatebuttonActionPerformed
+    private void updatebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_updatebuttonActionPerformed
         try {
             if (s2.getRowCount() <= 0) {
                 JOptionPane.showMessageDialog(this, "No Records Were Found!", "Invalid", JOptionPane.ERROR_MESSAGE);
@@ -543,8 +577,17 @@ public final class items_list extends javax.swing.JInternalFrame {
                 String maxstock = jTable1.getValueAt(i, 14).toString();
                 String rack = jTable1.getValueAt(i, 15).toString();
                 String disp = jTable1.getValueAt(i, 16).toString();
-                query_batch.add("update item set barcode='" + barcode + "',iname='" + iname + "',iname1='" + iname1 + "',prate='" + prate + "',taxp='" + taxp + "',mrp='" + mrp + "',rprice='" + rprice + "',wprice='" + wprice + "',cat='" + cat + "',manu='" + manu + "',hsn='" + hsn + "',udes='" + udes + "',minstock='" + minstock + "',maxstock='" + maxstock + "',rack='" + rack + "',disp='" + disp + "' where ino='" + ino + "'");
-                query_batch.add("update stock set barcode='" + barcode + "',iname='" + iname + "',mrp='" + mrp + "',rprice='" + rprice + "',wprice='" + wprice + "',prate='" + prate + "',cat='" + cat + "' where ino='" + ino + "' ");
+                String companyFilter = UserSession.hasSelectedCompany()
+                        ? " and company_id='" + UserSession.getSelectedCompanyID() + "'"
+                        : "";
+                query_batch.add("update item set barcode='" + barcode + "',iname='" + iname + "',iname1='" + iname1
+                        + "',prate='" + prate + "',taxp='" + taxp + "',mrp='" + mrp + "',rprice='" + rprice
+                        + "',wprice='" + wprice + "',cat='" + cat + "',manu='" + manu + "',hsn='" + hsn + "',udes='"
+                        + udes + "',minstock='" + minstock + "',maxstock='" + maxstock + "',rack='" + rack + "',disp='"
+                        + disp + "' where ino='" + ino + "'" + companyFilter);
+                query_batch.add("update stock set barcode='" + barcode + "',iname='" + iname + "',mrp='" + mrp
+                        + "',rprice='" + rprice + "',wprice='" + wprice + "',prate='" + prate + "',cat='" + cat
+                        + "' where ino='" + ino + "'" + companyFilter);
             }
             int a = util.doManipulation_Batch(query_batch);
             if (a > 0) {
@@ -555,7 +598,7 @@ public final class items_list extends javax.swing.JInternalFrame {
         } catch (HeadlessException | ClassNotFoundException | SQLException e) {
             System.out.println(e);
         }
-    }//GEN-LAST:event_updatebuttonActionPerformed
+    }// GEN-LAST:event_updatebuttonActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton allbutton;

@@ -20,6 +20,7 @@ import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import menupack.menu_form;
 import menupack.sample2;
+import menupack.UserSession;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CreationHelper;
@@ -98,8 +99,9 @@ public class sales_summary_userwise extends javax.swing.JInternalFrame {
             String lk1 = (new SimpleDateFormat("yyyy/MM/dd").format(nm1));
             boolean selva = false;
 
+            String companyFilter = UserSession.hasSelectedCompany() ? " and company_id='" + UserSession.getSelectedCompanyID() + "'" : "";
             ArrayList cashier1 = new ArrayList();
-            String query = "select distinct cashier from sales where dat between '" + lk + "' and '" + lk1 + "'";
+            String query = "select distinct cashier from sales where dat between '" + lk + "' and '" + lk1 + "'" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 cashier1.add(r.getString(1));
@@ -111,7 +113,7 @@ public class sales_summary_userwise extends javax.swing.JInternalFrame {
                 double cash = 0, card = 0, credit = 0, upi = 0, others = 0, net = 0, bal = 0;
                 double rcash = 0, rcard = 0, rcredit = 0, rupi = 0, rothers = 0, rnet = 0, rbal = 0;
                 query = "select count(billno),sum(cash),sum(card),sum(credit),sum(upi),sum(others),sum(net),sum(bal) from sales where dat between '"
-                        + lk + "' and '" + lk1 + "' and cashier='" + cashier1.get(i) + "' ";
+                        + lk + "' and '" + lk1 + "' and cashier='" + cashier1.get(i) + "'" + companyFilter + " ";
                 r = util.doQuery(query);
                 while (r.next()) {
                     billno = r.getInt(1);
@@ -125,7 +127,7 @@ public class sales_summary_userwise extends javax.swing.JInternalFrame {
                 }
 
                 query = "select count(billno),sum(cash),sum(card),sum(credit),sum(upi),sum(others),sum(net),sum(bal) from sreturn where dat between '"
-                        + lk + "' and '" + lk1 + "' and cashier='" + cashier1.get(i) + "' ";
+                        + lk + "' and '" + lk1 + "' and cashier='" + cashier1.get(i) + "'" + companyFilter + " ";
                 r = util.doQuery(query);
                 while (r.next()) {
                     rbillno = r.getInt(1);

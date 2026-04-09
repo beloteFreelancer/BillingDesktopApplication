@@ -51,6 +51,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import menupack.menu_form;
+import menupack.UserSession;
 import smspack.SMS_Sender_Single;
 
 /**
@@ -68,6 +69,8 @@ public final class sales extends javax.swing.JInternalFrame {
     String scode = "", sname = "", ttype = "", stock_bill, less_prate = "", tax = "Local", entry_mode = "Auto",
             dsales = "Retail", cust_details = "";
     double max_rdis = 0, max_wdis = 0;
+    double nItemTotal = 0; // sum of per-item totals (respects per-item tax type); used in
+                           // final_calculate()
     int hmany = 2, hmany1 = 3;
     String sms_alert = "", sender = "", smsuser = "", smspass = "", smsfoot1 = "", smsfoot2 = "", alter_sms = "",
             management_no1 = "", management_no2 = "";
@@ -82,7 +85,11 @@ public final class sales extends javax.swing.JInternalFrame {
 
     final void get_defaults() {
         try {
-            String query = "select scode,ttype,stock_bill,less_prate,maxdis,wdis,entry_mode,state,bformat,bformat1,dsales,cust_details,hmany,round,weighing_button from setting_bill";
+            String companyWhere = UserSession.hasSelectedCompany()
+                    ? " WHERE companyID='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select scode,ttype,stock_bill,less_prate,maxdis,wdis,entry_mode,state,bformat,bformat1,dsales,cust_details,hmany,round,weighing_button from company"
+                    + companyWhere;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 scode = r.getString(1);
@@ -160,7 +167,20 @@ public final class sales extends javax.swing.JInternalFrame {
 
         @Override
         public boolean isCellEditable(int row, int column) {
-            return column == 3 || column == 4 || column == 6 || column == 8;
+            // col 3=Qty, col 5=NetRate (selling price), col 8=Dis%
+            // col 4=MRP is read-only (manufacturer price, not editable in POS)
+            // col 6=Price (hidden internal column, kept in sync with Net Rate)
+            return column == 3 || column == 5 || column == 6 || column == 8;
+        }
+
+        @Override
+        public void setValueAt(Object value, int row, int column) {
+            super.setValueAt(value, row, column);
+            // Keep hidden Price (m6) in sync with visible Net Rate (m5)
+            // so that apply_all_changes() and save() calculations remain correct
+            if (column == 5) {
+                super.setValueAt(value, row, 6);
+            }
         }
     }
 
@@ -230,7 +250,7 @@ public final class sales extends javax.swing.JInternalFrame {
         s2.addColumn("MRP");
         s2.addColumn("Net Rate");
         s2.addColumn("Price");
-        s2.addColumn("Amount");
+        s2.addColumn("Total");
         s2.addColumn("Dis %");
         s2.addColumn("Dis Amt");
         s2.addColumn("Sub Total");
@@ -249,6 +269,12 @@ public final class sales extends javax.swing.JInternalFrame {
         s2.addColumn("RPrice");
         s2.addColumn("WPrice");
         s2.addColumn("Remarks");
+        s2.addColumn("Mfg Date");
+        s2.addColumn("Exp Date");
+        s2.addColumn("Size");
+        s2.addColumn("Color");
+        s2.addColumn("Brand");
+        s2.addColumn("Tax Inclusion");
 
         dtcr.setHorizontalAlignment(SwingConstants.CENTER);
         dtcr1.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -274,44 +300,152 @@ public final class sales extends javax.swing.JInternalFrame {
         jTable1.getColumnModel().getColumn(21).setCellRenderer(dtcr1);
         jTable1.getColumnModel().getColumn(22).setCellRenderer(dtcr1);
         jTable1.getColumnModel().getColumn(23).setCellRenderer(dtcr1);
-        jTable1.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-        jTable1.getColumnModel().getColumn(0).setPreferredWidth(50);
-        jTable1.getColumnModel().getColumn(1).setPreferredWidth(115);
-        jTable1.getColumnModel().getColumn(2).setPreferredWidth(355);
-        jTable1.getColumnModel().getColumn(3).setPreferredWidth(100);
-        jTable1.getColumnModel().getColumn(4).setPreferredWidth(110);
-        jTable1.getColumnModel().getColumn(5).setPreferredWidth(110);
-        jTable1.getColumnModel().getColumn(6).setPreferredWidth(110);
-        jTable1.getColumnModel().getColumn(7).setPreferredWidth(145);
-        jTable1.getColumnModel().getColumn(8).setPreferredWidth(90);
-        jTable1.getColumnModel().getColumn(9).setPreferredWidth(100);
-        jTable1.getColumnModel().getColumn(10).setPreferredWidth(130);
-        jTable1.getColumnModel().getColumn(11).setPreferredWidth(100);
-        jTable1.getColumnModel().getColumn(12).setPreferredWidth(120);
-        jTable1.getColumnModel().getColumn(13).setPreferredWidth(130);
-        jTable1.getColumnModel().getColumn(14).setPreferredWidth(120);
-        jTable1.getColumnModel().getColumn(15).setPreferredWidth(180);
-        jTable1.getColumnModel().getColumn(16).setPreferredWidth(120);
-        jTable1.getColumnModel().getColumn(17).setPreferredWidth(100);
-        jTable1.getColumnModel().getColumn(18).setPreferredWidth(100);
-        jTable1.getColumnModel().getColumn(19).setPreferredWidth(100);
-        jTable1.getColumnModel().getColumn(20).setPreferredWidth(100);
-        jTable1.getColumnModel().getColumn(21).setPreferredWidth(100);
-        jTable1.getColumnModel().getColumn(22).setPreferredWidth(100);
-        jTable1.getColumnModel().getColumn(23).setPreferredWidth(100);
-        jTable1.getColumnModel().getColumn(24).setPreferredWidth(100);
-        jTable1.getColumnModel().getColumn(25).setPreferredWidth(120);
-        String Ta = "Arial";
-        int Bold = 1, size = 14;
-        jTable1.getTableHeader().setFont(new Font(Ta, Bold, size));
+        jTable1.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        jTable1.getColumnModel().getColumn(0).setPreferredWidth(30); // #
+        jTable1.getColumnModel().getColumn(1).setPreferredWidth(30); // ItemCode (hidden)
+        jTable1.getColumnModel().getColumn(2).setPreferredWidth(200); // Description
+        jTable1.getColumnModel().getColumn(3).setPreferredWidth(50); // Qty
+        jTable1.getColumnModel().getColumn(4).setPreferredWidth(70); // MRP
+        jTable1.getColumnModel().getColumn(5).setPreferredWidth(70); // Net Rate
+        jTable1.getColumnModel().getColumn(6).setPreferredWidth(60); // Price
+        jTable1.getColumnModel().getColumn(7).setPreferredWidth(65); // Total
+        jTable1.getColumnModel().getColumn(8).setPreferredWidth(45); // Dis%
+        jTable1.getColumnModel().getColumn(9).setPreferredWidth(60); // DisAmt
+        jTable1.getColumnModel().getColumn(10).setPreferredWidth(75); // SubTotal
+        jTable1.getColumnModel().getColumn(11).setPreferredWidth(45); // Tax%
+        jTable1.getColumnModel().getColumn(12).setPreferredWidth(65); // TaxAmt
+        jTable1.getColumnModel().getColumn(13).setPreferredWidth(75); // Total (final amount)
+        jTable1.getColumnModel().getColumn(14).setPreferredWidth(30); // UnitDes (hidden)
+        jTable1.getColumnModel().getColumn(15).setPreferredWidth(30); // BarCode (hidden)
+        jTable1.getColumnModel().getColumn(16).setPreferredWidth(65); // HSN
+        jTable1.getColumnModel().getColumn(17).setPreferredWidth(30); // Tax (hidden)
+        jTable1.getColumnModel().getColumn(18).setPreferredWidth(30); // Entry (hidden)
+        jTable1.getColumnModel().getColumn(19).setPreferredWidth(30); // CostRate (hidden)
+        jTable1.getColumnModel().getColumn(20).setPreferredWidth(30); // Profit (hidden)
+        jTable1.getColumnModel().getColumn(21).setPreferredWidth(30); // PrintName (hidden)
+        jTable1.getColumnModel().getColumn(22).setPreferredWidth(30); // Pur.Rate (hidden)
+        jTable1.getColumnModel().getColumn(23).setPreferredWidth(30); // RPrice (hidden)
+        jTable1.getColumnModel().getColumn(24).setPreferredWidth(30); // WPrice (hidden)
+        jTable1.getColumnModel().getColumn(25).setPreferredWidth(30); // Remarks (hidden)
+        jTable1.getColumnModel().getColumn(26).setPreferredWidth(70); // MfgDate
+        jTable1.getColumnModel().getColumn(27).setPreferredWidth(70); // ExpDate
+        jTable1.getColumnModel().getColumn(28).setPreferredWidth(30); // Size (hidden)
+        jTable1.getColumnModel().getColumn(29).setPreferredWidth(30); // Color (hidden)
+        jTable1.getColumnModel().getColumn(30).setPreferredWidth(30); // Brand/TaxInclusion (hidden)
+        jTable1.getTableHeader().setFont(new Font("Arial", Font.BOLD, 12));
         jTable1.getTableHeader().setResizingAllowed(false);
         jTable1.getTableHeader().setReorderingAllowed(false);
+
+        // Move MfgDate and ExpDate to appear right after Qty
+        jTable1.moveColumn(26, 4); // MfgDate: v26(m26) → v4 (right after Qty at v3)
+        jTable1.moveColumn(27, 5); // ExpDate: v27(m27) → v5 (right after MfgDate at v4)
+        // Move SubTotal after TaxAmt so TaxAmt appears before SubTotal
+        jTable1.moveColumn(12, 14); // SubTotal: v12(m10) → v14 (after TaxAmt)
+        // Move HSN to before Qty (pharmacy shops need it early)
+        jTable1.moveColumn(18, 3); // HSN: v18(m16) → v3 (before Qty)
+        // After 4 moves, view order:
+        // v0=# | v1=ItemCode | v2=Desc | v3=HSN(m16) | v4=Qty(m3) | v5=MfgDate(m26) |
+        // v6=ExpDate(m27)
+        // | v7=MRP(m4) | v8=NetRate(m5) | v9=Price(m6) | v10=Total(m7) | v11=Dis%(m8)
+        // | v12=DisAmt(m9) | v13=Tax%(m11) | v14=TaxAmt(m12) | v15=SubTotal(m10)
+        // | v16=Total(m13) | v17=UnitDes | v18=BarCode | v19=Tax | v20=Entry
+        // | v21-v27=hidden | v28=Size | v29=Color | v30=Brand | v31=TaxInclusion
+
+        // Renderer for Description column: appends (size, color, brand) in brackets
+        jTable1.getColumnModel().getColumn(2).setCellRenderer(new javax.swing.table.DefaultTableCellRenderer() {
+            @Override
+            public java.awt.Component getTableCellRendererComponent(
+                    javax.swing.JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                String base = value != null ? value.toString() : "";
+                Object szO = s2.getValueAt(row, 28);
+                Object clO = s2.getValueAt(row, 29);
+                Object brO = s2.getValueAt(row, 30);
+                String sz = szO != null ? szO.toString() : "";
+                String cl = clO != null ? clO.toString() : "";
+                String brd = brO != null ? brO.toString() : "";
+                java.util.List<String> parts = new java.util.ArrayList<>();
+                if (!sz.isEmpty())
+                    parts.add(sz);
+                if (!cl.isEmpty())
+                    parts.add(cl);
+                if (!brd.isEmpty())
+                    parts.add(brd);
+                String display = parts.isEmpty() ? base : base + " (" + String.join(", ", parts) + ")";
+                return super.getTableCellRendererComponent(table, display, isSelected, hasFocus, row, column);
+            }
+        });
+
+        // Permanently hide internal-only columns (never shown in UI)
+        // Size(28), Color(29), Brand(30) are always hidden — shown inside Description
+        // brackets
+        for (int ci : new int[] { 1, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31 }) {
+            hideCol(jTable1, ci);
+        }
+
+        // DB-managed column visibility per shop type (company-specific)
+        try {
+            // Read shop_type for the selected company to derive correct defaults
+            String shopType = "General";
+            try {
+                String stWhere = UserSession.hasSelectedCompany()
+                        ? " WHERE companyID='" + UserSession.getSelectedCompanyID() + "'"
+                        : "";
+                ResultSet stRs = util.doQuery("SELECT shop_type FROM company" + stWhere + " LIMIT 1");
+                if (stRs != null && stRs.next()) {
+                    String st = stRs.getString("shop_type");
+                    if (st != null && !st.isEmpty())
+                        shopType = st;
+                }
+            } catch (Exception ignored) {
+            }
+            boolean hasMfgExp = shopType.equals("Pharmacy") || shopType.equals("Grocery");
+            boolean hasHsn = !shopType.equals("Clothing");
+
+            String colCompanyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : " AND company_id=''";
+            java.util.Map<String, Boolean> vis = new java.util.HashMap<>();
+            ResultSet icRs = util.doQuery(
+                    "SELECT col_key, col_visible FROM invoice_columns WHERE doc_type='invoice'" + colCompanyFilter);
+            while (icRs != null && icRs.next()) {
+                vis.put(icRs.getString("col_key"), icRs.getInt("col_visible") == 1);
+            }
+
+            // col_key → view index (after moveColumn reordering)
+            // NOTE: Compulsory columns (qty, mrp, net_rate, disc, disc_amt,
+            // tax_amt, sub_total) are NOT listed here — they are always visible.
+            // Only optional/shop-dependent columns are DB-managed.
+            // Defaults are derived from the company's shop_type.
+            String[][] managed = {
+                    // { col_key, view_index, default: "1"=visible, "0"=hidden }
+                    { "mfg_date", "5", hasMfgExp ? "1" : "0" },
+                    { "exp_date", "6", hasMfgExp ? "1" : "0" },
+                    { "price", "9", "0" },
+                    { "amount", "10", "0" },
+                    { "tax_pct", "13", "0" },
+                    { "total", "16", "1" },
+                    { "hsn", "3", hasHsn ? "1" : "0" },
+            };
+            for (String[] mc : managed) {
+                String key = mc[0];
+                int vIdx = Integer.parseInt(mc[1]);
+                boolean defVis = mc[2].equals("1");
+                boolean isVisible = vis.containsKey(key) ? vis.get(key) : defVis;
+                if (!isVisible) {
+                    hideCol(jTable1, vIdx);
+                }
+            }
+        } catch (Exception ignored) {
+        }
     }
 
     void get_billno() {
         try {
             int sno = 1;
-            String query = "select max(billno) from sales";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select max(billno) from sales" + companyFilter;
             ResultSet r = util.doQuery(query);
             boolean selva = false;
             while (r.next()) {
@@ -332,7 +466,11 @@ public final class sales extends javax.swing.JInternalFrame {
             boolean selva = false;
             double rrate = 0, wrate = 0, price = 0;
             String iname = null, ino = null;
-            String query = "select iname,rprice,wprice,ino from item where barcode='" + h17.getText() + "'";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select iname,rprice,wprice,ino from item where barcode='" + h17.getText() + "'"
+                    + companyFilter;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 iname = r.getString(1);
@@ -365,7 +503,10 @@ public final class sales extends javax.swing.JInternalFrame {
     void get_stock() {
         try {
             double stock = 0;
-            String query = "select sum(quan) from stock where barcode='" + h17.getText() + "'";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select sum(quan) from stock where barcode='" + h17.getText() + "'" + companyFilter;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 stock = r.getDouble(1);
@@ -398,11 +539,18 @@ public final class sales extends javax.swing.JInternalFrame {
         try {
             double netPrice = price;
             String hsn = ".", udes = "", iname1 = "";
+            String itemSize = "", itemColor = "", itemBrand = "";
             double disp = 0, prate = 0, mrp = 0, rprice = 0, wprice = 0;
             int taxp = 0;
+            String itemTtype = ttype; // default to company-wide; overridden per item below
             boolean selva = false;
-            String query = "select hsn,udes,disp,taxp,iname1,prate,mrp,rprice,wprice from item where ino='" + ino
-                    + "' and barcode='" + barcode + "' and iname='" + iname + "' ";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String itemMfgDate = "", itemExpDate = "";
+            String query = "select hsn,udes,disp,taxp,iname1,prate,mrp,rprice,wprice,size,color,brand,tax_inclusion,DATE_FORMAT(mfg_date,'%d/%m/%Y'),DATE_FORMAT(exp_date,'%d/%m/%Y') from item where ino='"
+                    + ino
+                    + "' and barcode='" + barcode + "' and iname='" + iname + "' " + companyFilter;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 hsn = r.getString(1);
@@ -414,6 +562,15 @@ public final class sales extends javax.swing.JInternalFrame {
                 mrp = r.getDouble(7);
                 rprice = r.getDouble(8);
                 wprice = r.getDouble(9);
+                itemSize = r.getString(10) != null ? r.getString(10) : "";
+                itemColor = r.getString(11) != null ? r.getString(11) : "";
+                itemBrand = r.getString(12) != null ? r.getString(12) : "";
+                String taxIncVal = r.getString(13);
+                if (taxIncVal != null && !taxIncVal.isBlank()) {
+                    itemTtype = taxIncVal;
+                }
+                itemMfgDate = r.getString(14) != null ? r.getString(14) : "";
+                itemExpDate = r.getString(15) != null ? r.getString(15) : "";
                 selva = true;
             }
             if (unit != null && !unit.isBlank()) {
@@ -427,8 +584,11 @@ public final class sales extends javax.swing.JInternalFrame {
             }
             double stock = 0;
             String entry = "purchase";
+            String stockCompanyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             query = "select quan,entry from stock where barcode='" + barcode + "' and ino='" + ino + "' and iname='"
-                    + iname + "' ";
+                    + iname + "' " + stockCompanyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 stock = r.getDouble(1);
@@ -436,22 +596,28 @@ public final class sales extends javax.swing.JInternalFrame {
             }
 
             double amount, disamt, sub, taxamt = 0, total;
-            if (ttype.equalsIgnoreCase("Inclusive of Tax")) {
-                double devide = 100 + taxp;
-                devide = price * (100 / devide);
-                taxamt = price - devide;
-                price = price - taxamt;
+            if (itemTtype.equalsIgnoreCase("Inclusive of Tax")) {
+                // Market standard: show taxable value (exclusive) in SubTotal
+                // Apply discount on net rate (excluding tax) for inclusive tax
                 amount = price * quan;
-                disamt = (disp * amount) / 100;
-                sub = amount - disamt;
-                taxamt = taxamt * quan;
+                double netRate = price / (1.0 + taxp / 100.0);
+                double netAmount = netRate * quan;
+                disamt = (disp * netAmount) / 100;
+                double discountedNetAmount = netAmount - disamt;
+                taxamt = (discountedNetAmount * taxp) / 100;
+                sub = discountedNetAmount; // taxable value
                 total = sub + taxamt;
-            } else if (ttype.equalsIgnoreCase("Inclusive Model-II")) {
+            } else if (itemTtype.equalsIgnoreCase("Inclusive Model-II")) {
+                // Apply discount on net rate (excluding tax) for inclusive tax
                 amount = price * quan;
-                disamt = (disp / 100) * amount;
-                sub = amount - disamt;
-                total = sub;
-            } else if (ttype.equalsIgnoreCase("Exclusive of Tax")) {
+                double netRate = price / (1.0 + taxp / 100.0);
+                double netAmount = netRate * quan;
+                disamt = (disp * netAmount) / 100;
+                double discountedNetAmount = netAmount - disamt;
+                taxamt = (discountedNetAmount * taxp) / 100;
+                sub = discountedNetAmount;
+                total = sub + taxamt;
+            } else if (itemTtype.equalsIgnoreCase("Exclusive of Tax")) {
                 amount = price * quan;
                 disamt = (disp * amount) / 100;
                 sub = amount - disamt;
@@ -463,6 +629,11 @@ public final class sales extends javax.swing.JInternalFrame {
                 sub = amount - disamt;
                 taxamt = 0;
                 total = sub;
+            }
+
+            // Net Rate = base price per unit (exclusive of tax for inclusive items)
+            if (itemTtype.equalsIgnoreCase("Inclusive of Tax") || itemTtype.equalsIgnoreCase("Inclusive Model-II")) {
+                netPrice = price / (1.0 + taxp / 100.0);
             }
 
             String price2 = String.format("%." + hmany + "f", price);
@@ -481,14 +652,16 @@ public final class sales extends javax.swing.JInternalFrame {
             int old_row = 0;
             for (int i = 0; i < jTable1.getRowCount(); i++) {
                 String old_ino = jTable1.getValueAt(i, 1).toString();
-                String old_barcode = jTable1.getValueAt(i, 15).toString();
-                String old_entry = jTable1.getValueAt(i, 18).toString();
+                String old_barcode = jTable1.getValueAt(i, 18).toString();
+                String old_entry = jTable1.getValueAt(i, 20).toString();
+                // Skip free item rows (price=0) so new scans don't merge into them
+                double old_price = Double.parseDouble(s2.getValueAt(i, 6).toString());
 
                 if (ino.equalsIgnoreCase(old_ino) && barcode.equalsIgnoreCase(old_barcode)
-                        && entry.equalsIgnoreCase(old_entry)) {
+                        && entry.equalsIgnoreCase(old_entry) && old_price > 0) {
                     selvakumar = true;
                     old_row = i;
-                    old_quan = Double.parseDouble(jTable1.getValueAt(i, 3).toString());
+                    old_quan = Double.parseDouble(jTable1.getValueAt(i, 4).toString());
                 }
             } // row counts ends for checking
 
@@ -504,7 +677,7 @@ public final class sales extends javax.swing.JInternalFrame {
             if (selvakumar == false) {
                 s2.addRow(new Object[] { jTable1.getRowCount() + 1, ino, iname, quan2, mrp2, netRate, price2, amount2,
                         disp, disamt, sub, taxp, taxamt, total, udes, barcode, hsn, tax, entry, 0, 0, iname1, prate,
-                        rprice, wprice, remarks });
+                        rprice, wprice, remarks, itemMfgDate, itemExpDate, itemSize, itemColor, itemBrand, itemTtype });
                 serial_num();
             } else {
                 double net_quan = old_quan + quan;
@@ -517,8 +690,10 @@ public final class sales extends javax.swing.JInternalFrame {
                 s2.setValueAt(quann2, old_row, 3);
             }
 
+            double calcValue = Double.parseDouble(quan2) * netPrice;
+            String calcValueStr = String.format("%.2f", calcValue);
             infol.setText("<html>" + iname + "&nbsp &nbsp &nbsp &nbsp <b>MRP: " + mrp2 + "</b> &nbsp &nbsp &nbsp "
-                    + quan2 + "x" + netRate + "=" + Double.parseDouble(quan2) * netPrice + "</html>");
+                    + quan2 + " x " + netRate + " = <b>" + calcValueStr + "</b></html>");
             // row selected
             Rectangle rect = jTable1.getCellRect(jTable1.getRowCount() - 1, 0, true);
             jTable1.scrollRectToVisible(rect);
@@ -535,33 +710,65 @@ public final class sales extends javax.swing.JInternalFrame {
     void apply_all_changes() {
         try {
             double nsub = 0, ndis = 0, ngross = 0, ntax = 0, nquan = 0, ncost_rate = 0;
+            nItemTotal = 0; // reset per-item total sum
             int items = 0;
             for (int i = 0; i < jTable1.getRowCount(); i++) {
-                double quan = Double.parseDouble(jTable1.getValueAt(i, 3).toString());
-                double price = Double.parseDouble(jTable1.getValueAt(i, 6).toString());
-                double disp = Double.parseDouble(jTable1.getValueAt(i, 8).toString());
-                double taxp = Double.parseDouble(jTable1.getValueAt(i, 11).toString());
-                double prate = Double.parseDouble(jTable1.getValueAt(i, 22).toString());
+                // Use model (s2) directly to avoid view-index shift from moveColumn
+                double quan = Double.parseDouble(s2.getValueAt(i, 3).toString());
+                double price = Double.parseDouble(s2.getValueAt(i, 6).toString());
+                double disp = Double.parseDouble(s2.getValueAt(i, 8).toString());
+                double taxp = Double.parseDouble(s2.getValueAt(i, 11).toString());
+                double prate = Double.parseDouble(s2.getValueAt(i, 22).toString());
 
                 double amount = price * quan;
-                double disamt = (disp * amount) / 100;
-                double sub = amount - disamt;
+                double disamt, sub;
+
+                // Use per-item tax inclusion type stored in m31; fall back to company-wide
+                // ttype
+                Object taxInclObj = s2.getValueAt(i, 31);
+                String itemTtype = (taxInclObj != null && !taxInclObj.toString().isBlank())
+                        ? taxInclObj.toString()
+                        : ttype;
+
+                // Apply discount based on tax type
+                if (itemTtype.equalsIgnoreCase("Inclusive of Tax")
+                        || itemTtype.equalsIgnoreCase("Inclusive Model-II")) {
+                    // For inclusive tax, apply discount on net rate (excluding tax)
+                    double netRate = price / (1.0 + taxp / 100.0);
+                    double netAmount = netRate * quan;
+                    disamt = (disp * netAmount) / 100;
+                    sub = netAmount - disamt; // taxable value after discount
+                } else {
+                    // For exclusive tax or no tax, apply discount on total amount
+                    disamt = (disp * amount) / 100;
+                    sub = amount - disamt;
+                }
 
                 double taxamt = 0, total = 0;
 
-                if (ttype.equalsIgnoreCase("No Tax")) {
+                if (itemTtype.equalsIgnoreCase("No Tax")) {
                     total = sub;
                     taxamt = 0;
-                } else if (ttype.equalsIgnoreCase("Inclusive Model-II")) {
-                    double devide = 100 + taxp;
-                    devide = price * (100 / devide);
-                    taxamt = price - devide;
-                    taxamt = taxamt * quan;
-                    total = sub;
-                } else if (ttype.equalsIgnoreCase("Inclusive of Tax") || ttype.equalsIgnoreCase("Exclusive of Tax")) {
+                } else if (itemTtype.equalsIgnoreCase("Inclusive Model-II")) {
+                    // Market standard: SubTotal = taxable value, Total = SubTotal + Tax
+                    taxamt = (sub * taxp) / 100;
+                    total = sub + taxamt;
+                } else if (itemTtype.equalsIgnoreCase("Inclusive of Tax")) {
+                    // Market standard: SubTotal = taxable value, Total = SubTotal + Tax
+                    taxamt = (sub * taxp) / 100;
+                    total = sub + taxamt;
+                } else if (itemTtype.equalsIgnoreCase("Exclusive of Tax")) {
                     taxamt = (taxp * sub) / 100;
                     total = sub + taxamt;
                 }
+
+                // Net Rate = base price per unit (exclusive of tax for inclusive items)
+                double netRateVal = price;
+                if (itemTtype.equalsIgnoreCase("Inclusive of Tax")
+                        || itemTtype.equalsIgnoreCase("Inclusive Model-II")) {
+                    netRateVal = price / (1.0 + taxp / 100.0);
+                }
+                String netRate2 = String.format("%." + hmany + "f", netRateVal);
 
                 double cost_rate = prate * quan;
                 double profit = sub - cost_rate;
@@ -576,21 +783,23 @@ public final class sales extends javax.swing.JInternalFrame {
                 String cost_rate2 = String.format("%." + hmany + "f", cost_rate);
                 String profit2 = String.format("%." + hmany + "f", profit);
 
-                jTable1.setValueAt(price2, i, 6);
-                jTable1.setValueAt(amount2, i, 7);
-                jTable1.setValueAt(disamt2, i, 9);
-                jTable1.setValueAt(sub2, i, 10);
-                jTable1.setValueAt(taxamt2, i, 12);
-                jTable1.setValueAt(total2, i, 13);
+                s2.setValueAt(netRate2, i, 5);
+                s2.setValueAt(price2, i, 6);
+                s2.setValueAt(amount2, i, 7);
+                s2.setValueAt(disamt2, i, 9);
+                s2.setValueAt(sub2, i, 10);
+                s2.setValueAt(taxamt2, i, 12);
+                s2.setValueAt(total2, i, 13);
 
-                jTable1.setValueAt(cost_rate2, i, 19);
-                jTable1.setValueAt(profit2, i, 20);
+                s2.setValueAt(cost_rate2, i, 19);
+                s2.setValueAt(profit2, i, 20);
 
                 nquan = nquan + quan;
                 nsub = nsub + amount;
                 ndis = ndis + disamt;
                 ngross = ngross + sub;
                 ntax = ntax + taxamt;
+                nItemTotal = nItemTotal + total;
                 items = items + 1;
                 ncost_rate = ncost_rate + cost_rate;
             } // table row counts ends
@@ -601,9 +810,14 @@ public final class sales extends javax.swing.JInternalFrame {
             String ntax2 = String.format("%." + hmany + "f", ntax);
             String ncost_rate2 = String.format("%." + hmany + "f", ncost_rate);
 
+            double discountBase = ngross + ndis; // base amount before discount (net of tax for inclusive items)
+            double ndis_pct = (discountBase > 0) ? (ndis / discountBase) * 100 : 0;
+            String ndis_pct2 = String.format("%.2f", ndis_pct);
+
             h7.setText("" + items);
             h8.setText("" + nquan);
             h9.setText("" + nsub2);
+            h10.setText("" + ndis_pct2);
             h11.setText("" + ndis2);
             h12.setText("" + ngross2);
             h13.setText("" + ntax2);
@@ -632,11 +846,13 @@ public final class sales extends javax.swing.JInternalFrame {
 
             double taxamt = Double.parseDouble(h13.getText());
             double other = Double.parseDouble(h14.getText());
-            double gt = gross + taxamt + other;
+            // nItemTotal is the sum of per-item totals (each item's total already accounts
+            // for
+            // its own tax type: inclusive items → total=sub, exclusive items →
+            // total=sub+taxamt).
+            // Using nItemTotal avoids double-counting tax for inclusive items.
+            double gt = (nItemTotal > 0 ? nItemTotal : gross + taxamt) + other;
 
-            if (ttype.equalsIgnoreCase("Inclusive Model-II")) {
-                gt = gross + other;
-            }
             String gross2 = String.format("%." + hmany + "f", gross);
             h12.setText("" + gross2);
 
@@ -690,19 +906,68 @@ public final class sales extends javax.swing.JInternalFrame {
         if (h27.getText().equals("")) {
             h27.setText("0.00");
         }
+        if (h30.getText().equals("")) {
+            h30.setText("0.00");
+        }
+        if (h31.getText().equals("")) {
+            h31.setText("0.00");
+        }
+
+        // Validate loyalty points usage
+        double loyalty_points = Double.parseDouble(h30.getText());
+        if (loyalty_points > 0) {
+            try {
+                // Get customer's available loyalty points
+                String customerPointsText = cpointsl.getText();
+                if (customerPointsText != null && customerPointsText.contains("Customer Points: ")) {
+                    String pointsStr = customerPointsText.replace("Customer Points: ", "").trim();
+                    int availablePoints = Integer.parseInt(pointsStr);
+
+                    if (loyalty_points > availablePoints) {
+                        JOptionPane.showMessageDialog(this,
+                                "<html><h2>Insufficient Loyalty Points!</h2>" +
+                                        "<p>Available: " + availablePoints + " points</p>" +
+                                        "<p>Requested: " + loyalty_points + " points</p></html>",
+                                "Invalid Points", JOptionPane.ERROR_MESSAGE);
+                        h30.setText("0.00");
+                        loyalty_points = 0.0;
+                    }
+                } else if (!h21.getText().equals("")) {
+                    // Customer is selected but points not displayed, refresh customer points
+                    get_customer_points();
+                    JOptionPane.showMessageDialog(this,
+                            "<html><h2>Please check customer loyalty points first!</h2></html>",
+                            "Customer Points", JOptionPane.WARNING_MESSAGE);
+                    h30.setText("0.00");
+                    loyalty_points = 0.0;
+                }
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(this,
+                        "<html><h2>Error reading customer loyalty points!</h2></html>",
+                        "Points Error", JOptionPane.ERROR_MESSAGE);
+                h30.setText("0.00");
+                loyalty_points = 0.0;
+            }
+        }
+
         double cash = Double.parseDouble(h25.getText());
         double card = Double.parseDouble(h26.getText());
         double others = Double.parseDouble(h27.getText());
-        double total = cash + card + others;
+        double creditAmt = Double.parseDouble(h31.getText());
+        double total = cash + card + others + loyalty_points + creditAmt;
 
         String cash2 = String.format("%." + hmany + "f", cash);
         String card2 = String.format("%." + hmany + "f", card);
         String others2 = String.format("%." + hmany + "f", others);
+        String loyalty_points2 = String.format("%." + hmany + "f", loyalty_points);
+        String credit2 = String.format("%." + hmany + "f", creditAmt);
         String total2 = String.format("%." + hmany + "f", total);
 
         h25.setText(cash2);
         h26.setText(card2);
         h27.setText(others2);
+        h30.setText(loyalty_points2);
+        h31.setText(credit2);
         h28.setText(total2);
         paidl.setText(total2);
 
@@ -791,7 +1056,10 @@ public final class sales extends javax.swing.JInternalFrame {
             multi_pay_mode.requestFocus();
             Point l = stockl.getLocationOnScreen();
             multi_pay_mode.setLocation(l.x, l.y + stockl.getHeight());
-            multi_pay_mode.setSize(306, 301);
+            multi_pay_mode.setSize(340, 388);
+            jLabelLoyaltyPts.setText(
+                    "<html><font color='#27ae60'><b>Loyalty Pts</b></font><br><font size='2' color='gray'>Avail: "
+                            + cpointsl.getText() + "</font></html>");
             multi_pay_mode.setVisible(true);
             h25.requestFocus();
         }
@@ -813,8 +1081,11 @@ public final class sales extends javax.swing.JInternalFrame {
             }
 
             String billno = h1.getText();
+            String companyFilterSave = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             boolean billExists = false;
-            ResultSet r = util.doQuery("SELECT billno FROM sales WHERE billno='" + billno + "'");
+            ResultSet r = util.doQuery("SELECT billno FROM sales WHERE billno='" + billno + "'" + companyFilterSave);
             while (r.next()) {
                 billExists = true;
             }
@@ -838,7 +1109,13 @@ public final class sales extends javax.swing.JInternalFrame {
             double net = Double.parseDouble(netl.getText());
 
             // Validate credit customers
-            if (h16.getSelectedItem().equals("Credit")) {
+            double multiPayCredit = 0;
+            if (h16.getSelectedItem().equals("Multi Pay")) {
+                multiPayCredit = Double.parseDouble(h31.getText().isEmpty() ? "0" : h31.getText());
+            }
+            boolean hasCredit = h16.getSelectedItem().equals("Credit") || multiPayCredit > 0;
+
+            if (hasCredit) {
                 String ctype = "Retail";
                 boolean customerExists = false;
                 r = util.doQuery("SELECT ctype FROM cust WHERE cid='" + cid + "'");
@@ -856,7 +1133,7 @@ public final class sales extends javax.swing.JInternalFrame {
             }
 
             int due_days = 0;
-            if (h16.getSelectedItem().equals("Credit")) {
+            if (hasCredit) {
                 double climit = 0, old_bal = 0;
                 r = util.doQuery("SELECT climit,duedays FROM cust WHERE cid='" + cid + "'");
                 while (r.next()) {
@@ -867,7 +1144,8 @@ public final class sales extends javax.swing.JInternalFrame {
                 while (r.next()) {
                     old_bal = r.getDouble(1);
                 }
-                double allowed_credit = net + old_bal;
+                double creditAmount = h16.getSelectedItem().equals("Credit") ? net : multiPayCredit;
+                double allowed_credit = creditAmount + old_bal;
                 if (allowed_credit > climit) {
                     JOptionPane.showMessageDialog(this,
                             "<html><b>Credit Limit: " + climit + "<br>Old Balance: " + old_bal + "</b></html>",
@@ -887,8 +1165,12 @@ public final class sales extends javax.swing.JInternalFrame {
                 try {
                     boolean found = false;
                     // Try to find by Mobile
+                    String custCompanyFilter = UserSession.hasSelectedCompany()
+                            ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                            : "";
                     if (mobile.length() >= 10) {
-                        ResultSet rs = util.doQuery("SELECT cid, cname FROM cust WHERE mobile='" + mobile + "'");
+                        ResultSet rs = util.doQuery(
+                                "SELECT cid, cname FROM cust WHERE mobile='" + mobile + "'" + custCompanyFilter);
                         if (rs.next()) {
                             cid = rs.getString("cid");
                             cname = rs.getString("cname"); // Sync name from DB
@@ -900,7 +1182,8 @@ public final class sales extends javax.swing.JInternalFrame {
                     }
                     // Try to find by Name if not found by Mobile
                     if (!found && cname.length() > 0 && !cname.equals(".")) {
-                        ResultSet rs = util.doQuery("SELECT cid, mobile FROM cust WHERE cname='" + cname + "'");
+                        ResultSet rs = util.doQuery(
+                                "SELECT cid, mobile FROM cust WHERE cname='" + cname + "'" + custCompanyFilter);
                         if (rs.next()) {
                             cid = rs.getString("cid");
                             String dbMobile = rs.getString("mobile");
@@ -926,7 +1209,10 @@ public final class sales extends javax.swing.JInternalFrame {
 
             if (createNewCustomer) {
                 if (!cardno.equals(".")) {
-                    r = util.doQuery("SELECT cid FROM cust WHERE cardno='" + cardno + "'");
+                    String custCompanyFilter2 = UserSession.hasSelectedCompany()
+                            ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                            : "";
+                    r = util.doQuery("SELECT cid FROM cust WHERE cardno='" + cardno + "'" + custCompanyFilter2);
                     while (r.next()) {
                         customerCardExists = true;
                     }
@@ -939,7 +1225,10 @@ public final class sales extends javax.swing.JInternalFrame {
                     }
                 }
 
-                r = util.doQuery("SELECT MAX(cid) FROM cust");
+                String custCompanyFilter3 = UserSession.hasSelectedCompany()
+                        ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                        : "";
+                r = util.doQuery("SELECT MAX(cid) FROM cust" + custCompanyFilter3);
                 while (r.next()) {
                     newcid = r.getInt(1);
                 }
@@ -994,7 +1283,8 @@ public final class sales extends javax.swing.JInternalFrame {
             String cash = h25.getText();
             String card = h26.getText();
             String others = h27.getText();
-            String credit = "0";
+            String loyalty_points = h30.getText();
+            String credit = h31.getText().isEmpty() ? "0" : h31.getText();
             String upi = "0";
             String today_points = pointsl.getText();
             String total_points = tot_pointsl.getText();
@@ -1004,19 +1294,19 @@ public final class sales extends javax.swing.JInternalFrame {
 
             if (pby.equalsIgnoreCase("Cash")) {
                 cash = String.valueOf(net);
-                card = others = credit = upi = "0";
+                card = others = credit = upi = loyalty_points = "0";
             } else if (pby.equalsIgnoreCase("Card")) {
                 card = "" + net;
-                cash = others = credit = upi = "0";
+                cash = others = credit = upi = loyalty_points = "0";
             } else if (pby.equalsIgnoreCase("Credit")) {
                 credit = "" + net;
-                cash = card = others = upi = "0";
+                cash = card = others = upi = loyalty_points = "0";
             } else if (pby.equalsIgnoreCase("UPI")) {
                 upi = "" + net;
-                cash = card = credit = others = "0";
+                cash = card = credit = others = loyalty_points = "0";
             } else if (pby.equalsIgnoreCase("Others")) {
                 others = "" + net;
-                cash = card = credit = upi = "0";
+                cash = card = credit = upi = loyalty_points = "0";
             }
 
             Connection conn = util.getConnection();
@@ -1025,7 +1315,7 @@ public final class sales extends javax.swing.JInternalFrame {
 
             try {
                 // Insert into sales
-                String salesQuery = "INSERT INTO sales (billno, dat, tim, location, cashier, terminal, items, quans, sub, disp, disamt, gross, taxamt, addamt, round, net, pby, paid, bal, cash, card, credit, others, upi, price_type, tax_type, tax, cid, cardno, cname, mobile, user, last, today_points, total_points, cost_rate) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                String salesQuery = "INSERT INTO sales (billno, dat, tim, location, cashier, terminal, items, quans, sub, disp, disamt, gross, taxamt, addamt, round, net, pby, paid, bal, cash, card, credit, others, loyalty_points, upi, price_type, tax_type, tax, cid, cardno, cname, mobile, user, last, today_points, total_points, cost_rate, company_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
                 PreparedStatement psSales = conn.prepareStatement(salesQuery);
                 psSales.setString(1, billno);
                 psSales.setString(2, date);
@@ -1050,55 +1340,65 @@ public final class sales extends javax.swing.JInternalFrame {
                 psSales.setString(21, card);
                 psSales.setString(22, credit);
                 psSales.setString(23, others);
-                psSales.setString(24, upi);
-                psSales.setString(25, price_type);
-                psSales.setString(26, ttype);
-                psSales.setString(27, tax);
-                psSales.setString(28, cid);
-                psSales.setString(29, cardno);
-                psSales.setString(30, cname);
-                psSales.setString(31, mobile);
-                psSales.setString(32, username);
-                psSales.setString(33, last);
-                psSales.setString(34, today_points);
-                psSales.setString(35, total_points);
-                psSales.setString(36, cost_rate);
+                psSales.setString(24, loyalty_points);
+                psSales.setString(25, upi);
+                psSales.setString(26, price_type);
+                psSales.setString(27, ttype);
+                psSales.setString(28, tax);
+                psSales.setString(29, cid);
+                psSales.setString(30, cardno);
+                psSales.setString(31, cname);
+                psSales.setString(32, mobile);
+                psSales.setString(33, username);
+                psSales.setString(34, last);
+                psSales.setString(35, today_points);
+                psSales.setString(36, total_points);
+                psSales.setString(37, cost_rate);
+                psSales.setString(38, UserSession.getSelectedCompanyID());
                 psSales.executeUpdate();
 
-                String salesItemsQuery = "INSERT INTO sales_items (billno, dat, cid, serial, ino, iname, quan, mrp, price, amount, disp, disamt, sub, taxp, taxamt, total, udes, barcode, hsn, tax, entry, cost_rate, profit, iname1, price_type, tax_type, item_type, prate, rprice, wprice, remarks) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                String salesItemsQuery = "INSERT INTO sales_items (billno, dat, cid, serial, ino, iname, quan, mrp, price, amount, disp, disamt, sub, taxp, taxamt, total, udes, barcode, hsn, tax, entry, cost_rate, profit, iname1, price_type, tax_type, item_type, prate, rprice, wprice, remarks, size, color, brand, company_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
                 PreparedStatement psItems = conn.prepareStatement(salesItemsQuery);
 
-                String stockUpdateQuery = "UPDATE stock SET quan = quan - ? WHERE barcode=? AND ino=? AND iname=? AND entry=?";
+                String stockUpdateQuery = "UPDATE stock SET quan = quan - ? WHERE barcode=? AND ino=? AND iname=? AND entry=? AND company_id=?";
                 PreparedStatement psStock = conn.prepareStatement(stockUpdateQuery);
 
                 for (int i = 0; i < jTable1.getRowCount(); i++) {
-                    String serial = jTable1.getValueAt(i, 0).toString();
-                    String ino = jTable1.getValueAt(i, 1).toString();
-                    String iname = jTable1.getValueAt(i, 2).toString();
-                    double quan = Double.parseDouble(jTable1.getValueAt(i, 3).toString());
-                    String mrp = jTable1.getValueAt(i, 4).toString();
-                    String price = jTable1.getValueAt(i, 6).toString();
-                    String amount = jTable1.getValueAt(i, 7).toString();
-                    String disp1 = jTable1.getValueAt(i, 8).toString();
-                    String disamt1 = jTable1.getValueAt(i, 9).toString();
-                    String sub1 = jTable1.getValueAt(i, 10).toString();
-                    String taxp1 = jTable1.getValueAt(i, 11).toString();
-                    String taxamt1 = jTable1.getValueAt(i, 12).toString();
-                    String total = jTable1.getValueAt(i, 13).toString();
-                    String udes = jTable1.getValueAt(i, 14).toString();
-                    String barcode = jTable1.getValueAt(i, 15).toString();
-                    String hsn = jTable1.getValueAt(i, 16).toString();
-                    String entry = jTable1.getValueAt(i, 18).toString();
-                    String item_cost_rate = jTable1.getValueAt(i, 19).toString();
-                    String profit = jTable1.getValueAt(i, 20).toString();
-                    String iname1 = jTable1.getValueAt(i, 21).toString();
-                    String prate = jTable1.getValueAt(i, 22).toString();
-                    String rprice = jTable1.getValueAt(i, 23).toString();
-                    String wprice = jTable1.getValueAt(i, 24).toString();
-                    String remarks = jTable1.getValueAt(i, 25).toString();
+                    // Use model (s2) directly — avoids view-index shift from moveColumn
+                    String serial = s2.getValueAt(i, 0).toString();
+                    String ino = s2.getValueAt(i, 1).toString();
+                    String iname = s2.getValueAt(i, 2).toString();
+                    double quan = Double.parseDouble(s2.getValueAt(i, 3).toString());
+                    String mrp = s2.getValueAt(i, 4).toString();
+                    String price = s2.getValueAt(i, 6).toString();
+                    String amount = s2.getValueAt(i, 7).toString();
+                    String disp1 = s2.getValueAt(i, 8).toString();
+                    String disamt1 = s2.getValueAt(i, 9).toString();
+                    String sub1 = s2.getValueAt(i, 10).toString();
+                    String taxp1 = s2.getValueAt(i, 11).toString();
+                    String taxamt1 = s2.getValueAt(i, 12).toString();
+                    String total = s2.getValueAt(i, 13).toString();
+                    String udes = s2.getValueAt(i, 14).toString();
+                    String barcode = s2.getValueAt(i, 15).toString();
+                    String hsn = s2.getValueAt(i, 16).toString();
+                    String entry = s2.getValueAt(i, 18).toString();
+                    String item_cost_rate = s2.getValueAt(i, 19).toString();
+                    String profit = s2.getValueAt(i, 20).toString();
+                    String iname1 = s2.getValueAt(i, 21).toString();
+                    String prate = s2.getValueAt(i, 22).toString();
+                    String rprice = s2.getValueAt(i, 23).toString();
+                    String wprice = s2.getValueAt(i, 24).toString();
+                    String remarks = s2.getValueAt(i, 25).toString();
+                    String itemSize = s2.getValueAt(i, 28) != null ? s2.getValueAt(i, 28).toString() : "";
+                    String itemColor = s2.getValueAt(i, 29) != null ? s2.getValueAt(i, 29).toString() : "";
+                    String itemBrand = s2.getValueAt(i, 30) != null ? s2.getValueAt(i, 30).toString() : "";
 
                     // Fetch subunit & subconv
-                    ResultSet rs_unit = util.doQuery("SELECT subunit, subconv, udes FROM item WHERE ino='" + ino + "'");
+                    String itemCompanyFilter = UserSession.hasSelectedCompany()
+                            ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                            : "";
+                    ResultSet rs_unit = util.doQuery(
+                            "SELECT subunit, subconv, udes FROM item WHERE ino='" + ino + "'" + itemCompanyFilter);
                     String subunit = "";
                     double subconv = 1;
                     String main_unit = "";
@@ -1142,6 +1442,10 @@ public final class sales extends javax.swing.JInternalFrame {
                     psItems.setString(29, rprice);
                     psItems.setString(30, wprice);
                     psItems.setString(31, remarks);
+                    psItems.setString(32, itemSize);
+                    psItems.setString(33, itemColor);
+                    psItems.setString(34, itemBrand);
+                    psItems.setString(35, UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "");
                     psItems.executeUpdate();
 
                     // Update stock
@@ -1150,6 +1454,7 @@ public final class sales extends javax.swing.JInternalFrame {
                     psStock.setString(3, ino);
                     psStock.setString(4, iname);
                     psStock.setString(5, entry);
+                    psStock.setString(6, UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "");
                     psStock.executeUpdate();
                 }
 
@@ -1191,24 +1496,26 @@ public final class sales extends javax.swing.JInternalFrame {
                     psPeracc.executeUpdate();
                 }
 
-                if (pby.equalsIgnoreCase("Credit")) {
+                if (pby.equalsIgnoreCase("Credit") || (pby.equalsIgnoreCase("Multi Pay") && multiPayCredit > 0)) {
                     int paid1 = 0;
+                    double creditTotal = pby.equalsIgnoreCase("Credit") ? net : multiPayCredit;
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
                     Calendar c = Calendar.getInstance();
                     c.setTime(sdf.parse(date));
                     c.add(Calendar.DAY_OF_MONTH, due_days);
                     String ddate = sdf.format(c.getTime());
 
-                    String custBalQuery = "INSERT INTO cust_bal (billno, dat, ddate, cid, cname, tot, paid, last) VALUES (?,?,?,?,?,?,?,?)";
+                    String custBalQuery = "INSERT INTO cust_bal (billno, dat, ddate, cid, cname, tot, paid, last, company_id) VALUES (?,?,?,?,?,?,?,?,?)";
                     PreparedStatement psCustBal = conn.prepareStatement(custBalQuery);
                     psCustBal.setString(1, billno);
                     psCustBal.setString(2, date);
                     psCustBal.setString(3, ddate);
                     psCustBal.setString(4, cid);
                     psCustBal.setString(5, cname);
-                    psCustBal.setDouble(6, net);
+                    psCustBal.setDouble(6, creditTotal);
                     psCustBal.setInt(7, paid1);
                     psCustBal.setString(8, last);
+                    psCustBal.setString(9, UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "");
                     psCustBal.executeUpdate();
                 }
 
@@ -1255,6 +1562,18 @@ public final class sales extends javax.swing.JInternalFrame {
                         psPoints.setString(1, total_points);
                         psPoints.setString(2, cid);
                         psPoints.executeUpdate();
+                    }
+                }
+
+                // Deduct loyalty points used for payment
+                if (!loyalty_points.equals("0") && !loyalty_points.equals("0.00") && !cid.equals("")) {
+                    double loyaltyPointsUsed = Double.parseDouble(loyalty_points);
+                    if (loyaltyPointsUsed > 0) {
+                        String deductPointsQuery = "UPDATE cust_points SET points = points - ? WHERE cid=?";
+                        PreparedStatement psDeductPoints = conn.prepareStatement(deductPointsQuery);
+                        psDeductPoints.setDouble(1, loyaltyPointsUsed);
+                        psDeductPoints.setString(2, cid);
+                        psDeductPoints.executeUpdate();
                     }
                 }
 
@@ -1381,7 +1700,10 @@ public final class sales extends javax.swing.JInternalFrame {
         try {
             pointsl.setText("");
             tot_pointsl.setText("");
-            String query = "select distinct billno from sales where billno='" + billno + "'";
+            String companyFilterView = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select distinct billno from sales where billno='" + billno + "'" + companyFilterView;
             ResultSet set1 = util.doQuery(query);
             boolean selva = false;
             while (set1.next()) {
@@ -1403,8 +1725,8 @@ public final class sales extends javax.swing.JInternalFrame {
                     s2.fireTableDataChanged();
                 }
 
-                query = "select billno,date_format(dat,'%d/%m/%Y'),tim,location,terminal,cashier,items,quans,sub,disp,disamt,gross,taxamt,addamt,round,pby,net,paid,bal,cash,card,others,price_type,tax_type,tax,cid,cardno,mobile,cname,today_points,total_points,cost_rate from sales where billno='"
-                        + billno + "'";
+                query = "select billno,date_format(dat,'%d/%m/%Y'),tim,location,terminal,cashier,items,quans,sub,disp,disamt,gross,taxamt,addamt,round,pby,net,paid,bal,cash,card,others,price_type,tax_type,tax,cid,cardno,mobile,cname,today_points,total_points,cost_rate,credit from sales where billno='"
+                        + billno + "'" + companyFilterView;
                 set1 = util.doQuery(query);
                 while (set1.next()) {
                     h1.setText(set1.getString(1));
@@ -1446,6 +1768,8 @@ public final class sales extends javax.swing.JInternalFrame {
                     h25.setText(cash);
                     h26.setText(card);
                     h27.setText(others);
+                    String creditVal = String.format("%." + hmany + "f", set1.getDouble(33));
+                    h31.setText(creditVal);
 
                     pricel.setText(set1.getString(23));
                     ttype = set1.getString(24);
@@ -1478,8 +1802,11 @@ public final class sales extends javax.swing.JInternalFrame {
                     }
                 }
 
-                query = "select serial,ino,iname,quan,mrp,price,amount,disp,disamt,sub,taxp,taxamt,total,udes,barcode,hsn,tax,entry,cost_rate,profit,iname1,prate,rprice,wprice from sales_items where billno='"
-                        + billno + "'";
+                String itemsCompanyFilter = UserSession.hasSelectedCompany()
+                        ? " AND s.company_id='" + UserSession.getSelectedCompanyID() + "'"
+                        : "";
+                query = "select s.serial,s.ino,s.iname,s.quan,s.mrp,s.price,s.amount,s.disp,s.disamt,s.sub,s.taxp,s.taxamt,s.total,s.udes,s.barcode,s.hsn,s.tax,s.entry,s.cost_rate,s.profit,s.iname1,s.prate,s.rprice,s.wprice,IFNULL(s.size,''),IFNULL(s.color,''),IFNULL(s.brand,''),IFNULL(DATE_FORMAT(i.mfg_date,'%d/%m/%Y'),''),IFNULL(DATE_FORMAT(i.exp_date,'%d/%m/%Y'),'') from sales_items s LEFT JOIN item i ON s.ino=i.ino AND s.barcode=i.barcode where s.billno='"
+                        + billno + "'" + itemsCompanyFilter;
                 set1 = util.doQuery(query);
                 while (set1.next()) {
                     String mrp = String.format("%." + hmany + "f", set1.getDouble(5));
@@ -1502,7 +1829,9 @@ public final class sales extends javax.swing.JInternalFrame {
                             sub, set1.getInt(11), taxamt, total, set1.getString(14), set1.getString(15),
                             set1.getString(16), set1.getString(17), set1.getString(18), set1.getString(19),
                             set1.getString(20), set1.getString(21), set1.getString(22), set1.getString(23),
-                            set1.getString(24), "" });
+                            set1.getString(24), "", set1.getString(28), set1.getString(29), set1.getString(25),
+                            set1.getString(26),
+                            set1.getString(27), ttype });
                 }
                 get_customer_details_using_mobileno();
                 get_retail_wholesale_color();
@@ -1543,6 +1872,9 @@ public final class sales extends javax.swing.JInternalFrame {
             if (h27.getText().equals("")) {
                 h27.setText("" + 0);
             }
+            if (h31.getText().equals("")) {
+                h31.setText("" + 0);
+            }
 
             String file_name = "Items_List";
             File draftsDir = new File(folder + "/Drafts/");
@@ -1551,14 +1883,14 @@ public final class sales extends javax.swing.JInternalFrame {
             }
             try (FileWriter f = new FileWriter(new File(folder + "/Drafts/" + file_name + ".txt"))) {
                 for (int i = 0; i < jTable1.getRowCount(); i++) {
-                    String barcode = jTable1.getValueAt(i, 15).toString();
+                    String barcode = jTable1.getValueAt(i, 18).toString();
                     String iname = jTable1.getValueAt(i, 2).toString();
-                    String price = jTable1.getValueAt(i, 6).toString();
-                    String quan = jTable1.getValueAt(i, 3).toString();
+                    String price = jTable1.getValueAt(i, 9).toString();
+                    String quan = jTable1.getValueAt(i, 4).toString();
                     String ino = jTable1.getValueAt(i, 1).toString();
-                    String entry = jTable1.getValueAt(i, 18).toString();
-                    String remarks = jTable1.getValueAt(i, 25).toString();
-                    String unit = jTable1.getValueAt(i, 14).toString();
+                    String entry = jTable1.getValueAt(i, 20).toString();
+                    String remarks = jTable1.getValueAt(i, 27).toString();
+                    String unit = jTable1.getValueAt(i, 17).toString();
                     f.write("" + barcode + "$" + iname + "$" + price + "$" + quan + "$" + ino + "$" + entry + "$"
                             + remarks + "$" + unit + "\r\n");
                 } // row counts ends here
@@ -1595,13 +1927,14 @@ public final class sales extends javax.swing.JInternalFrame {
                 String cash = h25.getText();
                 String card = h26.getText();
                 String others = h27.getText();
+                String creditDraft = h31.getText().isEmpty() ? "0" : h31.getText();
 
                 String price_type = pricel.getText();
                 f1.write(billno + "$" + date + "$" + time + "$" + location + "$" + terminal + "$" + cashier + "$"
                         + items + "$" + quans + "$" + sub + "$" + disp + "$" + dis + "$" + gross + "$" + taxamt + "$"
                         + other + "$" + round + "$" + pby + "$" + net + "$" + paid + "$" + bal + "$" + cid + "$"
                         + cardno + "$" + mobile + "$" + cname + "$" + cash + "$" + card + "$" + others + "$" + ttype
-                        + "$" + tax + "$" + price_type);
+                        + "$" + tax + "$" + price_type + "$" + creditDraft);
             }
 
         } catch (IOException e) {
@@ -1679,6 +2012,13 @@ public final class sales extends javax.swing.JInternalFrame {
                     tax = token.nextToken();
                     pricel.setText(token.nextToken());
 
+                    // Credit field (backward-compatible with old drafts)
+                    if (token.hasMoreTokens()) {
+                        h31.setText(token.nextToken());
+                    } else {
+                        h31.setText("0");
+                    }
+
                     double old_bal = 0;
                     String query = "select sum(tot-paid) from cust_bal where cid='" + h21.getText() + "'";
                     ResultSet r = util.doQuery(query);
@@ -1700,10 +2040,10 @@ public final class sales extends javax.swing.JInternalFrame {
 
     public double getRowProfit(int rowIndex) {
         try {
-            double quantity = Double.parseDouble(jTable1.getValueAt(rowIndex, 3).toString());
-            double price = Double.parseDouble(jTable1.getValueAt(rowIndex, 6).toString());
-            double discount = Double.parseDouble(jTable1.getValueAt(rowIndex, 8).toString());
-            double purchaseRate = Double.parseDouble(jTable1.getValueAt(rowIndex, 22).toString());
+            double quantity = Double.parseDouble(jTable1.getValueAt(rowIndex, 4).toString());
+            double price = Double.parseDouble(jTable1.getValueAt(rowIndex, 9).toString());
+            double discount = Double.parseDouble(jTable1.getValueAt(rowIndex, 11).toString());
+            double purchaseRate = Double.parseDouble(jTable1.getValueAt(rowIndex, 24).toString());
 
             double amount = price * quantity;
             double discountAmount = (discount / 100) * amount;
@@ -1732,7 +2072,11 @@ public final class sales extends javax.swing.JInternalFrame {
         try {
             String scode1 = "";
             customer_selection = false;
-            String query = "select cid,cardno,mobile,cname,scode from cust where mobile='" + h23.getText() + "'";
+            String custCompanyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select cid,cardno,mobile,cname,scode from cust where mobile='" + h23.getText() + "'"
+                    + custCompanyFilter;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 h21.setText(r.getString(1));
@@ -1765,7 +2109,11 @@ public final class sales extends javax.swing.JInternalFrame {
         try {
             String scode1 = "";
             customer_selection = false;
-            String query = "select cid,cardno,mobile,cname,scode from cust where cardno='" + h22.getText() + "'";
+            String custCompanyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select cid,cardno,mobile,cname,scode from cust where cardno='" + h22.getText() + "'"
+                    + custCompanyFilter;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 h21.setText(r.getString(1));
@@ -1866,14 +2214,14 @@ public final class sales extends javax.swing.JInternalFrame {
             s4.addColumn("Wholesale Price");
             jTable3.setModel(s4);
             jTable3.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-            jTable3.getColumnModel().getColumn(0).setPreferredWidth(150);
-            jTable3.getColumnModel().getColumn(1).setPreferredWidth(75);
-            jTable3.getColumnModel().getColumn(2).setPreferredWidth(304);
-            jTable3.getColumnModel().getColumn(3).setPreferredWidth(290);
-            jTable3.getColumnModel().getColumn(4).setPreferredWidth(120);
-            jTable3.getColumnModel().getColumn(5).setPreferredWidth(110);
-            jTable3.getColumnModel().getColumn(6).setPreferredWidth(110);
-            jTable3.getColumnModel().getColumn(7).setPreferredWidth(115);
+            jTable3.getColumnModel().getColumn(0).setPreferredWidth(130);
+            jTable3.getColumnModel().getColumn(1).setPreferredWidth(65);
+            jTable3.getColumnModel().getColumn(2).setPreferredWidth(280);
+            jTable3.getColumnModel().getColumn(3).setPreferredWidth(220);
+            jTable3.getColumnModel().getColumn(4).setPreferredWidth(100);
+            jTable3.getColumnModel().getColumn(5).setPreferredWidth(80);
+            jTable3.getColumnModel().getColumn(6).setPreferredWidth(100);
+            jTable3.getColumnModel().getColumn(7).setPreferredWidth(100);
             if (utype.equalsIgnoreCase("User")) {
                 jTable3.getColumnModel().getColumn(4).setPreferredWidth(0);
             }
@@ -1965,13 +2313,18 @@ public final class sales extends javax.swing.JInternalFrame {
             }
             save_draft();
             String billno = h1.getText();
+            String companyId = UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "";
+            String companyFilterAlter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + companyId + "'"
+                    : "";
             ArrayList barcode = new ArrayList();
             ArrayList ino = new ArrayList();
             ArrayList iname = new ArrayList();
             ArrayList quan = new ArrayList();
             ArrayList entry = new ArrayList();
 
-            String query = "select barcode,ino,iname,quan,entry from sales_items where billno='" + billno + "'";
+            String query = "select barcode,ino,iname,quan,entry from sales_items where billno='" + billno + "'"
+                    + companyFilterAlter;
             ResultSet set1 = util.doQuery(query);
             boolean selva = false;
             while (set1.next()) {
@@ -2021,7 +2374,8 @@ public final class sales extends javax.swing.JInternalFrame {
                 psAlter.executeUpdate();
 
                 if (selva == true) {
-                    String updateStockQuery = "UPDATE stock SET quan = quan + ? WHERE barcode=? AND ino=? AND iname=? AND entry=?";
+                    String companyCid = UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "";
+                    String updateStockQuery = "UPDATE stock SET quan = quan + ? WHERE barcode=? AND ino=? AND iname=? AND entry=? AND company_id=?";
                     PreparedStatement psStock = conn.prepareStatement(updateStockQuery);
                     for (int i = 0; i < barcode.size(); i++) {
                         psStock.setDouble(1, Double.parseDouble(quan.get(i).toString()));
@@ -2029,17 +2383,22 @@ public final class sales extends javax.swing.JInternalFrame {
                         psStock.setString(3, ino.get(i).toString());
                         psStock.setString(4, iname.get(i).toString());
                         psStock.setString(5, entry.get(i).toString());
+                        psStock.setString(6, companyCid);
                         psStock.addBatch();
                     }
                     psStock.executeBatch();
                 }
 
-                PreparedStatement psDeleteSales = conn.prepareStatement("DELETE FROM sales WHERE billno=?");
+                PreparedStatement psDeleteSales = conn
+                        .prepareStatement("DELETE FROM sales WHERE billno=? AND company_id=?");
                 psDeleteSales.setString(1, billno);
+                psDeleteSales.setString(2, companyId);
                 psDeleteSales.executeUpdate();
 
-                PreparedStatement psDeleteItems = conn.prepareStatement("DELETE FROM sales_items WHERE billno=?");
+                PreparedStatement psDeleteItems = conn
+                        .prepareStatement("DELETE FROM sales_items WHERE billno=? AND company_id=?");
                 psDeleteItems.setString(1, billno);
+                psDeleteItems.setString(2, companyId);
                 psDeleteItems.executeUpdate();
 
                 if (h16.getSelectedItem().equals("Credit")) {
@@ -2106,13 +2465,18 @@ public final class sales extends javax.swing.JInternalFrame {
             }
             save_draft();
             String billno = h1.getText();
+            String companyId = UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "";
+            String companyFilterDelete = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + companyId + "'"
+                    : "";
             ArrayList barcode = new ArrayList();
             ArrayList ino = new ArrayList();
             ArrayList iname = new ArrayList();
             ArrayList quan = new ArrayList();
             ArrayList entry = new ArrayList();
 
-            String query = "select barcode,ino,iname,quan,entry from sales_items where billno='" + billno + "'";
+            String query = "select barcode,ino,iname,quan,entry from sales_items where billno='" + billno + "'"
+                    + companyFilterDelete;
             ResultSet set1 = util.doQuery(query);
             boolean selva = false;
             while (set1.next()) {
@@ -2136,7 +2500,7 @@ public final class sales extends javax.swing.JInternalFrame {
             String cname = h24.getText();
             String pby = h16.getSelectedItem().toString();
             String old_amount = "" + 0;
-            query = "select net from sales where billno='" + billno + "' ";
+            query = "select net from sales where billno='" + billno + "'" + companyFilterDelete;
             set1 = util.doQuery(query);
             while (set1.next()) {
                 old_amount = set1.getString(1);
@@ -2162,7 +2526,8 @@ public final class sales extends javax.swing.JInternalFrame {
                 psDeleteLog.executeUpdate();
 
                 if (selva == true) {
-                    String updateStockQuery = "UPDATE stock SET quan = quan + ? WHERE barcode=? AND ino=? AND iname=? AND entry=?";
+                    String companyCid = UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "";
+                    String updateStockQuery = "UPDATE stock SET quan = quan + ? WHERE barcode=? AND ino=? AND iname=? AND entry=? AND company_id=?";
                     PreparedStatement psStock = conn.prepareStatement(updateStockQuery);
                     for (int i = 0; i < barcode.size(); i++) {
                         psStock.setDouble(1, Double.parseDouble(quan.get(i).toString()));
@@ -2170,17 +2535,22 @@ public final class sales extends javax.swing.JInternalFrame {
                         psStock.setString(3, ino.get(i).toString());
                         psStock.setString(4, iname.get(i).toString());
                         psStock.setString(5, entry.get(i).toString());
+                        psStock.setString(6, companyCid);
                         psStock.addBatch();
                     }
                     psStock.executeBatch();
                 }
 
-                PreparedStatement psDeleteSales = conn.prepareStatement("DELETE FROM sales WHERE billno=?");
+                PreparedStatement psDeleteSales = conn
+                        .prepareStatement("DELETE FROM sales WHERE billno=? AND company_id=?");
                 psDeleteSales.setString(1, billno);
+                psDeleteSales.setString(2, companyId);
                 psDeleteSales.executeUpdate();
 
-                PreparedStatement psDeleteItems = conn.prepareStatement("DELETE FROM sales_items WHERE billno=?");
+                PreparedStatement psDeleteItems = conn
+                        .prepareStatement("DELETE FROM sales_items WHERE billno=? AND company_id=?");
                 psDeleteItems.setString(1, billno);
+                psDeleteItems.setString(2, companyId);
                 psDeleteItems.executeUpdate();
 
                 String rno = "SALE-" + billno;
@@ -2236,8 +2606,11 @@ public final class sales extends javax.swing.JInternalFrame {
             double tquan;
             double stock = 0;
             String entry = "purchase";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             String query = "select quan,entry from stock where barcode='" + barcode + "' and ino='" + ino
-                    + "' and iname='" + iname + "' ";
+                    + "' and iname='" + iname + "' " + companyFilter;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 stock = r.getDouble(1);
@@ -2247,9 +2620,9 @@ public final class sales extends javax.swing.JInternalFrame {
             double entry_stock = 0;
             for (int i = 0; i < jTable1.getRowCount(); i++) {
                 String ino1 = jTable1.getValueAt(i, 1).toString();
-                String barcode1 = jTable1.getValueAt(i, 15).toString();
-                String entry1 = jTable1.getValueAt(i, 18).toString();
-                double quan1 = Double.parseDouble(jTable1.getValueAt(i, 3).toString());
+                String barcode1 = jTable1.getValueAt(i, 18).toString();
+                String entry1 = jTable1.getValueAt(i, 20).toString();
+                double quan1 = Double.parseDouble(jTable1.getValueAt(i, 4).toString());
                 if (ino.equals(ino1) && barcode.equals(barcode1) && entry.equals(entry1)) {
                     entry_stock = quan1;
                 }
@@ -2268,7 +2641,7 @@ public final class sales extends javax.swing.JInternalFrame {
             if (what3 <= 0) {
                 quan2 = split3[0];
             }
-            jTable1.setValueAt(quan2 + "", row, 3);
+            jTable1.setValueAt(quan2 + "", row, 4);
             apply_all_changes();
             h17.requestFocus();
         } catch (HeadlessException | ClassNotFoundException | NumberFormatException | SQLException e) {
@@ -2395,11 +2768,11 @@ public final class sales extends javax.swing.JInternalFrame {
                 for (int i = 0; i < jTable1.getRowCount(); i++) {
                     String ino = jTable1.getValueAt(i, 1).toString();
                     String iname = jTable1.getValueAt(i, 2).toString();
-                    String quan = jTable1.getValueAt(i, 3).toString();
-                    String price = jTable1.getValueAt(i, 6).toString();
-                    String barcode = jTable1.getValueAt(i, 15).toString();
-                    String remarks = jTable1.getValueAt(i, 25).toString();
-                    String unit = jTable1.getValueAt(i, 14).toString();
+                    String quan = jTable1.getValueAt(i, 4).toString();
+                    String price = jTable1.getValueAt(i, 9).toString();
+                    String barcode = jTable1.getValueAt(i, 18).toString();
+                    String remarks = jTable1.getValueAt(i, 27).toString();
+                    String unit = jTable1.getValueAt(i, 17).toString();
 
                     psHold.setInt(1, billno);
                     psHold.setString(2, location);
@@ -2453,6 +2826,92 @@ public final class sales extends javax.swing.JInternalFrame {
         }
     }
 
+    void free_item() {
+        int selectedRow = jTable1.getSelectedRow();
+        if (selectedRow < 0) {
+            JOptionPane.showMessageDialog(this, "<html><h1>Select an item to mark as Free!</h1></html>",
+                    "No Selection", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        int modelRow = jTable1.convertRowIndexToModel(selectedRow);
+        String iname = s2.getValueAt(modelRow, 2).toString();
+        double currentQty = Double.parseDouble(s2.getValueAt(modelRow, 3).toString());
+
+        // Ask how many free items
+        String input = JOptionPane.showInputDialog(this,
+                "<html><h2>'" + iname + "' — Qty: " + s2.getValueAt(modelRow, 3)
+                        + "</h2>How many items FREE?</html>",
+                "Free Item Quantity", JOptionPane.QUESTION_MESSAGE);
+        if (input == null || input.trim().isEmpty()) {
+            return;
+        }
+        double freeQty;
+        try {
+            freeQty = Double.parseDouble(input.trim());
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Invalid quantity!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        if (freeQty <= 0 || freeQty > currentQty) {
+            JOptionPane.showMessageDialog(this,
+                    "<html><h2>Free qty must be between 1 and " + s2.getValueAt(modelRow, 3) + "</h2></html>",
+                    "Invalid", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        double paidQty = currentQty - freeQty;
+
+        if (paidQty > 0) {
+            // Reduce qty on the original (paid) row
+            String paidQty2 = String.format("%." + hmany1 + "f", paidQty);
+            String[] sp = paidQty2.split("\\.");
+            if (Integer.parseInt(sp[1]) <= 0)
+                paidQty2 = sp[0];
+            s2.setValueAt(paidQty2, modelRow, 3);
+        } else {
+            // All qty is free — just set price to 0 on existing row
+            s2.setValueAt("0.00", modelRow, 5); // Net Rate
+            s2.setValueAt("0.00", modelRow, 6); // Price
+            s2.setValueAt("0", modelRow, 8); // Dis%
+            apply_all_changes();
+            h17.requestFocus();
+            return;
+        }
+
+        // Add a new row for the free qty (copy all columns from original, price=0)
+        String freeQty2 = String.format("%." + hmany1 + "f", freeQty);
+        String[] sp2 = freeQty2.split("\\.");
+        if (Integer.parseInt(sp2[1]) <= 0)
+            freeQty2 = sp2[0];
+
+        int cols = s2.getColumnCount();
+        Object[] newRow = new Object[cols];
+        for (int c = 0; c < cols; c++) {
+            newRow[c] = s2.getValueAt(modelRow, c);
+        }
+        newRow[3] = freeQty2; // Qty
+        newRow[5] = "0.00"; // Net Rate
+        newRow[6] = "0.00"; // Price
+        newRow[7] = "0.00"; // Amount
+        newRow[8] = 0; // Dis%
+        newRow[9] = "0.00"; // Dis Amt
+        newRow[10] = "0.00"; // Sub Total
+        newRow[12] = "0.00"; // Tax Amount
+        newRow[13] = "0.00"; // Total
+        newRow[19] = "0.00"; // Cost Rate
+        newRow[20] = "0.00"; // Profit
+        s2.addRow(newRow);
+        serial_num();
+        apply_all_changes();
+
+        // Select the new free row
+        int lastRow = jTable1.getRowCount() - 1;
+        Rectangle rect = jTable1.getCellRect(lastRow, 0, true);
+        jTable1.scrollRectToVisible(rect);
+        jTable1.setRowSelectionInterval(lastRow, lastRow);
+        h17.requestFocus();
+    }
+
     void retail_price() {
         try {
             int as = JOptionPane.showConfirmDialog(this,
@@ -2462,8 +2921,8 @@ public final class sales extends javax.swing.JInternalFrame {
                 return;
             }
             for (int i = 0; i < jTable1.getRowCount(); i++) {
-                String rrate = jTable1.getValueAt(i, 23).toString();
-                jTable1.setValueAt(rrate, i, 6);
+                String rrate = jTable1.getValueAt(i, 25).toString();
+                jTable1.setValueAt(rrate, i, 9);
             } // row counts ends
             apply_all_changes();
             pricel.setText("Retail");
@@ -2481,8 +2940,8 @@ public final class sales extends javax.swing.JInternalFrame {
                 return;
             }
             for (int i = 0; i < jTable1.getRowCount(); i++) {
-                String wrate = jTable1.getValueAt(i, 24).toString();
-                jTable1.setValueAt(wrate, i, 6);
+                String wrate = jTable1.getValueAt(i, 26).toString();
+                jTable1.setValueAt(wrate, i, 9);
             } // row counts ends
             pricel.setText("Wholesale");
             apply_all_changes();
@@ -2517,6 +2976,17 @@ public final class sales extends javax.swing.JInternalFrame {
         load_hold_table();
         get_net_default_values();
         bind();
+
+        // Free Item button — marks selected row as free (price=0)
+        javax.swing.JButton freebutton = new javax.swing.JButton();
+        freebutton.setBackground(new java.awt.Color(255, 200, 200));
+        freebutton.setFont(new java.awt.Font("Tahoma", 0, 14));
+        freebutton.setMnemonic('g');
+        freebutton.setText("<html>Free Item (Alt+G)</html>");
+        freebutton.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 100, 100)));
+        freebutton.addActionListener(e -> free_item());
+        getContentPane().add(freebutton);
+        freebutton.setBounds(390, 460, 130, 30);
     }
 
     private void bind() {
@@ -2564,8 +3034,13 @@ public final class sales extends javax.swing.JInternalFrame {
         jSeparator2 = new javax.swing.JSeparator();
         jLabel32 = new javax.swing.JLabel();
         h27 = new javax.swing.JTextField();
+        jLabelLoyaltyPts = new javax.swing.JLabel();
+        h30 = new javax.swing.JTextField();
+        jLabelCredit = new javax.swing.JLabel();
+        h31 = new javax.swing.JTextField();
         jLabel33 = new javax.swing.JLabel();
         selectbutton = new javax.swing.JButton();
+        multiPayCloseBtn = new javax.swing.JButton();
         iname_list = new javax.swing.JDialog();
         jScrollPane3 = new javax.swing.JScrollPane();
         jTable3 = new javax.swing.JTable();
@@ -2684,17 +3159,37 @@ public final class sales extends javax.swing.JInternalFrame {
         multi_pay_mode.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         multi_pay_mode.setUndecorated(true);
 
-        jLabel29.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
-        jLabel29.setText(" Multi Pay Mode");
+        // ─── Multi Pay Dialog Styling ─────────────────────────────────────────
+        jPanel9.setBackground(java.awt.Color.WHITE);
+        jPanel9.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(41, 128, 185), 2));
 
-        jLabel30.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
+        jLabel29.setFont(new java.awt.Font("Arial", 1, 16)); // NOI18N
+        jLabel29.setText("  \u2605 MULTI PAY MODE");
+        jLabel29.setForeground(java.awt.Color.WHITE);
+        jLabel29.setOpaque(true);
+        jLabel29.setBackground(new java.awt.Color(41, 128, 185));
+
+        jLabel30.setFont(new java.awt.Font("Arial", 0, 15)); // NOI18N
         jLabel30.setText("Cash");
 
-        h28.setEditable(false);
-        h28.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
-        h28.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        jLabel31.setFont(new java.awt.Font("Arial", 0, 15)); // NOI18N
+        jLabel31.setText("Card");
 
-        h25.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        jLabel32.setFont(new java.awt.Font("Arial", 0, 15)); // NOI18N
+        jLabel32.setText("Others");
+
+        jLabelLoyaltyPts.setFont(new java.awt.Font("Arial", 1, 13)); // NOI18N
+        jLabelLoyaltyPts.setText("<html><font color='#27ae60'>Loyalty Pts</font></html>");
+
+        jLabel33.setFont(new java.awt.Font("Arial", 1, 15)); // NOI18N
+        jLabel33.setText("Total");
+
+        h28.setEditable(false);
+        h28.setFont(new java.awt.Font("Arial", 1, 17)); // NOI18N
+        h28.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        h28.setBackground(new java.awt.Color(236, 240, 241));
+
+        h25.setFont(new java.awt.Font("Arial", 1, 17)); // NOI18N
         h25.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         h25.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -2702,7 +3197,7 @@ public final class sales extends javax.swing.JInternalFrame {
             }
         });
 
-        h26.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        h26.setFont(new java.awt.Font("Arial", 1, 17)); // NOI18N
         h26.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         h26.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
@@ -2715,13 +3210,7 @@ public final class sales extends javax.swing.JInternalFrame {
             }
         });
 
-        jLabel31.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
-        jLabel31.setText("Card");
-
-        jLabel32.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
-        jLabel32.setText("Others");
-
-        h27.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        h27.setFont(new java.awt.Font("Arial", 1, 17)); // NOI18N
         h27.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         h27.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
@@ -2734,13 +3223,43 @@ public final class sales extends javax.swing.JInternalFrame {
             }
         });
 
-        jLabel33.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
-        jLabel33.setText("Total");
+        h30.setFont(new java.awt.Font("Arial", 1, 17)); // NOI18N
+        h30.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        h30.setBackground(new java.awt.Color(212, 239, 223));
+        h30.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                h30FocusGained(evt);
+            }
+        });
+        h30.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                h30ActionPerformed(evt);
+            }
+        });
 
-        selectbutton.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+        jLabelCredit.setFont(new java.awt.Font("Arial", 1, 13)); // NOI18N
+        jLabelCredit.setText("<html><font color='#c0392b'>Credit</font></html>");
+
+        h31.setFont(new java.awt.Font("Arial", 1, 17)); // NOI18N
+        h31.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        h31.setBackground(new java.awt.Color(250, 219, 216));
+        h31.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                h31FocusGained(evt);
+            }
+        });
+        h31.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                h31ActionPerformed(evt);
+            }
+        });
+
+        selectbutton.setFont(new java.awt.Font("Arial", 1, 15)); // NOI18N
         selectbutton.setIcon(ColorConstants.loadIcon("/icons/selectall45.png")); // NOI18N
         selectbutton.setMnemonic('s');
-        selectbutton.setText("Select");
+        selectbutton.setText("OK - Save Sale");
+        selectbutton.setBackground(new java.awt.Color(39, 174, 96));
+        selectbutton.setForeground(java.awt.Color.WHITE);
         selectbutton.setToolTipText("");
         selectbutton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -2748,89 +3267,116 @@ public final class sales extends javax.swing.JInternalFrame {
             }
         });
 
+        multiPayCloseBtn.setFont(new java.awt.Font("Arial", 1, 15));
+        multiPayCloseBtn.setText("Close");
+        multiPayCloseBtn.setBackground(new java.awt.Color(192, 57, 43));
+        multiPayCloseBtn.setForeground(java.awt.Color.WHITE);
+        multiPayCloseBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                multi_pay_mode.dispose();
+            }
+        });
+
         javax.swing.GroupLayout jPanel9Layout = new javax.swing.GroupLayout(jPanel9);
         jPanel9.setLayout(jPanel9Layout);
         jPanel9Layout.setHorizontalGroup(
                 jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(jLabel29, javax.swing.GroupLayout.PREFERRED_SIZE, 160,
+                        .addComponent(jLabel29, javax.swing.GroupLayout.DEFAULT_SIZE, 336, Short.MAX_VALUE)
+                        .addGroup(jPanel9Layout.createSequentialGroup()
+                                .addGap(10, 10, 10)
+                                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(jLabel30, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jLabel31, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jLabel32, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jLabelLoyaltyPts, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jLabelCredit, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jLabel33, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(5, 5, 5)
+                                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(h25, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(h26, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(h27, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(h30, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(h31, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(h28, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 336,
                                 javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGroup(jPanel9Layout.createSequentialGroup()
                                 .addGap(10, 10, 10)
-                                .addComponent(jLabel30, javax.swing.GroupLayout.PREFERRED_SIZE, 60,
+                                .addComponent(selectbutton, javax.swing.GroupLayout.PREFERRED_SIZE, 230,
                                         javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(0, 0, 0)
-                                .addComponent(h25, javax.swing.GroupLayout.PREFERRED_SIZE, 220,
-                                        javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGroup(jPanel9Layout.createSequentialGroup()
-                                .addGap(10, 10, 10)
-                                .addComponent(jLabel31, javax.swing.GroupLayout.PREFERRED_SIZE, 60,
-                                        javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(0, 0, 0)
-                                .addComponent(h26, javax.swing.GroupLayout.PREFERRED_SIZE, 220,
-                                        javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGroup(jPanel9Layout.createSequentialGroup()
-                                .addGap(10, 10, 10)
-                                .addComponent(jLabel32, javax.swing.GroupLayout.PREFERRED_SIZE, 60,
-                                        javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(0, 0, 0)
-                                .addComponent(h27, javax.swing.GroupLayout.PREFERRED_SIZE, 220,
-                                        javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGroup(jPanel9Layout.createSequentialGroup()
-                                .addGap(10, 10, 10)
-                                .addComponent(jLabel33, javax.swing.GroupLayout.PREFERRED_SIZE, 60,
-                                        javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGroup(jPanel9Layout.createSequentialGroup()
-                                .addGap(70, 70, 70)
-                                .addComponent(h28, javax.swing.GroupLayout.PREFERRED_SIZE, 220,
-                                        javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 310,
-                                javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGroup(jPanel9Layout.createSequentialGroup()
-                                .addGap(150, 150, 150)
-                                .addComponent(selectbutton, javax.swing.GroupLayout.PREFERRED_SIZE, 140,
+                                .addGap(6, 6, 6)
+                                .addComponent(multiPayCloseBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 80,
                                         javax.swing.GroupLayout.PREFERRED_SIZE)));
         jPanel9Layout.setVerticalGroup(
                 jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addGroup(jPanel9Layout.createSequentialGroup()
-                                .addComponent(jLabel29, javax.swing.GroupLayout.PREFERRED_SIZE, 30,
+                                .addComponent(jLabel29, javax.swing.GroupLayout.PREFERRED_SIZE, 38,
                                         javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(20, 20, 20)
-                                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addComponent(jLabel30, javax.swing.GroupLayout.PREFERRED_SIZE, 40,
+                                .addGap(8, 8, 8)
+                                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jLabel30, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addComponent(h25, javax.swing.GroupLayout.PREFERRED_SIZE, 40,
+                                        .addComponent(h25, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addComponent(jLabel31, javax.swing.GroupLayout.PREFERRED_SIZE, 40,
+                                .addGap(4, 4, 4)
+                                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jLabel31, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addComponent(h26, javax.swing.GroupLayout.PREFERRED_SIZE, 40,
+                                        .addComponent(h26, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addComponent(jLabel32, javax.swing.GroupLayout.PREFERRED_SIZE, 40,
+                                .addGap(4, 4, 4)
+                                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jLabel32, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addComponent(h27, javax.swing.GroupLayout.PREFERRED_SIZE, 40,
+                                        .addComponent(h27, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(4, 4, 4)
+                                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jLabelLoyaltyPts, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(h30, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(4, 4, 4)
+                                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jLabelCredit, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(h31, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(8, 8, 8)
+                                .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 4,
+                                        javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(8, 8, 8)
+                                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jLabel33, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(h28, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE))
                                 .addGap(10, 10, 10)
-                                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 20,
+                                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(selectbutton, javax.swing.GroupLayout.PREFERRED_SIZE, 48,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addGroup(jPanel9Layout.createSequentialGroup()
-                                                .addGap(10, 10, 10)
-                                                .addGroup(jPanel9Layout
-                                                        .createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                                        .addComponent(jLabel33, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                                40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                        .addComponent(h28, javax.swing.GroupLayout.PREFERRED_SIZE, 40,
-                                                                javax.swing.GroupLayout.PREFERRED_SIZE))))
-                                .addGap(10, 10, 10)
-                                .addComponent(selectbutton, javax.swing.GroupLayout.PREFERRED_SIZE, 50,
-                                        javax.swing.GroupLayout.PREFERRED_SIZE)));
+                                        .addComponent(multiPayCloseBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 48,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(8, 8, 8)));
 
         javax.swing.GroupLayout multi_pay_modeLayout = new javax.swing.GroupLayout(multi_pay_mode.getContentPane());
         multi_pay_mode.getContentPane().setLayout(multi_pay_modeLayout);
         multi_pay_modeLayout.setHorizontalGroup(
                 multi_pay_modeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(jPanel9, javax.swing.GroupLayout.PREFERRED_SIZE, 306,
+                        .addComponent(jPanel9, javax.swing.GroupLayout.PREFERRED_SIZE, 336,
                                 javax.swing.GroupLayout.PREFERRED_SIZE));
         multi_pay_modeLayout.setVerticalGroup(
                 multi_pay_modeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -3339,7 +3885,7 @@ public final class sales extends javax.swing.JInternalFrame {
         getContentPane().add(jPanel2);
         jPanel2.setBounds(1010, 0, 280, 630);
 
-        jTable1.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
+        jTable1.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
                 new Object[][] {
                         { null, null, null, null },
@@ -3350,7 +3896,7 @@ public final class sales extends javax.swing.JInternalFrame {
                 new String[] {
                         "Title 1", "Title 2", "Title 3", "Title 4"
                 }));
-        jTable1.setRowHeight(25);
+        jTable1.setRowHeight(20);
         jTable1.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
                 jTable1KeyPressed(evt);
@@ -3359,7 +3905,7 @@ public final class sales extends javax.swing.JInternalFrame {
         jScrollPane1.setViewportView(jTable1);
 
         getContentPane().add(jScrollPane1);
-        jScrollPane1.setBounds(0, 110, 990, 350);
+        jScrollPane1.setBounds(0, 110, 1000, 350);
 
         h18.setEditable(false);
         h18.setFont(new java.awt.Font("Arial", 1, 14)); // NOI18N
@@ -3647,7 +4193,7 @@ public final class sales extends javax.swing.JInternalFrame {
         cpointsl.setForeground(new java.awt.Color(255, 153, 0));
         cpointsl.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
         getContentPane().add(cpointsl);
-        cpointsl.setBounds(90, 460, 390, 30);
+        cpointsl.setBounds(90, 460, 300, 30);
 
         h23.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         h23.addActionListener(new java.awt.event.ActionListener() {
@@ -3821,7 +4367,7 @@ public final class sales extends javax.swing.JInternalFrame {
         creditLabel.setForeground(new java.awt.Color(102, 102, 0));
         creditLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         getContentPane().add(creditLabel);
-        creditLabel.setBounds(530, 460, 130, 30);
+        creditLabel.setBounds(520, 460, 140, 30);
 
         weighingButton.setBackground(new java.awt.Color(255, 255, 204));
         weighingButton.setText("Weighing");
@@ -3877,7 +4423,11 @@ public final class sales extends javax.swing.JInternalFrame {
                 JOptionPane.showMessageDialog(this, "No Records Were Found!", "No Records", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            String query = "select billno from sales where billno > '" + grn + "' order by billno limit 1";
+            String navCompanyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select billno from sales where billno > '" + grn + "'" + navCompanyFilter
+                    + " order by billno limit 1";
             ResultSet set1 = util.doQuery(query);
             boolean selva = false;
             String search_grn = "";
@@ -3899,10 +4449,17 @@ public final class sales extends javax.swing.JInternalFrame {
         try {
             String grn = h1.getText();
             String query;
+            String prevCompanyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String prevCompanyFilterWhere = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             if (grn.equalsIgnoreCase("--")) {
-                query = "select max(billno) from sales";
+                query = "select max(billno) from sales" + prevCompanyFilterWhere;
             } else {
-                query = "select billno from sales where billno < '" + grn + "' order by billno desc limit 1";
+                query = "select billno from sales where billno < '" + grn + "'" + prevCompanyFilter
+                        + " order by billno desc limit 1";
             }
 
             ResultSet set1 = util.doQuery(query);
@@ -3962,7 +4519,10 @@ public final class sales extends javax.swing.JInternalFrame {
         multi_pay_mode.requestFocus();
         Point l = stockl.getLocationOnScreen();
         multi_pay_mode.setLocation(l.x, l.y + stockl.getHeight());
-        multi_pay_mode.setSize(306, 301);
+        multi_pay_mode.setSize(340, 388);
+        jLabelLoyaltyPts
+                .setText("<html><font color='#27ae60'><b>Loyalty Pts</b></font><br><font size='2' color='gray'>Avail: "
+                        + cpointsl.getText() + "</font></html>");
         multi_pay_mode.setVisible(true);
         h25.requestFocus();
     }// GEN-LAST:event_tenderbuttonActionPerformed
@@ -3996,11 +4556,69 @@ public final class sales extends javax.swing.JInternalFrame {
 
     private void h27ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h27ActionPerformed
         get_paid_bal_details();
-        get_bal_details();
-        multi_pay_mode.dispose();
-        h22.requestFocus();
+        h30.requestFocus();
 
     }// GEN-LAST:event_h27ActionPerformed
+
+    private void h30ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h30ActionPerformed
+        if (h21.getText().equals("") && !h30.getText().equals("0.00") && !h30.getText().equals("")) {
+            JOptionPane.showMessageDialog(this,
+                    "<html><h2>Please select a customer first to use loyalty points!</h2></html>",
+                    "Customer Required", JOptionPane.WARNING_MESSAGE);
+            h30.setText("0.00");
+            return;
+        }
+        get_paid_bal_details();
+        h31.requestFocus();
+    }// GEN-LAST:event_h30ActionPerformed
+
+    private void h30FocusGained(java.awt.event.FocusEvent evt) {// GEN-FIRST:event_h30FocusGained
+        h30.selectAll();
+    }// GEN-LAST:event_h30FocusGained
+
+    private void h31ActionPerformed(java.awt.event.ActionEvent evt) {
+        // Validate credit customer
+        double creditAmt = 0;
+        try {
+            creditAmt = Double.parseDouble(h31.getText());
+        } catch (NumberFormatException e) {
+            h31.setText("0.00");
+        }
+        if (creditAmt > 0 && h21.getText().equals("")) {
+            JOptionPane.showMessageDialog(this,
+                    "<html><h2>Please select a customer first to use Credit!</h2></html>",
+                    "Customer Required", JOptionPane.WARNING_MESSAGE);
+            h31.setText("0.00");
+            return;
+        }
+        if (creditAmt > 0) {
+            try {
+                String cid = h21.getText();
+                String ctype = "Retail";
+                boolean customerExists = false;
+                ResultSet r = util.doQuery("SELECT ctype FROM cust WHERE cid='" + cid + "'");
+                while (r.next()) {
+                    ctype = r.getString(1);
+                    customerExists = true;
+                }
+                if (ctype.equals("Retail") || !customerExists) {
+                    JOptionPane.showMessageDialog(this,
+                            "<html>Credit is only allowed for <b>'Credit Customer'</b>.<br>Please create customer as Credit Customer first.</html>",
+                            "Invalid Credit Customer!", JOptionPane.ERROR_MESSAGE);
+                    h31.setText("0.00");
+                    return;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        get_paid_bal_details();
+        selectbutton.requestFocus();
+    }
+
+    private void h31FocusGained(java.awt.event.FocusEvent evt) {
+        h31.selectAll();
+    }
 
     private void h25ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h25ActionPerformed
         get_paid_bal_details();
@@ -4110,7 +4728,7 @@ public final class sales extends javax.swing.JInternalFrame {
             return;
         }
         for (int i = 0; i < jTable1.getRowCount(); i++) {
-            jTable1.setValueAt(disp, i, 8);
+            jTable1.setValueAt(disp, i, 11);
         }
         apply_all_changes();
         h14.requestFocus();
@@ -4220,10 +4838,14 @@ public final class sales extends javax.swing.JInternalFrame {
         if (jTable3.getRowCount() > 0) {
             try {
                 String selectedName = jTable3.getValueAt(jTable3.getSelectedRow(), 2).toString();
+                String companyFilter = UserSession.hasSelectedCompany()
+                        ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                        : "";
                 String query = "SELECT i.ino, i.iname, i.barcode, "
-                        + (CompanySettingUtil.getInstance().isDisplayBatch() ? "i.batch" : "i.size")
-                        + ", DATE_FORMAT(i.mfg_date, '%d/%m/%Y') as mfg_date, DATE_FORMAT(i.exp_date, '%d/%m/%Y') as exp_date, i.rprice, i.wprice, i.udes, i.subunit, i.subconv, (SELECT IFNULL(SUM(s.quan), 0) FROM stock s WHERE s.ino = i.ino) AS stock FROM item i WHERE i.iname = '"
-                        + selectedName + "'";
+                        + (CompanySettingUtil.getInstance().isDisplayBatch() ? "i.batch, " : "")
+                        + "IFNULL(i.size,'') as size, IFNULL(i.color,'') as color, IFNULL(i.brand,'') as brand, DATE_FORMAT(i.mfg_date, '%d/%m/%Y') as mfg_date, DATE_FORMAT(i.exp_date, '%d/%m/%Y') as exp_date, i.rprice, i.wprice, i.udes, i.subunit, i.subconv, (SELECT IFNULL(SUM(s.quan), 0) FROM stock s WHERE s.ino = i.ino"
+                        + companyFilter + ") AS stock FROM item i WHERE i.iname = '"
+                        + selectedName + "'" + companyFilter;
                 ResultSet set = util.doQuery(query);
 
                 List<Object[]> rows = new ArrayList<>();
@@ -4233,7 +4855,12 @@ public final class sales extends javax.swing.JInternalFrame {
                     row.add(set.getString("ino"));
                     row.add(set.getString("iname"));
                     row.add(set.getString("barcode"));
-                    row.add(set.getString(CompanySettingUtil.getInstance().isDisplayBatch() ? "batch" : "size"));
+                    if (CompanySettingUtil.getInstance().isDisplayBatch()) {
+                        row.add(set.getString("batch"));
+                    }
+                    row.add(set.getString("size"));
+                    row.add(set.getString("color"));
+                    row.add(set.getString("brand"));
 
                     if (CompanySettingUtil.getInstance().isDisplayMfg()) {
                         row.add(set.getString("mfg_date"));
@@ -4267,7 +4894,8 @@ public final class sales extends javax.swing.JInternalFrame {
                     if (selectedIno != null) {
                         query = "SELECT ino, iname, barcode,"
                                 + (CompanySettingUtil.getInstance().isDisplayBatch() ? "batch" : "size")
-                                + ",rprice, wprice, udes, subunit,subconv FROM item WHERE ino = '" + selectedIno + "'";
+                                + ",rprice, wprice, udes, subunit,subconv FROM item WHERE ino = '" + selectedIno + "'"
+                                + companyFilter;
                         set = util.doQuery(query);
                         valueMap.clear();
                         while (set.next()) {
@@ -4325,7 +4953,12 @@ public final class sales extends javax.swing.JInternalFrame {
         colList.add("Item No");
         colList.add("Item Name");
         colList.add("Barcode");
-        colList.add(CompanySettingUtil.getInstance().isDisplayBatch() ? "Batch" : "Size");
+        if (CompanySettingUtil.getInstance().isDisplayBatch()) {
+            colList.add("Batch");
+        }
+        colList.add("Size");
+        colList.add("Color");
+        colList.add("Brand");
 
         if (CompanySettingUtil.getInstance().isDisplayMfg()) {
             colList.add("Mfg Date");
@@ -4445,12 +5078,15 @@ public final class sales extends javax.swing.JInternalFrame {
                         iname_list.setLocation(l.x, l.y + jLabel28.getHeight());
                         iname_list.setSize(1281, 528);
                         iname_list.setVisible(true);
+                        String companyFilter = UserSession.hasSelectedCompany()
+                                ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                                : "";
                         String query = "SELECT i.barcode, i.ino, i.iname, i.iname1, i.prate, i.mrp, i.rprice, i.wprice "
                                 + "FROM item i "
                                 + "INNER JOIN ( "
                                 + "   SELECT iname, MIN(ino) AS min_ino "
                                 + "   FROM item "
-                                + "   WHERE iname LIKE '%" + h17.getText() + "%' "
+                                + "   WHERE iname LIKE '%" + h17.getText() + "%'" + companyFilter + " "
                                 + "   GROUP BY iname "
                                 + ") sub ON i.iname = sub.iname AND i.ino = sub.min_ino "
                                 + "ORDER BY i.ino "
@@ -4475,11 +5111,15 @@ public final class sales extends javax.swing.JInternalFrame {
                         iname_list.setSize(1281, 528);
                         iname_list.setVisible(true);
                         // Query for all items when h17 is empty
+                        String companyFilter = UserSession.hasSelectedCompany()
+                                ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                                : "";
                         String query = "SELECT i.barcode, i.ino, i.iname, i.iname1, i.prate, i.mrp, i.rprice, i.wprice "
                                 + "FROM item i "
                                 + "INNER JOIN ( "
                                 + "   SELECT iname, MIN(ino) AS min_ino "
                                 + "   FROM item "
+                                + "   WHERE 1=1" + companyFilter + " "
                                 + "   GROUP BY iname "
                                 + ") sub ON i.iname = sub.iname AND i.ino = sub.min_ino "
                                 + "ORDER BY i.ino "
@@ -4648,13 +5288,17 @@ public final class sales extends javax.swing.JInternalFrame {
                     cname_list.setLocation(l.x, l.y + jLabel28.getHeight());
                     cname_list.setSize(1063, 528);
                     cname_list.setVisible(true);
+                    String custCompanyFilter = UserSession.hasSelectedCompany()
+                            ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                            : "";
                     String query;
                     if (pricel.getText().equals("Retail")) {
                         query = "select cid,ctype,cname,cardno,mobile,city,scode from cust where cname like '"
-                                + h24.getText() + "%' order by cname limit 300";
+                                + h24.getText() + "%'" + custCompanyFilter + " order by cname limit 300";
                     } else {
                         query = "select cid,ctype,cname,cardno,mobile,city,scode from cust where cname like '"
-                                + h24.getText() + "%' and ctype='Credit Customer' order by cname limit 300";
+                                + h24.getText() + "%' and ctype='Credit Customer'" + custCompanyFilter
+                                + " order by cname limit 300";
                     }
 
                     ResultSet r = util.doQuery(query);
@@ -4844,6 +5488,7 @@ public final class sales extends javax.swing.JInternalFrame {
     private javax.swing.JTextField h27;
     private javax.swing.JTextField h28;
     private javax.swing.JTextField h29;
+    private javax.swing.JTextField h30;
     private javax.swing.JTextField h3;
     private javax.swing.JTextField h4;
     private javax.swing.JTextField h5;
@@ -4889,6 +5534,9 @@ public final class sales extends javax.swing.JInternalFrame {
     private javax.swing.JLabel jLabel33;
     private javax.swing.JLabel jLabel34;
     private javax.swing.JLabel jLabel35;
+    private javax.swing.JLabel jLabelCredit;
+    private javax.swing.JTextField h31;
+    private javax.swing.JLabel jLabelLoyaltyPts;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
@@ -4930,6 +5578,7 @@ public final class sales extends javax.swing.JInternalFrame {
     private javax.swing.JButton retrivebutton;
     private javax.swing.JButton savebutton;
     private javax.swing.JButton selectbutton;
+    private javax.swing.JButton multiPayCloseBtn;
     private javax.swing.JLabel stockl;
     private javax.swing.JButton tenderbutton;
     private javax.swing.JTextField tot_pointsl;
@@ -4938,4 +5587,11 @@ public final class sales extends javax.swing.JInternalFrame {
     private javax.swing.JButton weighingButton;
     private javax.swing.JButton wholesalebutton;
     // End of variables declaration//GEN-END:variables
+
+    private void hideCol(javax.swing.JTable table, int colIdx) {
+        javax.swing.table.TableColumn tc = table.getColumnModel().getColumn(colIdx);
+        tc.setMinWidth(0);
+        tc.setMaxWidth(0);
+        tc.setPreferredWidth(0);
+    }
 }

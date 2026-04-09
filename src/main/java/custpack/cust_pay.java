@@ -11,6 +11,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import menupack.UserSession;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
@@ -21,7 +22,7 @@ import menupack.sample2;
 /**
  *
  * @author K.SELVAKUMAR, copyrights K.SELVAKUMAR, +91 99427 32229,
- * mysoft.java@gmail.com
+ *         mysoft.java@gmail.com
  */
 public final class cust_pay extends javax.swing.JInternalFrame {
 
@@ -171,8 +172,8 @@ public final class cust_pay extends javax.swing.JInternalFrame {
             String net = h6.getText();
             String pby = h7.getSelectedItem().toString();
             String remarks = h9.getText();
-            String dis = h12.getText();
-            String tot = h13.getText();
+            String dis = h12.getText().trim().isEmpty() ? "0" : h12.getText().trim();
+            String tot = h13.getText().trim().isEmpty() ? "0" : h13.getText().trim();
             boolean selva = false;
             String query = "select distinct sno from cust_pay where sno='" + sno + "'";
             r = util.doQuery(query);
@@ -180,11 +181,13 @@ public final class cust_pay extends javax.swing.JInternalFrame {
                 selva = true;
             }
             if (selva == true) {
-                JOptionPane.showMessageDialog(this, "Entry No Already Exist!", "Already Exist", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Entry No Already Exist!", "Already Exist",
+                        JOptionPane.ERROR_MESSAGE);
                 h4.requestFocus();
                 return;
             }
-            int aa = JOptionPane.showConfirmDialog(this, "<html><h1>Want to Save ?</h1></html>", "Are You Sure", JOptionPane.YES_NO_OPTION);
+            int aa = JOptionPane.showConfirmDialog(this, "<html><h1>Want to Save ?</h1></html>", "Are You Sure",
+                    JOptionPane.YES_NO_OPTION);
             if (aa == JOptionPane.NO_OPTION) {
                 return;
             }
@@ -193,12 +196,17 @@ public final class cust_pay extends javax.swing.JInternalFrame {
                 String billno = jTable1.getValueAt(i, 0).toString();
                 String amount = jTable1.getValueAt(i, 1).toString();
 
-                query_batch.add("insert into cust_pay values ('" + sno + "','" + date + "','" + time + "','" + cid + "','" + cname + "','" + billno + "','" + amount + "','" + net + "','" + pby + "','" + remarks + "','" + username + "','" + last + "','" + dis + "','" + tot + "'  )");
-                query_batch.add("update cust_bal set paid=paid+" + amount + " where billno='" + billno + "' and cid='" + cid + "' and cname='" + cname + "' ");
+                query_batch.add("insert into cust_pay values ('" + sno + "','" + date + "','" + time + "','" + cid
+                        + "','" + cname + "','" + billno + "','" + amount + "','" + net + "','" + pby + "','" + remarks
+                        + "','" + username + "','" + last + "','" + dis + "','" + tot + "','"
+                        + (UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "") + "'  )");
+                query_batch.add("update cust_bal set paid=paid+" + amount + " where billno='" + billno + "' and cid='"
+                        + cid + "' and cname='" + cname + "' ");
             }
             int count = util.doManipulation_Batch(query_batch);
             if (count > 0) {
-                int as = JOptionPane.showConfirmDialog(this, "<html><h1>You Want to Print Receipt ?</h1></html>", "Saved Successfully", JOptionPane.YES_NO_OPTION);
+                int as = JOptionPane.showConfirmDialog(this, "<html><h1>You Want to Print Receipt ?</h1></html>",
+                        "Saved Successfully", JOptionPane.YES_NO_OPTION);
                 if (as == JOptionPane.YES_OPTION) {
                     print();
                 }
@@ -262,7 +270,8 @@ public final class cust_pay extends javax.swing.JInternalFrame {
 
     void view(String sno) {
         try {
-            String query = "select distinct sno,date_format(dat,'%d/%m/%Y'),tim,cid,cname,net,pby,remarks,dis,tot from cust_pay where sno='" + sno + "' ";
+            String query = "select distinct sno,date_format(dat,'%d/%m/%Y'),tim,cid,cname,net,pby,remarks,dis,tot from cust_pay where sno='"
+                    + sno + "' ";
             r = util.doQuery(query);
             boolean selva = false;
             while (r.next()) {
@@ -293,7 +302,7 @@ public final class cust_pay extends javax.swing.JInternalFrame {
                 while (r.next()) {
                     double amount = r.getDouble(2);
                     String amount2 = String.format("%." + hmany + "f", amount);
-                    s2.addRow(new Object[]{r.getString(1), amount2});
+                    s2.addRow(new Object[] { r.getString(1), amount2 });
                 }
                 get_patient_details(h4.getText());
             }
@@ -318,7 +327,8 @@ public final class cust_pay extends javax.swing.JInternalFrame {
     void delete(String sno) {
         try {
             if (utype.equalsIgnoreCase("User")) {
-                JOptionPane.showMessageDialog(this, "Login as 'Administrator' to Delete!", "Permission Restricted", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Login as 'Administrator' to Delete!", "Permission Restricted",
+                        JOptionPane.ERROR_MESSAGE);
                 return;
             }
             int as = JOptionPane.showConfirmDialog(this, "Want to Delete ?", "Are You Sure", JOptionPane.YES_NO_OPTION);
@@ -342,7 +352,8 @@ public final class cust_pay extends javax.swing.JInternalFrame {
             for (int i = 0; i < jTable1.getRowCount(); i++) {
                 String billno = jTable1.getValueAt(i, 0).toString();
                 String amount = jTable1.getValueAt(i, 1).toString();
-                query_batch.add("update cust_bal set paid=paid-" + amount + " where billno='" + billno + "' and cid='" + cid + "' and cname='" + cname + "' ");
+                query_batch.add("update cust_bal set paid=paid-" + amount + " where billno='" + billno + "' and cid='"
+                        + cid + "' and cname='" + cname + "' ");
             }
             int count = util.doManipulation_Batch(query_batch);
             if (count > 0) {
@@ -359,7 +370,11 @@ public final class cust_pay extends javax.swing.JInternalFrame {
             DefaultCaret caret = (DefaultCaret) hh.getCaret();
             caret.setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
             hh.setText("");
-            String query = "select cid,cname,add1,add2,add3,city,mobile,climit,cname from cust where cid='" + cid + "'";
+            String custCompanyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select cid,cname,add1,add2,add3,city,mobile,climit,cname from cust where cid='" + cid + "'"
+                    + custCompanyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 hh.append("\n Cust_Id     : " + r.getString(1));
@@ -406,7 +421,8 @@ public final class cust_pay extends javax.swing.JInternalFrame {
             }
 
             double total = 0;
-            query = "select date_format(dat,'%d/%m/%Y'),billno,tot-paid from cust_bal where cid='" + cid + "' and tot-paid >0 ";
+            query = "select date_format(dat,'%d/%m/%Y'),billno,tot-paid from cust_bal where cid='" + cid
+                    + "' and tot-paid >0 ";
             r = util.doQuery(query);
             while (r.next()) {
                 String date = r.getString(1);
@@ -469,7 +485,8 @@ public final class cust_pay extends javax.swing.JInternalFrame {
             }
 
             boolean selva = false;
-            String query = "select distinct cname from cust_bal where cid='" + h4.getText() + "' and cname='" + h5.getText() + "'";
+            String query = "select distinct cname from cust_bal where cid='" + h4.getText() + "' and cname='"
+                    + h5.getText() + "'";
             r = util.doQuery(query);
             while (r.next()) {
                 selva = true;
@@ -490,14 +507,48 @@ public final class cust_pay extends javax.swing.JInternalFrame {
             }
 
             if (Double.parseDouble(h11.getText()) > Double.parseDouble(ball.getText())) {
-                JOptionPane.showMessageDialog(this, "Paid Amount is Greaterthan Balance Amount ?", "Invalid Paid Amount", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Paid Amount is Greaterthan Balance Amount ?",
+                        "Invalid Paid Amount", JOptionPane.ERROR_MESSAGE);
                 h11.requestFocus();
                 return;
             }
             double amount = Double.parseDouble(h11.getText());
             String amount2 = String.format("%." + hmany + "f", amount);
-            s2.addRow(new Object[]{h10.getSelectedItem(), amount2});
+            s2.addRow(new Object[] { h10.getSelectedItem(), amount2 });
             h10.removeItem(h10.getSelectedItem());
+            h11.setText("");
+            ball.setText("");
+            calculate();
+        } catch (HeadlessException | ClassNotFoundException | NumberFormatException | SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    void add_all_items() {
+        try {
+            if (h4.getText().equals("") || h5.getText().equals("")) {
+                JOptionPane.showMessageDialog(this, "Select Customer First ?", "Customer", JOptionPane.ERROR_MESSAGE);
+                h4.requestFocus();
+                return;
+            }
+            if (h10.getItemCount() <= 0) {
+                JOptionPane.showMessageDialog(this, "No Pending Bills Found!", "No Bills",
+                        JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+            String cid = h4.getText();
+            String custBalCo = UserSession.hasSelectedCompany()
+                    ? " AND IFNULL(company_id,'') = '" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select billno, tot-paid from cust_bal where cid='" + cid + "' and tot-paid > 0" + custBalCo;
+            ResultSet rs = util.doQuery(query);
+            while (rs.next()) {
+                String billno = rs.getString(1);
+                double due = rs.getDouble(2);
+                String due2 = String.format("%." + hmany + "f", due);
+                s2.addRow(new Object[] { billno, due2 });
+            }
+            h10.removeAllItems();
             h11.setText("");
             ball.setText("");
             calculate();
@@ -517,7 +568,8 @@ public final class cust_pay extends javax.swing.JInternalFrame {
 
     void get_bal() {
         try {
-            String query = "select tot-paid from cust_bal where cid='" + h4.getText() + "' and billno='" + h10.getSelectedItem() + "'";
+            String query = "select tot-paid from cust_bal where cid='" + h4.getText() + "' and billno='"
+                    + h10.getSelectedItem() + "'";
             r = util.doQuery(query);
             while (r.next()) {
                 ball.setText(r.getString(1));
@@ -552,17 +604,22 @@ public final class cust_pay extends javax.swing.JInternalFrame {
                     phone = r.getString(1);
                 }
                 double nbal = 0;
-                query = "select sum(tot-paid) from cust_bal where cid='" + h4.getText() + "'";
+                String custBalCo2 = UserSession.hasSelectedCompany()
+                        ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                        : "";
+                query = "select sum(tot-paid) from cust_bal where cid='" + h4.getText() + "'" + custBalCo2;
                 r = util.doQuery(query);
                 while (r.next()) {
                     nbal = r.getDouble(1);
                 }
                 String nbal2 = String.format("%." + hmany + "f", nbal);
-                String message = "INFO: \nDear " + h5.getText() + ", Thank you for your payment of " + h6.getText() + ", Ref_No: " + h1.getText() + ". Your Net Balance as on: " + g.format(d) + " is: " + nbal2 + "." + cname1;
+                String message = "INFO: \nDear " + h5.getText() + ", Thank you for your payment of " + h6.getText()
+                        + ", Ref_No: " + h1.getText() + ". Your Net Balance as on: " + g.format(d) + " is: " + nbal2
+                        + "." + cname1;
                 if (phone.length() == 10) {
                     new smspack.SMS_Sender_Single().getData(smsuser, smspass, sender, phone, message);
                 }
-            }//sms alert yes ends
+            } // sms alert yes ends
         } catch (HeadlessException | ClassNotFoundException | SQLException e) {
             System.out.println(e.getMessage());
         }
@@ -583,7 +640,8 @@ public final class cust_pay extends javax.swing.JInternalFrame {
     }
 
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated
+    // Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         cname_list = new javax.swing.JDialog();
@@ -624,6 +682,7 @@ public final class cust_pay extends javax.swing.JInternalFrame {
         h11 = new javax.swing.JTextField();
         jButton1 = new javax.swing.JButton();
         jButton2 = new javax.swing.JButton();
+        clearAllDuesButton = new javax.swing.JButton();
         ball = new javax.swing.JTextField();
         h6 = new javax.swing.JTextField();
         jLabel24 = new javax.swing.JLabel();
@@ -647,16 +706,15 @@ public final class cust_pay extends javax.swing.JInternalFrame {
 
         jTable2.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jTable2.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
-        ));
+                new Object[][] {
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null }
+                },
+                new String[] {
+                        "Title 1", "Title 2", "Title 3", "Title 4"
+                }));
         jTable2.setRowHeight(25);
         jTable2.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -909,16 +967,15 @@ public final class cust_pay extends javax.swing.JInternalFrame {
 
         jTable1.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
-        ));
+                new Object[][] {
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null }
+                },
+                new String[] {
+                        "Title 1", "Title 2", "Title 3", "Title 4"
+                }));
         jTable1.setRowHeight(25);
         jScrollPane2.setViewportView(jTable1);
 
@@ -950,12 +1007,13 @@ public final class cust_pay extends javax.swing.JInternalFrame {
             public void focusGained(java.awt.event.FocusEvent evt) {
                 h11FocusGained(evt);
             }
+
             public void focusLost(java.awt.event.FocusEvent evt) {
                 h11FocusLost(evt);
             }
         });
         getContentPane().add(h11);
-        h11.setBounds(100, 200, 250, 30);
+        h11.setBounds(100, 200, 150, 30);
 
         jButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/add22.png"))); // NOI18N
         jButton1.addActionListener(new java.awt.event.ActionListener() {
@@ -964,7 +1022,7 @@ public final class cust_pay extends javax.swing.JInternalFrame {
             }
         });
         getContentPane().add(jButton1);
-        jButton1.setBounds(350, 200, 50, 30);
+        jButton1.setBounds(250, 200, 50, 30);
 
         jButton2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/delete22.png"))); // NOI18N
         jButton2.addActionListener(new java.awt.event.ActionListener() {
@@ -973,7 +1031,17 @@ public final class cust_pay extends javax.swing.JInternalFrame {
             }
         });
         getContentPane().add(jButton2);
-        jButton2.setBounds(400, 200, 50, 30);
+        jButton2.setBounds(300, 200, 50, 30);
+
+        clearAllDuesButton.setFont(new java.awt.Font("Arial", 1, 11));
+        clearAllDuesButton.setText("Clear All Dues");
+        clearAllDuesButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                add_all_items();
+            }
+        });
+        getContentPane().add(clearAllDuesButton);
+        clearAllDuesButton.setBounds(350, 200, 110, 30);
 
         ball.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         ball.addActionListener(new java.awt.event.ActionListener() {
@@ -1025,34 +1093,34 @@ public final class cust_pay extends javax.swing.JInternalFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closebuttonActionPerformed
+    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_closebuttonActionPerformed
         this.dispose();
-    }//GEN-LAST:event_closebuttonActionPerformed
+    }// GEN-LAST:event_closebuttonActionPerformed
 
-    private void savebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_savebuttonActionPerformed
+    private void savebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_savebuttonActionPerformed
         save();
-    }//GEN-LAST:event_savebuttonActionPerformed
+    }// GEN-LAST:event_savebuttonActionPerformed
 
-    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearbuttonActionPerformed
+    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_clearbuttonActionPerformed
         clear();
-    }//GEN-LAST:event_clearbuttonActionPerformed
+    }// GEN-LAST:event_clearbuttonActionPerformed
 
-    private void viewbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_viewbuttonActionPerformed
+    private void viewbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_viewbuttonActionPerformed
         String sno = JOptionPane.showInputDialog(this, "Enter Receipt No ?", "Receipt No", JOptionPane.PLAIN_MESSAGE);
         view(sno);
-    }//GEN-LAST:event_viewbuttonActionPerformed
+    }// GEN-LAST:event_viewbuttonActionPerformed
 
-    private void deletebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deletebuttonActionPerformed
+    private void deletebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_deletebuttonActionPerformed
         String sno = h1.getText();
         delete(sno);
-    }//GEN-LAST:event_deletebuttonActionPerformed
+    }// GEN-LAST:event_deletebuttonActionPerformed
 
-    private void h1FocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_h1FocusGained
+    private void h1FocusGained(java.awt.event.FocusEvent evt) {// GEN-FIRST:event_h1FocusGained
 
         h4.requestFocus();
-    }//GEN-LAST:event_h1FocusGained
+    }// GEN-LAST:event_h1FocusGained
 
-    private void jTable2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable2MouseClicked
+    private void jTable2MouseClicked(java.awt.event.MouseEvent evt) {// GEN-FIRST:event_jTable2MouseClicked
 
         if (jTable2.getRowCount() > 0) {
             String cid = jTable2.getValueAt(jTable2.getSelectedRow(), 0).toString();
@@ -1061,14 +1129,14 @@ public final class cust_pay extends javax.swing.JInternalFrame {
         }
         cname_list.dispose();
 
-    }//GEN-LAST:event_jTable2MouseClicked
+    }// GEN-LAST:event_jTable2MouseClicked
 
-    private void jTable2FocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jTable2FocusLost
+    private void jTable2FocusLost(java.awt.event.FocusEvent evt) {// GEN-FIRST:event_jTable2FocusLost
         cname_list.dispose();
         // TODO add your handling code here:
-    }//GEN-LAST:event_jTable2FocusLost
+    }// GEN-LAST:event_jTable2FocusLost
 
-    private void jTable2KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTable2KeyPressed
+    private void jTable2KeyPressed(java.awt.event.KeyEvent evt) {// GEN-FIRST:event_jTable2KeyPressed
         if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
             if (jTable2.getRowCount() > 0) {
                 String cid = jTable2.getValueAt(jTable2.getSelectedRow(), 0).toString();
@@ -1080,26 +1148,26 @@ public final class cust_pay extends javax.swing.JInternalFrame {
             cname_list.dispose();
             h4.requestFocus();
         }
-    }//GEN-LAST:event_jTable2KeyPressed
+    }// GEN-LAST:event_jTable2KeyPressed
 
-    private void jScrollPane4FocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jScrollPane4FocusLost
+    private void jScrollPane4FocusLost(java.awt.event.FocusEvent evt) {// GEN-FIRST:event_jScrollPane4FocusLost
 
         cname_list.dispose();
-    }//GEN-LAST:event_jScrollPane4FocusLost
+    }// GEN-LAST:event_jScrollPane4FocusLost
 
-    private void jButton10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton10ActionPerformed
+    private void jButton10ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton10ActionPerformed
 
         cname_list.setVisible(false);
         cname_list.dispose();
         h3.requestFocus();
-    }//GEN-LAST:event_jButton10ActionPerformed
+    }// GEN-LAST:event_jButton10ActionPerformed
 
-    private void cname_listFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_cname_listFocusLost
+    private void cname_listFocusLost(java.awt.event.FocusEvent evt) {// GEN-FIRST:event_cname_listFocusLost
 
         cname_list.dispose();
-    }//GEN-LAST:event_cname_listFocusLost
+    }// GEN-LAST:event_cname_listFocusLost
 
-    private void prebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_prebuttonActionPerformed
+    private void prebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_prebuttonActionPerformed
 
         try {
             String query;
@@ -1126,9 +1194,9 @@ public final class cust_pay extends javax.swing.JInternalFrame {
         }
 
         // TODO add your handling code here:
-    }//GEN-LAST:event_prebuttonActionPerformed
+    }// GEN-LAST:event_prebuttonActionPerformed
 
-    private void nextbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nextbuttonActionPerformed
+    private void nextbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_nextbuttonActionPerformed
 
         try {
             String query;
@@ -1153,13 +1221,13 @@ public final class cust_pay extends javax.swing.JInternalFrame {
         } catch (HeadlessException | ClassNotFoundException | SQLException e) {
             System.out.println(e.getMessage());
         }
-    }//GEN-LAST:event_nextbuttonActionPerformed
+    }// GEN-LAST:event_nextbuttonActionPerformed
 
-    private void printbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_printbuttonActionPerformed
+    private void printbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_printbuttonActionPerformed
         print();
-    }//GEN-LAST:event_printbuttonActionPerformed
+    }// GEN-LAST:event_printbuttonActionPerformed
 
-    private void jCalendarButton1PropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jCalendarButton1PropertyChange
+    private void jCalendarButton1PropertyChange(java.beans.PropertyChangeEvent evt) {// GEN-FIRST:event_jCalendarButton1PropertyChange
 
         try {
             if (evt.getNewValue() instanceof Date) {
@@ -1173,9 +1241,9 @@ public final class cust_pay extends javax.swing.JInternalFrame {
         }
 
         // TODO add your handling code here:
-    }//GEN-LAST:event_jCalendarButton1PropertyChange
+    }// GEN-LAST:event_jCalendarButton1PropertyChange
 
-    private void h4KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_h4KeyPressed
+    private void h4KeyPressed(java.awt.event.KeyEvent evt) {// GEN-FIRST:event_h4KeyPressed
 
         cname_list.requestFocus();
         jTable2.requestFocus();
@@ -1194,83 +1262,95 @@ public final class cust_pay extends javax.swing.JInternalFrame {
                 cname_list.setLocation(l.x, l.y + jLabel23.getHeight());
                 cname_list.setSize(890, 310);
                 cname_list.setVisible(true);
-                String query = "select cid,cname,sum(tot-paid) from cust_bal where cname like '" + h4.getText() + "%' group by cid, cname having sum(tot-paid)>0 order by cname limit 500";
+                String custCompanyFilter = UserSession.hasSelectedCompany()
+                        ? " AND c.company_id='" + UserSession.getSelectedCompanyID() + "'"
+                        : "";
+                String query = "select b.cid, b.cname, sum(b.tot-b.paid) from cust_bal b"
+                        + " inner join cust c on b.cid=c.cid"
+                        + " where b.cname like '" + h4.getText() + "%'" + custCompanyFilter
+                        + " group by b.cid, b.cname having sum(b.tot-b.paid)>0 order by b.cname limit 500";
                 r = util.doQuery(query);
                 while (r.next()) {
-                    s3.addRow(new Object[]{r.getString(1), r.getString(2), r.getString(3)});
+                    s3.addRow(new Object[] { r.getString(1), r.getString(2), r.getString(3) });
                 }
             } catch (ClassNotFoundException | SQLException e) {
                 System.out.println(e.getMessage());
             }
         }
-    }//GEN-LAST:event_h4KeyPressed
+    }// GEN-LAST:event_h4KeyPressed
 
-    private void h4FocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_h4FocusLost
+    private void h4FocusLost(java.awt.event.FocusEvent evt) {// GEN-FIRST:event_h4FocusLost
         h4.setText(h4.getText().toUpperCase());
         if (hh.getText().equals("")) {
             get_patient_details(h4.getText());
         }
-    }//GEN-LAST:event_h4FocusLost
+    }// GEN-LAST:event_h4FocusLost
 
-    private void h5FocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_h5FocusGained
+    private void h5FocusGained(java.awt.event.FocusEvent evt) {// GEN-FIRST:event_h5FocusGained
         h4.setEnabled(false);
-    }//GEN-LAST:event_h5FocusGained
+    }// GEN-LAST:event_h5FocusGained
 
-    private void h11FocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_h11FocusLost
+    private void h11FocusLost(java.awt.event.FocusEvent evt) {// GEN-FIRST:event_h11FocusLost
         h12.requestFocus();
-    }//GEN-LAST:event_h11FocusLost
+    }// GEN-LAST:event_h11FocusLost
 
-    private void h11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_h11ActionPerformed
+    private void h11ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h11ActionPerformed
         add_item();
-    }//GEN-LAST:event_h11ActionPerformed
+    }// GEN-LAST:event_h11ActionPerformed
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton1ActionPerformed
         add_item();
-    }//GEN-LAST:event_jButton1ActionPerformed
+    }// GEN-LAST:event_jButton1ActionPerformed
 
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton2ActionPerformed
         s2.removeRow(jTable1.getSelectedRow());
         calculate();
-    }//GEN-LAST:event_jButton2ActionPerformed
+    }// GEN-LAST:event_jButton2ActionPerformed
 
-    private void ballActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ballActionPerformed
+    private void ballActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_ballActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_ballActionPerformed
+    }// GEN-LAST:event_ballActionPerformed
 
-    private void ballFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_ballFocusLost
+    private void ballFocusLost(java.awt.event.FocusEvent evt) {// GEN-FIRST:event_ballFocusLost
         // TODO add your handling code here:
-    }//GEN-LAST:event_ballFocusLost
+    }// GEN-LAST:event_ballFocusLost
 
-    private void h11FocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_h11FocusGained
+    private void h11FocusGained(java.awt.event.FocusEvent evt) {// GEN-FIRST:event_h11FocusGained
         if (h10.getSelectedItem() != null) {
             get_bal();
         }
-    }//GEN-LAST:event_h11FocusGained
+    }// GEN-LAST:event_h11FocusGained
 
-    private void h12FocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_h12FocusLost
+    private void h12FocusLost(java.awt.event.FocusEvent evt) {// GEN-FIRST:event_h12FocusLost
         if (h12.getText().equals("")) {
             h12.setText("" + 0);
+        }
+        if (h6.getText().equals("")) {
+            h6.setText("0");
         }
         double tot = Double.parseDouble(h6.getText());
         double paid = Double.parseDouble(h12.getText());
         double bal = tot - paid;
         h13.setText("" + bal);
-        h7.requestFocus();        // TODO add your handling code here:
-    }//GEN-LAST:event_h12FocusLost
+        h7.requestFocus(); // TODO add your handling code here:
+    }// GEN-LAST:event_h12FocusLost
 
-    private void h12ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_h12ActionPerformed
+    private void h12ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h12ActionPerformed
         if (h12.getText().equals("")) {
             h12.setText("" + 0);
+        }
+        if (h6.getText().equals("")) {
+            h6.setText("0");
         }
         double tot = Double.parseDouble(h6.getText());
         double paid = Double.parseDouble(h12.getText());
         double bal = tot - paid;
         h13.setText("" + bal);
         h7.requestFocus();
-// TODO add your handling code here:
-    }//GEN-LAST:event_h12ActionPerformed
+        // TODO add your handling code here:
+    }// GEN-LAST:event_h12ActionPerformed
 
-    private void h10KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_h10KeyPressed
+    private void h10KeyPressed(java.awt.event.KeyEvent evt) {// GEN-FIRST:event_h10KeyPressed
         if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
             if (h10.getSelectedItem() == null || h10.getSelectedItem() == "") {
                 h12.requestFocus();
@@ -1278,7 +1358,7 @@ public final class cust_pay extends javax.swing.JInternalFrame {
         }
 
         // TODO add your handling code here:
-    }//GEN-LAST:event_h10KeyPressed
+    }// GEN-LAST:event_h10KeyPressed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField ball;
@@ -1302,6 +1382,7 @@ public final class cust_pay extends javax.swing.JInternalFrame {
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton10;
     private javax.swing.JButton jButton2;
+    private javax.swing.JButton clearAllDuesButton;
     private net.sourceforge.jcalendarbutton.JCalendarButton jCalendarButton1;
     private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel17;

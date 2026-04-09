@@ -49,6 +49,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import menupack.menu_form;
+import menupack.UserSession;
 
 /**
  *
@@ -72,6 +73,11 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
     AutoCompleteSupport support;
     int hmany = 4;
 
+    // ─── Multi Pay Dialog ──────────────────────────────────────────────
+    private javax.swing.JDialog multi_pay_mode;
+    private javax.swing.JTextField mpCash, mpCard, mpOthers, mpCredit, mpTotal;
+    double multiPayCredit = 0;
+
     public class sample2 extends DefaultTableModel {
 
         @Override
@@ -86,8 +92,9 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
 
         @Override
         public boolean isCellEditable(int row, int column) {
-            return column == 3 || column == 4 || column == 5 || column == 6 || column == 7 || column == 9
-                    || column == 10;
+            return column == 3 || column == 4 || column == 5 || column == 6 || column == 7 || column == 8
+                    || column == 10
+                    || column == 11;
         }
     }
 
@@ -127,7 +134,8 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
         s2.addColumn("Retail Price");
         s2.addColumn("Wholesale Price");
         s2.addColumn("Purchase Price");
-        s2.addColumn("Qty");
+        s2.addColumn("Paid_Qty");
+        s2.addColumn("Free_Qty");
         s2.addColumn("Amount");
         s2.addColumn("Dis %");
         s2.addColumn("Dis Amt");
@@ -158,10 +166,11 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
         jTable1.getColumnModel().getColumn(14).setCellRenderer(dtcr1);
         jTable1.getColumnModel().getColumn(15).setCellRenderer(dtcr1);
         jTable1.getColumnModel().getColumn(16).setCellRenderer(dtcr1);
-        jTable1.getColumnModel().getColumn(16).setCellRenderer(dtcr1);
+        jTable1.getColumnModel().getColumn(17).setCellRenderer(dtcr1);
         jTable1.getColumnModel().getColumn(17).setCellRenderer(dtcr1);
         jTable1.getColumnModel().getColumn(18).setCellRenderer(dtcr1);
         jTable1.getColumnModel().getColumn(19).setCellRenderer(dtcr1);
+        jTable1.getColumnModel().getColumn(20).setCellRenderer(dtcr1);
         jTable1.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         jTable1.getColumnModel().getColumn(0).setPreferredWidth(153);
         jTable1.getColumnModel().getColumn(1).setPreferredWidth(100);
@@ -171,26 +180,86 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
         jTable1.getColumnModel().getColumn(5).setPreferredWidth(125);
         jTable1.getColumnModel().getColumn(6).setPreferredWidth(120);
         jTable1.getColumnModel().getColumn(7).setPreferredWidth(75);
-        jTable1.getColumnModel().getColumn(8).setPreferredWidth(140);
-        jTable1.getColumnModel().getColumn(9).setPreferredWidth(100);
+        jTable1.getColumnModel().getColumn(8).setPreferredWidth(75);
+        jTable1.getColumnModel().getColumn(9).setPreferredWidth(140);
         jTable1.getColumnModel().getColumn(10).setPreferredWidth(100);
         jTable1.getColumnModel().getColumn(11).setPreferredWidth(100);
-        jTable1.getColumnModel().getColumn(12).setPreferredWidth(110);
+        jTable1.getColumnModel().getColumn(12).setPreferredWidth(100);
         jTable1.getColumnModel().getColumn(13).setPreferredWidth(110);
-        jTable1.getColumnModel().getColumn(14).setPreferredWidth(130);
-        jTable1.getColumnModel().getColumn(15).setPreferredWidth(120);
-        jTable1.getColumnModel().getColumn(16).setPreferredWidth(110);
-        jTable1.getColumnModel().getColumn(17).setPreferredWidth(180);
-        jTable1.getColumnModel().getColumn(18).setPreferredWidth(200);
-        jTable1.getColumnModel().getColumn(19).setPreferredWidth(180);
+        jTable1.getColumnModel().getColumn(14).setPreferredWidth(110);
+        jTable1.getColumnModel().getColumn(15).setPreferredWidth(130);
+        jTable1.getColumnModel().getColumn(16).setPreferredWidth(120);
+        jTable1.getColumnModel().getColumn(17).setPreferredWidth(110);
+        jTable1.getColumnModel().getColumn(18).setPreferredWidth(180);
+        jTable1.getColumnModel().getColumn(19).setPreferredWidth(200);
+        jTable1.getColumnModel().getColumn(20).setPreferredWidth(180);
         String Ta = "Arial";
         int Bold = 0, size = 14;
         jTable1.getTableHeader().setFont(new Font(Ta, Bold, size));
+        try {
+            String colCompanyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : " AND company_id=''";
+            ResultSet colRs = util
+                    .doQuery("SELECT col_key, col_visible FROM invoice_columns WHERE doc_type='purchase'"
+                            + colCompanyFilter);
+            while (colRs != null && colRs.next()) {
+                int colIdx = -1;
+                switch (colRs.getString("col_key")) {
+                    case "mrp":
+                        colIdx = 3;
+                        break;
+                    case "rprice":
+                        colIdx = 4;
+                        break;
+                    case "wprice":
+                        colIdx = 5;
+                        break;
+                    case "disc":
+                        colIdx = 10;
+                        break;
+                    case "disc_amt":
+                        colIdx = 11;
+                        break;
+                    case "sub_total":
+                        colIdx = 12;
+                        break;
+                    case "tax_pct":
+                        colIdx = 13;
+                        break;
+                    case "tax_amt":
+                        colIdx = 14;
+                        break;
+                    case "hsn":
+                        colIdx = 16;
+                        break;
+                    case "tax_type":
+                        colIdx = 17;
+                        break;
+                    case "category":
+                        colIdx = 18;
+                        break;
+                    case "manufacturer":
+                        colIdx = 19;
+                        break;
+                }
+                if (colIdx >= 0 && colRs.getInt("col_visible") == 0) {
+                    javax.swing.table.TableColumn tc = jTable1.getColumnModel().getColumn(colIdx);
+                    tc.setMinWidth(0);
+                    tc.setMaxWidth(0);
+                    tc.setPreferredWidth(0);
+                }
+            }
+        } catch (Exception ignored) {
+        }
     }
 
     final void get_defaults() {
         try {
-            String query = "select pur_rate_edit,rprice,wprice,rdis,wdis from setting_bill";
+            String companyWhere = UserSession.hasSelectedCompany()
+                    ? " WHERE companyID='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select pur_rate_edit,rprice,wprice,rdis,wdis from company" + companyWhere;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 pur_rate_edit = r.getString(1);
@@ -214,7 +283,10 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
         try {
             int sno = 1;
             Connection conn = util.getConnection();
-            PreparedStatement ps = conn.prepareStatement("select max(grn) from purchase");
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            PreparedStatement ps = conn.prepareStatement("select max(grn) from purchase" + companyFilter);
             ResultSet r = ps.executeQuery();
             boolean selva = false;
             while (r.next()) {
@@ -241,7 +313,7 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
             while (set1.next()) {
                 scode = set1.getString(1);
             }
-            ps = conn.prepareStatement("select scode from setting_bill");
+            ps = conn.prepareStatement("select scode from company");
             set1 = ps.executeQuery();
             while (set1.next()) {
                 actual_code = set1.getString(1);
@@ -260,8 +332,9 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
         try {
             Connection conn = util.getConnection();
             PreparedStatement ps = conn.prepareStatement(
-                    "select ino,iname,barcode,prate,mrp,rprice,wprice,taxp from item where ino=? order by ino limit 1");
+                    "select ino,iname,barcode,prate,mrp,rprice,wprice,taxp from item where ino=? AND company_id=? order by ino limit 1");
             ps.setString(1, h8.getText());
+            ps.setString(2, UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "");
             ResultSet r = ps.executeQuery();
             while (r.next()) {
                 h8.setText(r.getString(1));
@@ -282,8 +355,9 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
         try {
             Connection conn = util.getConnection();
             PreparedStatement ps = conn.prepareStatement(
-                    "select ino,iname,prate,mrp,rprice,wprice,taxp from item where barcode=? order by ino limit 1");
+                    "select ino,iname,prate,mrp,rprice,wprice,taxp from item where barcode=? AND company_id=? order by ino limit 1");
             ps.setString(1, h7.getText());
+            ps.setString(2, UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "");
             ResultSet r = ps.executeQuery();
             while (r.next()) {
                 h8.setText(r.getString(1));
@@ -300,13 +374,15 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
     }
 
     void add_item(String barcode, String ino, String iname, double prate, double mrp, double rrate, double wrate,
-            double disp, double disamt, int taxp, double quan) {
+            double disp, double disamt, int taxp, double quan, double freeQty) {
         try {
             String cat = ".", manu = ".", hsn = ".", iname1 = ".";
             boolean selva = false;
             Connection conn = util.getConnection();
-            PreparedStatement ps = conn.prepareStatement("select distinct cat,manu,hsn,iname1 from item where ino=?");
+            PreparedStatement ps = conn
+                    .prepareStatement("select distinct cat,manu,hsn,iname1 from item where ino=? AND company_id=?");
             ps.setString(1, ino);
+            ps.setString(2, UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "");
             ResultSet r = ps.executeQuery();
             while (r.next()) {
                 cat = r.getString(1);
@@ -353,7 +429,8 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
             }
             String prate1 = String.format("%." + hmany + "f", prate);
             String mrp1 = String.format("%." + hmany + "f", mrp);
-            s2.addRow(new Object[] { barcode, ino, iname, mrp1, rrate, wrate, prate1, quan, amount, disp, disamt, sub,
+            s2.addRow(new Object[] { barcode, ino, iname, mrp1, rrate, wrate, prate1, quan, freeQty, amount, disp,
+                    disamt, sub,
                     taxp, taxamt, total, hsn, ttype, cat, manu, iname1 });
             // row selected
             Rectangle rect = jTable1.getCellRect(jTable1.getRowCount() - 1, 0, true);
@@ -377,9 +454,9 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
                 double wrate1 = Double.parseDouble(jTable1.getValueAt(i, 5).toString());
                 double prate = Double.parseDouble(jTable1.getValueAt(i, 6).toString());
                 double quan = Double.parseDouble(jTable1.getValueAt(i, 7).toString());
-                double disp = Double.parseDouble(jTable1.getValueAt(i, 9).toString());
-                double disamt = Double.parseDouble(jTable1.getValueAt(i, 10).toString());
-                double taxp = Double.parseDouble(jTable1.getValueAt(i, 12).toString());
+                double disp = Double.parseDouble(jTable1.getValueAt(i, 10).toString());
+                double disamt = Double.parseDouble(jTable1.getValueAt(i, 11).toString());
+                double taxp = Double.parseDouble(jTable1.getValueAt(i, 13).toString());
 
                 double amount = prate * quan;
                 if (disp > 0) {
@@ -402,11 +479,11 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
                 String rrate2 = String.format("%." + hmany + "f", rrate1);
                 String wrate2 = String.format("%." + hmany + "f", wrate1);
 
-                jTable1.setValueAt(amount1, i, 8);
-                jTable1.setValueAt(disamt1, i, 10);
-                jTable1.setValueAt(sub1, i, 11);
-                jTable1.setValueAt(taxamt1, i, 13);
-                jTable1.setValueAt(total1, i, 14);
+                jTable1.setValueAt(amount1, i, 9);
+                jTable1.setValueAt(disamt1, i, 11);
+                jTable1.setValueAt(sub1, i, 12);
+                jTable1.setValueAt(taxamt1, i, 14);
+                jTable1.setValueAt(total1, i, 15);
 
                 jTable1.setValueAt(rrate2, i, 4);
                 jTable1.setValueAt(wrate2, i, 5);
@@ -508,6 +585,7 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
             h15.setText("");
             h16.setText("");
             h29.setText("");
+            h31.setText("");
             h8.requestFocus();
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -628,18 +706,20 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
             String po_no = h30.getText();
             ArrayList query_batch = new ArrayList();
 
+            String cid = UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "";
             conn = util.getConnection();
             conn.setAutoCommit(false);
             PreparedStatement psItems = conn.prepareStatement(
-                    "INSERT INTO purchase_items (grn, dat, cname, billno, bdate, barcode, ino, iname, mrp, rprice, wprice, price, quan, amount, disp, disamt, sub, taxp, taxamt, total, hsn, ttype, cat, manu, ttype1, iname1) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                    "INSERT INTO purchase_items (grn, dat, cname, billno, bdate, barcode, ino, iname, mrp, rprice, wprice, price, quan, free_qty, amount, disp, disamt, sub, taxp, taxamt, total, hsn, ttype, cat, manu, ttype1, iname1) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             PreparedStatement psStockUpdate = conn
-                    .prepareStatement("UPDATE stock SET quan=quan+? WHERE barcode=? AND ino=? AND iname=? AND entry=?");
+                    .prepareStatement(
+                            "UPDATE stock SET quan=quan+? WHERE barcode=? AND ino=? AND iname=? AND entry=? AND company_id=?");
             PreparedStatement psStockUpdateRate = conn.prepareStatement(
-                    "UPDATE stock SET quan=quan+?, mrp=?, rprice=?, wprice=?, prate=? WHERE barcode=? AND ino=? AND iname=? AND entry=?");
+                    "UPDATE stock SET quan=quan+?, mrp=?, rprice=?, wprice=?, prate=? WHERE barcode=? AND ino=? AND iname=? AND entry=? AND company_id=?");
             PreparedStatement psItemUpdate = conn.prepareStatement(
                     "UPDATE item SET mrp=?, rprice=?, wprice=?, prate=? WHERE barcode=? AND ino=? AND iname=?");
             PreparedStatement psStockInsert = conn.prepareStatement(
-                    "INSERT INTO stock (barcode, ino, iname, mrp, rprice, wprice, prate, quan, cat, entry) VALUES (?,?,?,?,?,?,?,?,?,?)");
+                    "INSERT INTO stock (barcode, ino, iname, mrp, rprice, wprice, prate, quan, cat, entry, company_id) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
 
             for (int i = 0; i < jTable1.getRowCount(); i++) {
                 String barcode = jTable1.getValueAt(i, 0).toString();
@@ -650,18 +730,19 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
                 String wprice = jTable1.getValueAt(i, 5).toString();
                 double prate = Double.parseDouble(jTable1.getValueAt(i, 6).toString());
                 String quan = jTable1.getValueAt(i, 7).toString();
-                String amount = jTable1.getValueAt(i, 8).toString();
-                String disp1 = jTable1.getValueAt(i, 9).toString();
-                String disamt1 = jTable1.getValueAt(i, 10).toString();
-                String sub1 = jTable1.getValueAt(i, 11).toString();
-                String taxp1 = jTable1.getValueAt(i, 12).toString();
-                String taxamt1 = jTable1.getValueAt(i, 13).toString();
-                String total = jTable1.getValueAt(i, 14).toString();
-                String hsn = jTable1.getValueAt(i, 15).toString();
-                String tax_type1 = jTable1.getValueAt(i, 16).toString();
-                String cat = jTable1.getValueAt(i, 17).toString();
-                String manu = jTable1.getValueAt(i, 18).toString();
-                String iname1 = jTable1.getValueAt(i, 19).toString();
+                String freeQty = jTable1.getValueAt(i, 8).toString();
+                String amount = jTable1.getValueAt(i, 9).toString();
+                String disp1 = jTable1.getValueAt(i, 10).toString();
+                String disamt1 = jTable1.getValueAt(i, 11).toString();
+                String sub1 = jTable1.getValueAt(i, 12).toString();
+                String taxp1 = jTable1.getValueAt(i, 13).toString();
+                String taxamt1 = jTable1.getValueAt(i, 14).toString();
+                String total = jTable1.getValueAt(i, 15).toString();
+                String hsn = jTable1.getValueAt(i, 16).toString();
+                String tax_type1 = jTable1.getValueAt(i, 17).toString();
+                String cat = jTable1.getValueAt(i, 18).toString();
+                String manu = jTable1.getValueAt(i, 19).toString();
+                String iname1 = jTable1.getValueAt(i, 20).toString();
 
                 psItems.setString(1, grn);
                 psItems.setString(2, date);
@@ -676,43 +757,46 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
                 psItems.setString(11, wprice);
                 psItems.setDouble(12, prate);
                 psItems.setString(13, quan);
-                psItems.setString(14, amount);
-                psItems.setString(15, disp1);
-                psItems.setString(16, disamt1);
-                psItems.setString(17, sub1);
-                psItems.setString(18, taxp1);
-                psItems.setString(19, taxamt1);
-                psItems.setString(20, total);
-                psItems.setString(21, hsn);
-                psItems.setString(22, tax_type1);
-                psItems.setString(23, cat);
-                psItems.setString(24, manu);
-                psItems.setString(25, ttype1);
-                psItems.setString(26, iname1);
+                psItems.setString(14, freeQty);
+                psItems.setString(15, amount);
+                psItems.setString(16, disp1);
+                psItems.setString(17, disamt1);
+                psItems.setString(18, sub1);
+                psItems.setString(19, taxp1);
+                psItems.setString(20, taxamt1);
+                psItems.setString(21, total);
+                psItems.setString(22, hsn);
+                psItems.setString(23, tax_type1);
+                psItems.setString(24, cat);
+                psItems.setString(25, manu);
+                psItems.setString(26, ttype1);
+                psItems.setString(27, iname1);
                 psItems.addBatch();
 
                 double old_rate = 0;
                 boolean selvak = false;
                 PreparedStatement psCheckStock = conn.prepareStatement(
-                        "SELECT DISTINCT prate FROM stock WHERE barcode=? AND ino=? AND iname=? AND entry=?");
+                        "SELECT DISTINCT prate FROM stock WHERE barcode=? AND ino=? AND iname=? AND entry=? AND company_id=?");
                 psCheckStock.setString(1, barcode);
                 psCheckStock.setString(2, ino);
                 psCheckStock.setString(3, iname);
                 psCheckStock.setString(4, entry);
+                psCheckStock.setString(5, cid);
                 r = psCheckStock.executeQuery();
                 while (r.next()) {
                     selvak = true;
                     old_rate = r.getDouble(1);
                 }
                 if (selvak == true && old_rate == prate) {
-                    psStockUpdate.setDouble(1, Double.parseDouble(quan));
+                    psStockUpdate.setDouble(1, Double.parseDouble(quan) + Double.parseDouble(freeQty));
                     psStockUpdate.setString(2, barcode);
                     psStockUpdate.setString(3, ino);
                     psStockUpdate.setString(4, iname);
                     psStockUpdate.setString(5, entry);
+                    psStockUpdate.setString(6, cid);
                     psStockUpdate.addBatch();
                 } else if (selvak == true && old_rate != prate) {
-                    psStockUpdateRate.setDouble(1, Double.parseDouble(quan));
+                    psStockUpdateRate.setDouble(1, Double.parseDouble(quan) + Double.parseDouble(freeQty));
                     psStockUpdateRate.setString(2, mrp);
                     psStockUpdateRate.setString(3, rprice);
                     psStockUpdateRate.setString(4, wprice);
@@ -721,6 +805,7 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
                     psStockUpdateRate.setString(7, ino);
                     psStockUpdateRate.setString(8, iname);
                     psStockUpdateRate.setString(9, entry);
+                    psStockUpdateRate.setString(10, cid);
                     psStockUpdateRate.addBatch();
 
                     psItemUpdate.setString(1, mrp);
@@ -739,9 +824,10 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
                     psStockInsert.setString(5, rprice);
                     psStockInsert.setString(6, wprice);
                     psStockInsert.setDouble(7, prate);
-                    psStockInsert.setString(8, quan);
+                    psStockInsert.setDouble(8, Double.parseDouble(quan) + Double.parseDouble(freeQty));
                     psStockInsert.setString(9, cat);
                     psStockInsert.setString(10, entry);
+                    psStockInsert.setString(11, cid);
                     psStockInsert.addBatch();
                 }
             } // jtable row counts ends
@@ -753,7 +839,7 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
             psStockInsert.executeBatch();
 
             PreparedStatement psPurchase = conn.prepareStatement(
-                    "INSERT INTO purchase (grn, dat, cname, billno, bdate, bamount, items, quans, sub, dis, gross, tax, fright, other, gt, round, net, pby, user, last, ttype, po_no) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                    "INSERT INTO purchase (grn, dat, cname, billno, bdate, bamount, items, quans, sub, dis, gross, tax, fright, other, gt, round, net, pby, user, last, ttype, po_no, company_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             psPurchase.setString(1, grn);
             psPurchase.setString(2, date);
             psPurchase.setString(3, cname);
@@ -776,6 +862,7 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
             psPurchase.setString(20, last);
             psPurchase.setString(21, ttype1);
             psPurchase.setString(22, po_no);
+            psPurchase.setString(23, UserSession.getSelectedCompanyID());
             psPurchase.executeUpdate();
 
             if (!po_no.equals(".")) {
@@ -784,8 +871,9 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
                 psPo.setString(1, po_no);
                 psPo.executeUpdate();
             }
-            if (pby.equalsIgnoreCase("Credit")) {
+            if (pby.equalsIgnoreCase("Credit") || (pby.equalsIgnoreCase("Multi Pay") && multiPayCredit > 0)) {
                 int paid1 = 0;
+                double creditTotal = pby.equalsIgnoreCase("Credit") ? net : multiPayCredit;
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
                 Calendar c = Calendar.getInstance();
                 c.setTime(sdf.parse(date));
@@ -793,14 +881,15 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
                 String ddate = sdf.format(c.getTime());
 
                 PreparedStatement psVenBal = conn.prepareStatement(
-                        "INSERT INTO ven_bal (billno, dat, ddate, cname, tot, paid, last) VALUES (?,?,?,?,?,?,?)");
+                        "INSERT INTO ven_bal (billno, dat, ddate, cname, tot, paid, last, company_id) VALUES (?,?,?,?,?,?,?,?)");
                 psVenBal.setString(1, billno);
                 psVenBal.setString(2, date);
                 psVenBal.setString(3, ddate);
                 psVenBal.setString(4, cname);
-                psVenBal.setDouble(5, net);
+                psVenBal.setDouble(5, creditTotal);
                 psVenBal.setInt(6, paid1);
                 psVenBal.setString(7, last);
+                psVenBal.setString(8, UserSession.getSelectedCompanyID());
                 psVenBal.executeUpdate();
             } // credit bill ends
 
@@ -851,6 +940,7 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
             diffl.setText("");
             h30.setText("");
             h30.setEditable(true);
+            multiPayCredit = 0;
             searchbutton1.setEnabled(true);
             if (s2.getRowCount() > 0) {
                 s2.getDataVector().removeAllElements();
@@ -927,7 +1017,10 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
                     ResultSet r1;
                     try {
                         PreparedStatement psBal = conn
-                                .prepareStatement("select sum(tot-paid) from ven_bal where cname=?");
+                                .prepareStatement("select sum(tot-paid) from ven_bal where cname=?"
+                                        + (UserSession.hasSelectedCompany()
+                                                ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                                                : ""));
                         psBal.setString(1, h3.getText());
                         r1 = psBal.executeQuery();
                         while (r1.next()) {
@@ -939,16 +1032,16 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
                     }
                 }
                 PreparedStatement psItems = conn.prepareStatement(
-                        "select barcode,ino,iname,mrp,rprice,wprice,price,quan,amount,disp,disamt,sub,taxp,taxamt,total,hsn,ttype,cat,manu,iname1 from purchase_items where grn=?");
+                        "select barcode,ino,iname,mrp,rprice,wprice,price,quan,IFNULL(free_qty,0),amount,disp,disamt,sub,taxp,taxamt,total,hsn,ttype,cat,manu,iname1 from purchase_items where grn=?");
                 psItems.setString(1, grn);
                 set1 = psItems.executeQuery();
                 while (set1.next()) {
                     s2.addRow(new Object[] { set1.getString(1), set1.getString(2), set1.getString(3), set1.getString(4),
                             set1.getString(5), set1.getString(6), set1.getString(7), set1.getString(8),
-                            set1.getString(9),
-                            set1.getString(10), set1.getString(11), set1.getString(12), set1.getString(13),
-                            set1.getString(14), set1.getString(15), set1.getString(16), set1.getString(17),
-                            set1.getString(18), set1.getString(19), set1.getString(20) });
+                            set1.getString(9), set1.getString(10),
+                            set1.getString(11), set1.getString(12), set1.getString(13), set1.getString(14),
+                            set1.getString(15), set1.getString(16), set1.getString(17), set1.getString(18),
+                            set1.getString(19), set1.getString(20), set1.getString(21) });
                 }
             } // if selva true ends
         } catch (HeadlessException | NumberFormatException | SQLException e) {
@@ -1002,9 +1095,9 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
                     String wprice = jTable1.getValueAt(i, 5).toString();
                     String prate = jTable1.getValueAt(i, 6).toString();
                     String quan = jTable1.getValueAt(i, 7).toString();
-                    String disp1 = jTable1.getValueAt(i, 9).toString();
-                    String disamt1 = jTable1.getValueAt(i, 10).toString();
-                    String taxp1 = jTable1.getValueAt(i, 12).toString();
+                    String disp1 = jTable1.getValueAt(i, 10).toString();
+                    String disamt1 = jTable1.getValueAt(i, 11).toString();
+                    String taxp1 = jTable1.getValueAt(i, 13).toString();
                     f.write("" + barcode + "$" + ino + "$" + iname + "$" + prate + "$" + mrp + "$" + rprice + "$"
                             + wprice + "$" + disp1 + "$" + disamt1 + "$" + taxp1 + "$" + quan + "\r\n");
                 } // row counts ends here
@@ -1086,9 +1179,9 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
                     String wprice = jTable1.getValueAt(i, 5).toString();
                     String prate = jTable1.getValueAt(i, 6).toString();
                     String quan = jTable1.getValueAt(i, 7).toString();
-                    String disp1 = jTable1.getValueAt(i, 9).toString();
-                    String disamt1 = jTable1.getValueAt(i, 10).toString();
-                    String taxp1 = jTable1.getValueAt(i, 12).toString();
+                    String disp1 = jTable1.getValueAt(i, 10).toString();
+                    String disamt1 = jTable1.getValueAt(i, 11).toString();
+                    String taxp1 = jTable1.getValueAt(i, 13).toString();
                     f.write("" + barcode + "$" + ino + "$" + iname + "$" + prate + "$" + mrp + "$" + rprice + "$"
                             + wprice + "$" + disp1 + "$" + disamt1 + "$" + taxp1 + "$" + quan + "\r\n");
                 } // row counts ends here
@@ -1157,7 +1250,7 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
                     taxp = Integer.parseInt(token.nextToken());
                     quan = Double.parseDouble(token.nextToken());
                 }
-                add_item(barcode, ino, iname, prate, mrp, rprice, wprice, disp, disamt, taxp, quan);
+                add_item(barcode, ino, iname, prate, mrp, rprice, wprice, disp, disamt, taxp, quan, 0);
             } // while loop reading lines one by one ends he
 
             String file_name1 = "Bill_Details_Purchase";
@@ -1192,7 +1285,11 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
                     ttypel.setSelectedItem(token.nextToken());
                     h30.setText(token.nextToken());
                     double old_bal = 0;
-                    String query1 = "select sum(tot-paid) from ven_bal where cname='" + h3.getText() + "'";
+                    String companyFilterAnd = UserSession.hasSelectedCompany()
+                            ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                            : "";
+                    String query1 = "select sum(tot-paid) from ven_bal where cname='" + h3.getText() + "'"
+                            + companyFilterAnd;
                     ResultSet r1;
                     try {
                         r1 = util.doQuery(query1);
@@ -1238,20 +1335,24 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
 
             Connection conn = util.getConnection();
             conn.setAutoCommit(false);
+            String cid = UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "";
             PreparedStatement psUpdateStock = conn
-                    .prepareStatement("update stock set quan=quan-? where barcode=? and ino=? and iname=? and entry=?");
+                    .prepareStatement(
+                            "update stock set quan=quan-? where barcode=? and ino=? and iname=? and entry=? and company_id=?");
 
             for (int i = 0; i < jTable1.getRowCount(); i++) {
                 String barcode = jTable1.getValueAt(i, 0).toString();
                 String ino = jTable1.getValueAt(i, 1).toString();
                 String iname = jTable1.getValueAt(i, 2).toString();
                 String quan = jTable1.getValueAt(i, 7).toString();
+                String freeQty = jTable1.getValueAt(i, 8).toString();
 
-                psUpdateStock.setDouble(1, Double.parseDouble(quan));
+                psUpdateStock.setDouble(1, Double.parseDouble(quan) + Double.parseDouble(freeQty));
                 psUpdateStock.setString(2, barcode);
                 psUpdateStock.setString(3, ino);
                 psUpdateStock.setString(4, iname);
                 psUpdateStock.setString(5, entry);
+                psUpdateStock.setString(6, cid);
                 psUpdateStock.addBatch();
             } // jtable row counts ends
             psUpdateStock.executeBatch();
@@ -1264,9 +1365,12 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
             psDeletePurchaseItems.setString(1, grn);
             psDeletePurchaseItems.executeUpdate();
 
-            if (h28.getSelectedItem().equals("Credit")) {
+            if (h28.getSelectedItem().equals("Credit") || h28.getSelectedItem().equals("Multi Pay")) {
                 PreparedStatement psDeleteVenBal = conn
-                        .prepareStatement("delete from ven_bal where billno=? and cname=?");
+                        .prepareStatement("delete from ven_bal where billno=? and cname=?"
+                                + (UserSession.hasSelectedCompany()
+                                        ? " and company_id='" + UserSession.getSelectedCompanyID() + "'"
+                                        : ""));
                 psDeleteVenBal.setString(1, h4.getText());
                 psDeleteVenBal.setString(2, h3.getText());
                 psDeleteVenBal.executeUpdate();
@@ -1316,13 +1420,15 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
             ArrayList<String> ino = new ArrayList<>();
             ArrayList<String> iname = new ArrayList<>();
             ArrayList<String> quan = new ArrayList<>();
+            ArrayList<String> freeQtyList = new ArrayList<>();
             String entry = "purchase";
 
             Connection conn = util.getConnection();
             conn.setAutoCommit(false);
 
             PreparedStatement ps = conn
-                    .prepareStatement("select barcode,ino,iname,quan from purchase_items where grn=?");
+                    .prepareStatement(
+                            "select barcode,ino,iname,quan,IFNULL(free_qty,0) from purchase_items where grn=?");
             ps.setString(1, grn);
             ResultSet set1 = ps.executeQuery();
             boolean selva = false;
@@ -1332,17 +1438,21 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
                 ino.add(set1.getString(2));
                 iname.add(set1.getString(3));
                 quan.add(set1.getString(4));
+                freeQtyList.add(set1.getString(5));
             }
 
             if (selva == true) {
+                String cid = UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "";
                 PreparedStatement psUpdateStock = conn.prepareStatement(
-                        "update stock set quan=quan-? where barcode=? and ino=? and iname=? and entry=?");
+                        "update stock set quan=quan-? where barcode=? and ino=? and iname=? and entry=? and company_id=?");
                 for (int i = 0; i < barcode.size(); i++) {
-                    psUpdateStock.setDouble(1, Double.parseDouble(quan.get(i)));
+                    psUpdateStock.setDouble(1,
+                            Double.parseDouble(quan.get(i)) + Double.parseDouble(freeQtyList.get(i)));
                     psUpdateStock.setString(2, barcode.get(i));
                     psUpdateStock.setString(3, ino.get(i));
                     psUpdateStock.setString(4, iname.get(i));
                     psUpdateStock.setString(5, entry);
+                    psUpdateStock.setString(6, cid);
                     psUpdateStock.addBatch();
                 }
                 psUpdateStock.executeBatch();
@@ -1356,9 +1466,12 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
             psDeletePurchaseItems.setString(1, grn);
             psDeletePurchaseItems.executeUpdate();
 
-            if (h28.getSelectedItem().equals("Credit")) {
+            if (h28.getSelectedItem().equals("Credit") || h28.getSelectedItem().equals("Multi Pay")) {
                 PreparedStatement psDeleteVenBal = conn
-                        .prepareStatement("delete from ven_bal where billno=? and cname=?");
+                        .prepareStatement("delete from ven_bal where billno=? and cname=?"
+                                + (UserSession.hasSelectedCompany()
+                                        ? " and company_id='" + UserSession.getSelectedCompanyID() + "'"
+                                        : ""));
                 psDeleteVenBal.setString(1, h4.getText());
                 psDeleteVenBal.setString(2, h3.getText());
                 psDeleteVenBal.executeUpdate();
@@ -1432,7 +1545,7 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
                 double rprice1 = Double.parseDouble(jTable1.getValueAt(i, 4).toString());
                 double wprice1 = Double.parseDouble(jTable1.getValueAt(i, 5).toString());
                 double quan = Double.parseDouble(jTable1.getValueAt(i, 7).toString());
-                String tname1 = jTable1.getValueAt(i, 19).toString();
+                String tname1 = jTable1.getValueAt(i, 20).toString();
                 int quan1 = (int) quan;
 
                 String mrp2 = String.format("%." + hmany1 + "f", mrp1);
@@ -1481,12 +1594,15 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
         try {
             int count = 0;
             Connection conn = util.getConnection();
-            PreparedStatement ps = conn.prepareStatement("select count(iname) from item");
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            PreparedStatement ps = conn.prepareStatement("select count(iname) from item WHERE 1=1" + companyFilter);
             ResultSet set = ps.executeQuery();
             while (set.next()) {
                 count = set.getInt(1);
             }
-            ps = conn.prepareStatement("select iname from item");
+            ps = conn.prepareStatement("select iname from item WHERE 1=1" + companyFilter);
             set = ps.executeQuery();
             Object f[] = new Object[count];
             int index = 0;
@@ -1532,7 +1648,10 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
                 double old_bal = 0;
                 ResultSet r1;
                 try {
-                    PreparedStatement psBal = conn.prepareStatement("select sum(tot-paid) from ven_bal where cname=?");
+                    PreparedStatement psBal = conn.prepareStatement("select sum(tot-paid) from ven_bal where cname=?"
+                            + (UserSession.hasSelectedCompany()
+                                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                                    : ""));
                     psBal.setString(1, h3.getText());
                     r1 = psBal.executeQuery();
                     while (r1.next()) {
@@ -1546,13 +1665,14 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
 
             get_tax_type();
             ps = conn.prepareStatement(
-                    "select barcode,a.ino,a.iname,a.mrp,rprice,wprice,price,quan,a.taxp,hsn,cat,manu,iname1 from po_items a,item b where a.ino=b.ino and grn=?");
+                    "select barcode,a.ino,a.iname,a.mrp,rprice,wprice,price,quan,IFNULL(a.free_qty,0),a.taxp,hsn,cat,manu,iname1 from po_items a,item b where a.ino=b.ino and grn=?");
             ps.setString(1, h30.getText());
             r = ps.executeQuery();
             while (r.next()) {
                 s2.addRow(new Object[] { r.getString(1), r.getString(2), r.getString(3), r.getString(4), r.getString(5),
-                        r.getString(6), r.getString(7), r.getString(8), 0, 0, 0, 0, r.getString(9), 0, 0,
-                        r.getString(10), ttype, r.getString(11), r.getString(12), r.getString(13) });
+                        r.getString(6), r.getString(7), r.getString(8), r.getString(9), 0, 0, 0, 0, r.getString(10), 0,
+                        0,
+                        r.getString(11), ttype, r.getString(12), r.getString(13), r.getString(14) });
             }
             apply_all_changes();
 
@@ -1581,6 +1701,7 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
         jPanel1.setVisible(false);
         get_sug();
         printbutton.setVisible(false);
+        initMultiPayDialog();
 
     }
 
@@ -1687,6 +1808,8 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
         h29 = new javax.swing.JTextField();
         jLabel34 = new javax.swing.JLabel();
         h30 = new javax.swing.JTextField();
+        h31 = new javax.swing.JTextField();
+        jLabel35 = new javax.swing.JLabel();
         searchbutton1 = new javax.swing.JButton();
         printbutton = new javax.swing.JButton();
         creditLabel = new javax.swing.JLabel();
@@ -1892,7 +2015,7 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
             }
         });
         getContentPane().add(h11);
-        h11.setBounds(70, 180, 180, 30);
+        h11.setBounds(38, 180, 100, 30);
 
         jLabel5.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jLabel5.setText("GRN No");
@@ -1927,7 +2050,7 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
         h9.setEditable(false);
         h9.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         getContentPane().add(h9);
-        h9.setBounds(250, 150, 480, 30);
+        h9.setBounds(185, 150, 405, 30);
 
         jLabel8.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jLabel8.setText(" Bill Date");
@@ -1979,20 +2102,20 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
         getContentPane().add(h4);
         h4.setBounds(70, 100, 180, 30);
 
-        jLabel10.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        jLabel10.setText(" Qty");
+        jLabel10.setFont(new java.awt.Font("Arial", 0, 12)); // NOI18N
+        jLabel10.setText("Paid Qty");
         getContentPane().add(jLabel10);
-        jLabel10.setBounds(1130, 180, 30, 30);
+        jLabel10.setBounds(780, 180, 50, 30);
 
         h15.setEditable(false);
         h15.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         getContentPane().add(h15);
-        h15.setBounds(1090, 180, 40, 30);
+        h15.setBounds(740, 180, 35, 30);
 
-        jLabel12.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+        jLabel12.setFont(new java.awt.Font("Arial", 0, 12)); // NOI18N
         jLabel12.setText("MRP");
         getContentPane().add(jLabel12);
-        jLabel12.setBounds(10, 180, 60, 30);
+        jLabel12.setBounds(10, 180, 28, 30);
 
         h6.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         h6.addActionListener(new java.awt.event.ActionListener() {
@@ -2003,10 +2126,10 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
         getContentPane().add(h6);
         h6.setBounds(570, 100, 150, 30);
 
-        jLabel13.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        jLabel13.setText("   Tax %");
+        jLabel13.setFont(new java.awt.Font("Arial", 0, 12)); // NOI18N
+        jLabel13.setText("Tax %");
         getContentPane().add(jLabel13);
-        jLabel13.setBounds(1030, 180, 60, 30);
+        jLabel13.setBounds(708, 180, 32, 30);
 
         h7.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         h7.addActionListener(new java.awt.event.ActionListener() {
@@ -2015,7 +2138,7 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
             }
         });
         getContentPane().add(h7);
-        h7.setBounds(790, 150, 200, 30);
+        h7.setBounds(645, 150, 150, 30);
 
         h10.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         h10.addActionListener(new java.awt.event.ActionListener() {
@@ -2024,12 +2147,12 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
             }
         });
         getContentPane().add(h10);
-        h10.setBounds(1090, 150, 140, 30);
+        h10.setBounds(885, 150, 100, 30);
 
-        jLabel15.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        jLabel15.setText("It.Code");
+        jLabel15.setFont(new java.awt.Font("Arial", 0, 12)); // NOI18N
+        jLabel15.setText("Item Code");
         getContentPane().add(jLabel15);
-        jLabel15.setBounds(10, 150, 60, 30);
+        jLabel15.setBounds(10, 150, 55, 30);
 
         h8.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         h8.addActionListener(new java.awt.event.ActionListener() {
@@ -2043,17 +2166,17 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
             }
         });
         getContentPane().add(h8);
-        h8.setBounds(70, 150, 180, 30);
+        h8.setBounds(65, 150, 120, 30);
 
-        jLabel16.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        jLabel16.setText(" Retail Price");
+        jLabel16.setFont(new java.awt.Font("Arial", 0, 12)); // NOI18N
+        jLabel16.setText("Retail Price");
         getContentPane().add(jLabel16);
-        jLabel16.setBounds(250, 180, 80, 30);
+        jLabel16.setBounds(143, 180, 70, 30);
 
-        jLabel17.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        jLabel17.setText(" Wholesale Price");
+        jLabel17.setFont(new java.awt.Font("Arial", 0, 12)); // NOI18N
+        jLabel17.setText("Wholesale Price");
         getContentPane().add(jLabel17);
-        jLabel17.setBounds(490, 180, 110, 30);
+        jLabel17.setBounds(318, 180, 90, 30);
 
         h13.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         h13.addActionListener(new java.awt.event.ActionListener() {
@@ -2062,12 +2185,12 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
             }
         });
         getContentPane().add(h13);
-        h13.setBounds(600, 180, 130, 30);
+        h13.setBounds(408, 180, 100, 30);
 
-        jLabel18.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        jLabel18.setText(" Barcode");
+        jLabel18.setFont(new java.awt.Font("Arial", 0, 12)); // NOI18N
+        jLabel18.setText("Barcode");
         getContentPane().add(jLabel18);
-        jLabel18.setBounds(730, 150, 60, 30);
+        jLabel18.setBounds(595, 150, 50, 30);
 
         h16.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         h16.addActionListener(new java.awt.event.ActionListener() {
@@ -2076,12 +2199,26 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
             }
         });
         getContentPane().add(h16);
-        h16.setBounds(1160, 180, 70, 30);
+        h16.setBounds(830, 180, 55, 30);
 
-        jLabel19.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        jLabel19.setText(" Dis Amt");
+        jLabel35.setFont(new java.awt.Font("Arial", 0, 12)); // NOI18N
+        jLabel35.setText("Free Qty");
+        getContentPane().add(jLabel35);
+        jLabel35.setBounds(890, 180, 50, 30);
+
+        h31.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+        h31.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                h31ActionPerformed(evt);
+            }
+        });
+        getContentPane().add(h31);
+        h31.setBounds(940, 180, 55, 30);
+
+        jLabel19.setFont(new java.awt.Font("Arial", 0, 12)); // NOI18N
+        jLabel19.setText("Dis Amt");
         getContentPane().add(jLabel19);
-        jLabel19.setBounds(850, 180, 60, 30);
+        jLabel19.setBounds(593, 180, 45, 30);
 
         h14.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         h14.addActionListener(new java.awt.event.ActionListener() {
@@ -2090,7 +2227,7 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
             }
         });
         getContentPane().add(h14);
-        h14.setBounds(790, 180, 60, 30);
+        h14.setBounds(543, 180, 45, 30);
 
         jCalendarButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/cal40.png"))); // NOI18N
         jCalendarButton1.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
@@ -2102,9 +2239,9 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
         jCalendarButton1.setBounds(460, 100, 30, 30);
 
         jLabel20.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        jLabel20.setText(" Total Qty");
+        jLabel20.setText(" Paid Qty");
         getContentPane().add(jLabel20);
-        jLabel20.setBounds(210, 440, 100, 30);
+        jLabel20.setBounds(210, 440, 80, 30);
 
         h12.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         h12.addActionListener(new java.awt.event.ActionListener() {
@@ -2113,7 +2250,7 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
             }
         });
         getContentPane().add(h12);
-        h12.setBounds(330, 180, 160, 30);
+        h12.setBounds(213, 180, 100, 30);
 
         jLabel21.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jLabel21.setText(" Sub Total");
@@ -2358,7 +2495,8 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
 
         h28.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         h28.setModel(
-                new javax.swing.DefaultComboBoxModel<>(new String[] { "Credit", "Cash", "Bank", "UPI", "Others" }));
+                new javax.swing.DefaultComboBoxModel<>(
+                        new String[] { "Credit", "Cash", "Bank", "UPI", "Others", "Multi Pay" }));
         h28.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
                 h28KeyPressed(evt);
@@ -2433,15 +2571,15 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
         getContentPane().add(jPanel1);
         jPanel1.setBounds(790, 70, 440, 70);
 
-        jLabel31.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        jLabel31.setText(" Purchase Price");
+        jLabel31.setFont(new java.awt.Font("Arial", 0, 12)); // NOI18N
+        jLabel31.setText("Purchase Price");
         getContentPane().add(jLabel31);
-        jLabel31.setBounds(990, 150, 100, 30);
+        jLabel31.setBounds(800, 150, 85, 30);
 
-        jLabel33.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        jLabel33.setText(" Dis %");
+        jLabel33.setFont(new java.awt.Font("Arial", 0, 12)); // NOI18N
+        jLabel33.setText("Dis %");
         getContentPane().add(jLabel33);
-        jLabel33.setBounds(730, 180, 60, 30);
+        jLabel33.setBounds(513, 180, 30, 30);
 
         h29.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         h29.addActionListener(new java.awt.event.ActionListener() {
@@ -2450,7 +2588,7 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
             }
         });
         getContentPane().add(h29);
-        h29.setBounds(910, 180, 80, 30);
+        h29.setBounds(638, 180, 65, 30);
 
         jLabel34.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jLabel34.setText(" Tax Type");
@@ -2575,7 +2713,7 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
                         double quan = getNumericCellValue(row.getCell(10));
 
                         if (!ino.isEmpty() && !iname.isEmpty()) {
-                            add_item(barcode, ino, iname, prate, mrp, rrate, wrate, disp, disamt, taxp, quan);
+                            add_item(barcode, ino, iname, prate, mrp, rrate, wrate, disp, disamt, taxp, quan, 0);
                         }
                     }
                 }
@@ -2648,7 +2786,11 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
                 return;
             }
             Connection conn = util.getConnection();
-            PreparedStatement ps = conn.prepareStatement("select grn from purchase where grn > ? order by grn limit 1");
+            String companyAnd = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            PreparedStatement ps = conn
+                    .prepareStatement("select grn from purchase where grn > ?" + companyAnd + " order by grn limit 1");
             ps.setString(1, grn);
             ResultSet set1 = ps.executeQuery();
             boolean selva = false;
@@ -2673,12 +2815,19 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
             String grn = h1.getText();
             Connection conn = util.getConnection();
             ResultSet set1;
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String companyAnd = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             if (grn.equalsIgnoreCase("--")) {
-                PreparedStatement ps = conn.prepareStatement("select max(grn) from purchase");
+                PreparedStatement ps = conn.prepareStatement("select max(grn) from purchase" + companyFilter);
                 set1 = ps.executeQuery();
             } else {
                 PreparedStatement ps = conn
-                        .prepareStatement("select grn from purchase where grn < ? order by grn desc limit 1");
+                        .prepareStatement(
+                                "select grn from purchase where grn < ?" + companyAnd + " order by grn desc limit 1");
                 ps.setString(1, grn);
                 set1 = ps.executeQuery();
             }
@@ -2789,6 +2938,13 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
     }// GEN-LAST:event_h8ActionPerformed
 
     private void h16ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h16ActionPerformed
+        if (h16.getText().equals("")) {
+            h16.setText("" + 1);
+        }
+        h31.requestFocus();
+    }// GEN-LAST:event_h16ActionPerformed
+
+    private void h31ActionPerformed(java.awt.event.ActionEvent evt) {
         try {
             if (h8.getText().equals("") || h9.getText().equals("")) {
                 JOptionPane.showMessageDialog(this, "Enter Item Details ?", "Item Details", JOptionPane.ERROR_MESSAGE);
@@ -2827,6 +2983,9 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
             if (h29.getText().equals("")) {
                 h29.setText("" + 0);
             }
+            if (h31.getText().equals("")) {
+                h31.setText("" + 0);
+            }
             String barcode = h7.getText();
             String ino = h8.getText();
             String iname = h9.getText();
@@ -2838,6 +2997,7 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
             double disamt = Double.parseDouble(h29.getText());
             int taxp = Integer.parseInt(h15.getText());
             double quan = Double.parseDouble(h16.getText());
+            double freeQty = Double.parseDouble(h31.getText());
 
             if (taxp != 0 && taxp != 5 && taxp != 12 && taxp != 18 && taxp != 28) {
                 JOptionPane.showMessageDialog(this, "<html><h4>Allowed: 0%, 5%, 12%, 18%, 28%</h4></html>",
@@ -2845,7 +3005,7 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
                 h18.requestFocus();
                 return;
             }
-            add_item(barcode, ino, iname, prate, mrp, rrate1, wrate1, disp, disamt, taxp, quan);
+            add_item(barcode, ino, iname, prate, mrp, rrate1, wrate1, disp, disamt, taxp, quan, freeQty);
         } catch (HeadlessException | NumberFormatException e) {
             System.out.println(e.getMessage());
         }
@@ -2973,7 +3133,11 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
 
     private void h28KeyPressed(java.awt.event.KeyEvent evt) {// GEN-FIRST:event_h28KeyPressed
         if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
-            save();
+            if (h28.getSelectedItem().equals("Multi Pay")) {
+                showMultiPayDialog();
+            } else {
+                save();
+            }
         }
     }// GEN-LAST:event_h28KeyPressed
 
@@ -3008,8 +3172,12 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
                     cname_list.setSize(857, 438);
                     cname_list.setVisible(true);
                     Connection conn = util.getConnection();
+                    String companyFilter = UserSession.hasSelectedCompany()
+                            ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                            : "";
                     PreparedStatement ps = conn.prepareStatement(
-                            "select cname,city from vendor where cname like ? order by cname limit 300");
+                            "select cname,city from vendor where cname like ?" + companyFilter
+                                    + " order by cname limit 300");
                     ps.setString(1, h3.getText() + "%");
                     ResultSet r = ps.executeQuery();
                     while (r.next()) {
@@ -3034,7 +3202,10 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
 
                 try {
                     Connection conn = util.getConnection();
-                    PreparedStatement ps = conn.prepareStatement("select sum(tot-paid) from ven_bal where cname=?");
+                    PreparedStatement ps = conn.prepareStatement("select sum(tot-paid) from ven_bal where cname=?"
+                            + (UserSession.hasSelectedCompany()
+                                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                                    : ""));
                     ps.setString(1, h3.getText());
                     ResultSet r1 = ps.executeQuery();
                     while (r1.next()) {
@@ -3062,7 +3233,10 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
             double old_bal = 0;
             try {
                 Connection conn = util.getConnection();
-                PreparedStatement ps = conn.prepareStatement("select sum(tot-paid) from ven_bal where cname=?");
+                PreparedStatement ps = conn.prepareStatement("select sum(tot-paid) from ven_bal where cname=?"
+                        + (UserSession.hasSelectedCompany()
+                                ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                                : ""));
                 ps.setString(1, h3.getText());
                 ResultSet r1 = ps.executeQuery();
                 while (r1.next()) {
@@ -3109,31 +3283,37 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
         if (jTable3.getRowCount() > 0) {
             try {
                 String selectedName = jTable3.getValueAt(jTable3.getSelectedRow(), 2).toString();
-                Connection conn = util.getConnection();
-                PreparedStatement ps = conn.prepareStatement("SELECT ino, iname, barcode,"
-                        + (CompanySettingUtil.getInstance().isDisplayBatch() ? "batch" : "size")
-                        + ",rprice, wprice FROM item WHERE iname = ?");
-                ps.setString(1, selectedName);
-                ResultSet set = ps.executeQuery();
+                String companyFilter = UserSession.hasSelectedCompany()
+                        ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                        : "";
+                String query = "SELECT ino, iname, barcode, "
+                        + (CompanySettingUtil.getInstance().isDisplayBatch() ? "batch, " : "")
+                        + "IFNULL(size,'') as size, IFNULL(color,'') as color, IFNULL(brand,'') as brand, rprice, wprice FROM item WHERE iname = '"
+                        + selectedName + "'" + companyFilter;
+                ResultSet set = util.doQuery(query);
 
                 List<Object[]> rows = new ArrayList<>();
                 Map<String, String> valueMap = new HashMap<>();
                 while (set.next()) {
-                    rows.add(new Object[] {
-                            set.getString("ino"),
-                            set.getString("iname"),
-                            set.getString("barcode"),
-                            set.getString(CompanySettingUtil.getInstance().isDisplayBatch() ? "batch" : "size"),
-                            set.getString("rprice"),
-                            set.getString("wprice")
-                    });
+                    List<Object> row = new ArrayList<>();
+                    row.add(set.getString("ino"));
+                    row.add(set.getString("iname"));
+                    row.add(set.getString("barcode"));
+                    if (CompanySettingUtil.getInstance().isDisplayBatch()) {
+                        row.add(set.getString("batch"));
+                    }
+                    row.add(set.getString("size"));
+                    row.add(set.getString("color"));
+                    row.add(set.getString("brand"));
+                    row.add(set.getString("rprice"));
+                    row.add(set.getString("wprice"));
+                    rows.add(row.toArray());
 
                     valueMap.put("ino", set.getString("ino"));
                     valueMap.put("iname", set.getString("iname"));
                     valueMap.put("rprice", set.getString("rprice"));
                     valueMap.put("wprice", set.getString("wprice"));
                     valueMap.put("barcode", set.getString("barcode"));
-
                 }
                 if (rows.size() == 1) {
                     h8.setText(jTable3.getValueAt(jTable3.getSelectedRow(), 0).toString());
@@ -3148,7 +3328,7 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
                                 JOptionPane.INFORMATION_MESSAGE);
                     }
                 }
-            } catch (SQLException e) {
+            } catch (ClassNotFoundException | SQLException e) {
                 System.out.println(e.getMessage());
                 JOptionPane.showMessageDialog(this, "Error: " + e.getMessage(), "Exception", JOptionPane.ERROR_MESSAGE);
             }
@@ -3158,8 +3338,20 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
     }
 
     private String showSelectionDialog(List<Object[]> data) {
-        String[] columns = { "Item No", "Item Name", "Barcode",
-                CompanySettingUtil.getInstance().isDisplayBatch() ? "Batch" : "Size", "RPrice", "WPrice" };
+        List<String> colList = new ArrayList<>();
+        colList.add("Item No");
+        colList.add("Item Name");
+        colList.add("Barcode");
+        if (CompanySettingUtil.getInstance().isDisplayBatch()) {
+            colList.add("Batch");
+        }
+        colList.add("Size");
+        colList.add("Color");
+        colList.add("Brand");
+        colList.add("RPrice");
+        colList.add("WPrice");
+
+        String[] columns = colList.toArray(new String[0]);
 
         // Prepare table data (including rprice and wprice)
         Object[][] tableData = new Object[data.size()][columns.length];
@@ -3258,9 +3450,13 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
                     iname_list.setLocation(l.x, l.y + jLabel15.getHeight());
                     iname_list.setSize(1100, 382);
                     iname_list.setVisible(true);
+                    String companyFilter = UserSession.hasSelectedCompany()
+                            ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                            : "";
                     String query = "SELECT i.ino, i.barcode, i.iname, i.cat, i.manu FROM item i INNER JOIN ( SELECT iname, MIN(ino) AS min_ino FROM item WHERE iname LIKE  '%"
                             + h8.getText().trim().replace("'", "''")
-                            + "%' GROUP BY iname ) sub ON i.iname = sub.iname AND i.ino = sub.min_ino ORDER BY i.ino LIMIT 500";
+                            + "%'" + companyFilter
+                            + " GROUP BY iname ) sub ON i.iname = sub.iname AND i.ino = sub.min_ino ORDER BY i.ino LIMIT 500";
                     ResultSet r = util.doQuery(query);
                     while (r.next()) {
                         s4.addRow(new Object[] { r.getString(1), r.getString(2), r.getString(3), r.getString(4),
@@ -3332,6 +3528,224 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
         }
     }// GEN-LAST:event_printbuttonActionPerformed
 
+    // ─── Multi Pay Dialog Methods ─────────────────────────────────────────
+
+    private void initMultiPayDialog() {
+        multi_pay_mode = new javax.swing.JDialog();
+        multi_pay_mode.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        multi_pay_mode.setUndecorated(true);
+        multi_pay_mode.setModal(true);
+
+        javax.swing.JPanel mpPanel = new javax.swing.JPanel();
+        mpPanel.setBackground(java.awt.Color.WHITE);
+        mpPanel.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(41, 128, 185), 2));
+
+        javax.swing.JLabel titleLabel = new javax.swing.JLabel();
+        titleLabel.setFont(new java.awt.Font("Arial", 1, 16));
+        titleLabel.setText("  \u2605 MULTI PAY MODE");
+        titleLabel.setForeground(java.awt.Color.WHITE);
+        titleLabel.setOpaque(true);
+        titleLabel.setBackground(new java.awt.Color(41, 128, 185));
+
+        javax.swing.JLabel cashLabel = new javax.swing.JLabel("Cash");
+        cashLabel.setFont(new java.awt.Font("Arial", 0, 15));
+        javax.swing.JLabel cardLabel = new javax.swing.JLabel("Card");
+        cardLabel.setFont(new java.awt.Font("Arial", 0, 15));
+        javax.swing.JLabel othersLabel = new javax.swing.JLabel("Others");
+        othersLabel.setFont(new java.awt.Font("Arial", 0, 15));
+        javax.swing.JLabel creditLbl = new javax.swing.JLabel("<html><font color='#c0392b'>Credit</font></html>");
+        creditLbl.setFont(new java.awt.Font("Arial", 1, 13));
+        javax.swing.JLabel totalLabel = new javax.swing.JLabel("Total");
+        totalLabel.setFont(new java.awt.Font("Arial", 1, 15));
+
+        mpCash = new javax.swing.JTextField();
+        mpCash.setFont(new java.awt.Font("Arial", 1, 17));
+        mpCash.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        mpCash.addActionListener(e -> mpCard.requestFocus());
+
+        mpCard = new javax.swing.JTextField();
+        mpCard.setFont(new java.awt.Font("Arial", 1, 17));
+        mpCard.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        mpCard.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                get_multi_paid_details();
+            }
+        });
+        mpCard.addActionListener(e -> mpOthers.requestFocus());
+
+        mpOthers = new javax.swing.JTextField();
+        mpOthers.setFont(new java.awt.Font("Arial", 1, 17));
+        mpOthers.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        mpOthers.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                get_multi_paid_details();
+            }
+        });
+        mpOthers.addActionListener(e -> get_multi_paid_details());
+
+        mpCredit = new javax.swing.JTextField();
+        mpCredit.setFont(new java.awt.Font("Arial", 1, 17));
+        mpCredit.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        mpCredit.setBackground(new java.awt.Color(250, 219, 216));
+        mpCredit.setEditable(false);
+
+        mpTotal = new javax.swing.JTextField();
+        mpTotal.setFont(new java.awt.Font("Arial", 1, 17));
+        mpTotal.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        mpTotal.setEditable(false);
+        mpTotal.setBackground(new java.awt.Color(236, 240, 241));
+
+        javax.swing.JButton mpOkBtn = new javax.swing.JButton("OK - Save Purchase");
+        mpOkBtn.setFont(new java.awt.Font("Arial", 1, 15));
+        mpOkBtn.setBackground(new java.awt.Color(39, 174, 96));
+        mpOkBtn.setForeground(java.awt.Color.WHITE);
+        mpOkBtn.addActionListener(e -> {
+            get_multi_paid_details();
+            multi_pay_mode.dispose();
+            save();
+        });
+
+        javax.swing.JButton mpCloseBtn = new javax.swing.JButton("Close");
+        mpCloseBtn.setFont(new java.awt.Font("Arial", 1, 15));
+        mpCloseBtn.setBackground(new java.awt.Color(192, 57, 43));
+        mpCloseBtn.setForeground(java.awt.Color.WHITE);
+        mpCloseBtn.addActionListener(e -> multi_pay_mode.dispose());
+
+        javax.swing.JSeparator sep = new javax.swing.JSeparator();
+
+        javax.swing.GroupLayout mpLayout = new javax.swing.GroupLayout(mpPanel);
+        mpPanel.setLayout(mpLayout);
+        mpLayout.setHorizontalGroup(
+                mpLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(titleLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 336, Short.MAX_VALUE)
+                        .addGroup(mpLayout.createSequentialGroup()
+                                .addGap(10, 10, 10)
+                                .addGroup(mpLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(cashLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(cardLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(othersLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(creditLbl, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(totalLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(5, 5, 5)
+                                .addGroup(mpLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(mpCash, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(mpCard, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(mpOthers, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(mpCredit, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(mpTotal, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(sep, javax.swing.GroupLayout.PREFERRED_SIZE, 336,
+                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGroup(mpLayout.createSequentialGroup()
+                                .addGap(10, 10, 10)
+                                .addComponent(mpOkBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 230,
+                                        javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(6, 6, 6)
+                                .addComponent(mpCloseBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 80,
+                                        javax.swing.GroupLayout.PREFERRED_SIZE)));
+        mpLayout.setVerticalGroup(
+                mpLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(mpLayout.createSequentialGroup()
+                                .addComponent(titleLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 38,
+                                        javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(8, 8, 8)
+                                .addGroup(mpLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(cashLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(mpCash, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(4, 4, 4)
+                                .addGroup(mpLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(cardLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(mpCard, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(4, 4, 4)
+                                .addGroup(mpLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(othersLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(mpOthers, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(8, 8, 8)
+                                .addComponent(sep, javax.swing.GroupLayout.PREFERRED_SIZE, 4,
+                                        javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(8, 8, 8)
+                                .addGroup(mpLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(creditLbl, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(mpCredit, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(4, 4, 4)
+                                .addGroup(mpLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(totalLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(mpTotal, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(10, 10, 10)
+                                .addGroup(mpLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(mpOkBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 48,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(mpCloseBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 48,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(8, 8, 8)));
+
+        javax.swing.GroupLayout dlgLayout = new javax.swing.GroupLayout(multi_pay_mode.getContentPane());
+        multi_pay_mode.getContentPane().setLayout(dlgLayout);
+        dlgLayout.setHorizontalGroup(
+                dlgLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(mpPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 336,
+                                javax.swing.GroupLayout.PREFERRED_SIZE));
+        dlgLayout.setVerticalGroup(
+                dlgLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(mpPanel, javax.swing.GroupLayout.DEFAULT_SIZE,
+                                javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE));
+        multi_pay_mode.pack();
+    }
+
+    private void showMultiPayDialog() {
+        mpCash.setText("");
+        mpCard.setText("");
+        mpOthers.setText("");
+        mpCredit.setText("");
+        mpTotal.setText(h27.getText());
+        multiPayCredit = 0;
+        multi_pay_mode.setLocationRelativeTo(this);
+        multi_pay_mode.setVisible(true);
+        mpCash.requestFocus();
+    }
+
+    private void get_multi_paid_details() {
+        try {
+            double cash = mpCash.getText().isEmpty() ? 0 : Double.parseDouble(mpCash.getText());
+            double card = mpCard.getText().isEmpty() ? 0 : Double.parseDouble(mpCard.getText());
+            double others = mpOthers.getText().isEmpty() ? 0 : Double.parseDouble(mpOthers.getText());
+            double net = Double.parseDouble(h27.getText());
+            double paid = cash + card + others;
+            double credit = net - paid;
+            if (credit < 0)
+                credit = 0;
+
+            String fmt = "%." + hmany + "f";
+            mpCash.setText(String.format(fmt, cash));
+            mpCard.setText(String.format(fmt, card));
+            mpOthers.setText(String.format(fmt, others));
+            mpCredit.setText(String.format(fmt, credit));
+            mpTotal.setText(String.format(fmt, net));
+            multiPayCredit = credit;
+        } catch (NumberFormatException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton alterbutton;
     private javax.swing.JButton applybutton;
@@ -3368,6 +3782,7 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
     private javax.swing.JTextField h29;
     private javax.swing.JTextField h3;
     private javax.swing.JTextField h30;
+    private javax.swing.JTextField h31;
     private javax.swing.JTextField h4;
     private javax.swing.JTextField h5;
     private javax.swing.JTextField h6;
@@ -3407,6 +3822,7 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
     private javax.swing.JLabel jLabel32;
     private javax.swing.JLabel jLabel33;
     private javax.swing.JLabel jLabel34;
+    private javax.swing.JLabel jLabel35;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel46;
     private javax.swing.JLabel jLabel5;

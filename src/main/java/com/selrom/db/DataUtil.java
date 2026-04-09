@@ -11,7 +11,7 @@ import java.util.ArrayList;
 /**
  *
  * @author K.SELVAKUMAR, copyrights K.SELVAKUMAR, +91 99427 32229,
- * mysoft.java@gmail.com
+ *         mysoft.java@gmail.com
  */
 public final class DataUtil {
 
@@ -25,8 +25,7 @@ public final class DataUtil {
         }
     }
 
-    public void setup() throws ClassNotFoundException 
-    {
+    public void setup() throws ClassNotFoundException {
         try {
             conn = Database.getInstance().getConnection();
         } catch (ClassNotFoundException | SQLException ex) {
@@ -74,6 +73,7 @@ public final class DataUtil {
         }
         return -1;
     }
+
     public int doManipulation_Batch(ArrayList query) throws SQLException, ClassNotFoundException {
         try {
             connectionCheck();
@@ -81,7 +81,7 @@ public final class DataUtil {
             conn.setAutoCommit(false);
             for (int i = 0; i < query.size(); i++) {
                 s.addBatch(query.get(i).toString());
-            }//array size
+            } // array size
             int a[] = s.executeBatch();
             conn.commit();
             int set = a.length;
@@ -104,6 +104,11 @@ public final class DataUtil {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public PreparedStatement getPreparedStatement(String query) throws SQLException, ClassNotFoundException {
+        connectionCheck();
+        return conn.prepareStatement(query);
     }
 
     public Connection getConnection() {

@@ -8,10 +8,34 @@ import com.selrom.db.DataUtil;
  */
 public class print_class_estimate {
 
-
     void get_print(DataUtil util, String billno, String drive, String folder, String billformat) {
         switch (billformat) {
+            // New Standard Names
             case "":
+            case "Estimate 3-Inch (Thermal)":
+                new print_estimate_thermal().Report(util, billno, drive, folder, billformat);
+                break;
+            case "Estimate 3-Inch MRP (Thermal)":
+                new print_estimate_thermal().Report(util, billno, drive, folder, billformat);
+                break;
+            case "Estimate 3-Inch Short (Thermal)":
+                new print_estimate_thermal().Report(util, billno, drive, folder, billformat);
+                break;
+            case "Estimate 4-Inch (Thermal)":
+                new print_estimate_thermal().Report(util, billno, drive, folder, billformat);
+                break;
+            case "Estimate 4-Inch MRP (Thermal)":
+                new print_estimate_thermal().Report(util, billno, drive, folder, billformat);
+                break;
+            case "Estimate A4":
+                new print_estimate_a4().Report(util, billno, drive, folder, billformat);
+                break;
+            case "Estimate A5":
+            case "Estimate Half Page":
+                new print_estimate_a4().Report(util, billno, drive, folder, billformat);
+                break;
+
+            // Legacy Support
             case "Thermal":
                 new print_estimate_thermal().Report(util, billno, drive, folder, billformat);
                 break;
@@ -31,6 +55,9 @@ public class print_class_estimate {
                 new print_estimate_a4().Report(util, billno, drive, folder, billformat);
                 break;
             case "A5":
+                new print_estimate_a4().Report(util, billno, drive, folder, billformat);
+                break;
+            case "A4-Half":
                 new print_estimate_a4().Report(util, billno, drive, folder, billformat);
                 break;
 

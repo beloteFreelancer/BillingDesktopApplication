@@ -1,0 +1,1 @@
+ALTER TABLE item DROP PRIMARY KEY, ADD PRIMARY KEY (ino, company_id);

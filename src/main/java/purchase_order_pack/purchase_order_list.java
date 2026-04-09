@@ -18,6 +18,7 @@ import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import menupack.menu_form;
 import menupack.sample2;
+import menupack.UserSession;
 
 /**
  *
@@ -61,7 +62,8 @@ public class purchase_order_list extends javax.swing.JInternalFrame {
         s2.addColumn("PO Date");
         s2.addColumn("Supplier");
         s2.addColumn("Items");
-        s2.addColumn("Qty");
+        s2.addColumn("Paid Qty");
+        s2.addColumn("Free Qty");
         s2.addColumn("Sub Total");
         s2.addColumn("Tax Amt");
         s2.addColumn("Net Total");
@@ -81,19 +83,21 @@ public class purchase_order_list extends javax.swing.JInternalFrame {
         jTable1.getColumnModel().getColumn(9).setCellRenderer(dtcr1);
         jTable1.getColumnModel().getColumn(10).setCellRenderer(dtcr1);
         jTable1.getColumnModel().getColumn(11).setCellRenderer(dtcr1);
+        jTable1.getColumnModel().getColumn(12).setCellRenderer(dtcr1);
         jTable1.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         jTable1.getColumnModel().getColumn(0).setPreferredWidth(90);
         jTable1.getColumnModel().getColumn(1).setPreferredWidth(90);
         jTable1.getColumnModel().getColumn(2).setPreferredWidth(250);
         jTable1.getColumnModel().getColumn(3).setPreferredWidth(60);
-        jTable1.getColumnModel().getColumn(4).setPreferredWidth(60);
-        jTable1.getColumnModel().getColumn(5).setPreferredWidth(100);
+        jTable1.getColumnModel().getColumn(4).setPreferredWidth(70);
+        jTable1.getColumnModel().getColumn(5).setPreferredWidth(70);
         jTable1.getColumnModel().getColumn(6).setPreferredWidth(100);
-        jTable1.getColumnModel().getColumn(7).setPreferredWidth(110);
-        jTable1.getColumnModel().getColumn(8).setPreferredWidth(130);
-        jTable1.getColumnModel().getColumn(9).setPreferredWidth(120);
+        jTable1.getColumnModel().getColumn(7).setPreferredWidth(100);
+        jTable1.getColumnModel().getColumn(8).setPreferredWidth(110);
+        jTable1.getColumnModel().getColumn(9).setPreferredWidth(130);
         jTable1.getColumnModel().getColumn(10).setPreferredWidth(120);
-        jTable1.getColumnModel().getColumn(11).setPreferredWidth(180);
+        jTable1.getColumnModel().getColumn(11).setPreferredWidth(120);
+        jTable1.getColumnModel().getColumn(12).setPreferredWidth(180);
         String Ta = "Arial";
         int Bold = 0, size = 14;
         jTable1.getTableHeader().setFont(new Font(Ta, Bold, size));
@@ -102,19 +106,24 @@ public class purchase_order_list extends javax.swing.JInternalFrame {
     void load_report() {
         try {
             boolean selva = false;
-            String query = "select grn,date_format(dat,'%d/%m/%Y'),cname,items,quans,sub,taxamt,net,status,pstatus,user,last from po_entry where pstatus='Ordered' order by dat,grn";
+            String poCompanyFilter = UserSession.hasSelectedCompany()
+                    ? " AND p.company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select p.grn,date_format(p.dat,'%d/%m/%Y'),p.cname,p.items,p.quans,IFNULL((select sum(IFNULL(free_qty,0)) from po_items where grn=p.grn),0),p.sub,p.taxamt,p.net,p.status,p.pstatus,p.user,p.last from po_entry p where p.pstatus='Ordered'"
+                    + poCompanyFilter + " order by p.dat,p.grn";
             r = util.doQuery(query);
             while (r.next()) {
-                String sub = String.format("%." + hmany + "f", r.getDouble(6));
-                String taxamt = String.format("%." + hmany + "f", r.getDouble(7));
-                String net = String.format("%." + hmany + "f", r.getDouble(8));
+                String sub = String.format("%." + hmany + "f", r.getDouble(7));
+                String taxamt = String.format("%." + hmany + "f", r.getDouble(8));
+                String net = String.format("%." + hmany + "f", r.getDouble(9));
                 s2.addRow(new Object[] { r.getString(1), r.getString(2), r.getString(3), r.getString(4), r.getString(5),
-                        sub, taxamt, net, r.getString(9), r.getString(10), r.getString(11), r.getString(12) });
+                        r.getString(6), sub, taxamt, net, r.getString(10), r.getString(11), r.getString(12),
+                        r.getString(13) });
                 selva = true;
             }
             double net = 0;
             for (int i = 0; i < jTable1.getRowCount(); i++) {
-                net = net + Double.parseDouble(jTable1.getValueAt(i, 7).toString());
+                net = net + Double.parseDouble(jTable1.getValueAt(i, 8).toString());
             }
             if (selva == true) {
                 generatebutton.setEnabled(false);
@@ -143,7 +152,7 @@ public class purchase_order_list extends javax.swing.JInternalFrame {
                 return;
             }
             String pono = jTable1.getValueAt(jTable1.getSelectedRow(), 0).toString();
-            String po_status = jTable1.getValueAt(jTable1.getSelectedRow(), 8).toString();
+            String po_status = jTable1.getValueAt(jTable1.getSelectedRow(), 9).toString();
             if (po_status.equalsIgnoreCase("Approved")) {
                 JOptionPane.showMessageDialog(this, "Order Already Approved!", "Invalid", JOptionPane.ERROR_MESSAGE);
                 return;
@@ -152,7 +161,7 @@ public class purchase_order_list extends javax.swing.JInternalFrame {
             String query = "update po_entry set status='" + updated_status + "' where grn='" + pono + "' ";
             int a = util.doManipulation(query);
             if (a > 0) {
-                jTable1.setValueAt(updated_status, jTable1.getSelectedRow(), 8);
+                jTable1.setValueAt(updated_status, jTable1.getSelectedRow(), 9);
                 JOptionPane.showMessageDialog(this, "<html><h1>Order Approved</h1></html>", "Approved",
                         JOptionPane.PLAIN_MESSAGE);
             }
@@ -422,7 +431,7 @@ public class purchase_order_list extends javax.swing.JInternalFrame {
 
     private void printbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_printbuttonActionPerformed
         String billno = jTable1.getValueAt(jTable1.getSelectedRow(), 0).toString();
-        String po_status = jTable1.getValueAt(jTable1.getSelectedRow(), 8).toString();
+        String po_status = jTable1.getValueAt(jTable1.getSelectedRow(), 9).toString();
         if (po_status.equalsIgnoreCase("Not Approved")) {
             JOptionPane.showMessageDialog(this, "PO Should be Approved before Print!", "Invalid",
                     JOptionPane.ERROR_MESSAGE);

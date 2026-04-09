@@ -17,6 +17,7 @@ import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import menupack.menu_form;
 import menupack.sample2;
+import menupack.UserSession;
 
 /**
  *
@@ -72,12 +73,21 @@ public class stock_report_min_stock extends javax.swing.JInternalFrame {
         try {
             boolean selva = false;
             String query;
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND a.company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String companyFilterB = UserSession.hasSelectedCompany()
+                    ? " AND b.company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             if (all.isSelected()) {
-                query = "select distinct a.ino,a.iname,minstock,sum(quan) from stock a,item b where a.ino=b.ino and a.iname=b.iname group by a.ino having sum(quan)< minstock order by a.iname";
+                query = "select distinct a.ino,a.iname,minstock,sum(quan) from stock a,item b where a.ino=b.ino and a.iname=b.iname"
+                        + companyFilter + companyFilterB
+                        + " group by a.ino having sum(quan)< minstock order by a.iname";
             } else {
                 query = "select distinct a.ino,a.iname,minstock,sum(quan) from stock a,item b where a.cat='"
                         + h3.getSelectedItem()
-                        + "' and a.ino=b.ino and a.iname=b.iname group by a.ino having sum(quan)< minstock order by a.iname";
+                        + "' and a.ino=b.ino and a.iname=b.iname" + companyFilter + companyFilterB
+                        + " group by a.ino having sum(quan)< minstock order by a.iname";
             }
             r = util.doQuery(query);
             while (r.next()) {
@@ -100,13 +110,16 @@ public class stock_report_min_stock extends javax.swing.JInternalFrame {
 
     final void get_cid() {
         try {
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             int count = 0;
-            String query = "select distinct cat from stock";
+            String query = "select distinct cat from stock" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 count = count + 1;
             }
-            query = "select distinct cat from stock";
+            query = "select distinct cat from stock" + companyFilter;
             r = util.doQuery(query);
             Object f[] = new Object[count];
             int index = 0;

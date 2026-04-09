@@ -3,6 +3,7 @@ package itempack;
 import Utils.CompanySettingUtil;
 import Utils.ItemUtil;
 import Utils.ColorConstants;
+import menupack.UserSession;
 import ca.odell.glazedlists.GlazedLists;
 import ca.odell.glazedlists.swing.AutoCompleteSupport;
 import com.selrom.db.DataUtil;
@@ -57,7 +58,7 @@ public final class item_master extends javax.swing.JInternalFrame {
     void get_default() {
         try {
             String print_name = "";
-            String query = "select print_name,rprice,wprice,rdis,wdis,hmany from setting_bill";
+            String query = "select print_name,rprice,wprice,rdis,wdis,hmany from company";
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 print_name = r.getString(1);
@@ -75,7 +76,10 @@ public final class item_master extends javax.swing.JInternalFrame {
     void get_ino() {
         try {
             int sno = 1;
-            String query = "select max(ino) from item";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select max(ino) from item" + companyFilter;
             ResultSet r = util.doQuery(query);
             boolean selva = false;
             while (r.next()) {
@@ -91,15 +95,38 @@ public final class item_master extends javax.swing.JInternalFrame {
         }
     }
 
+    void get_barcode() {
+        try {
+            int barcode = 1000;
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "SELECT MAX(CAST(barcode AS UNSIGNED)) FROM item" + companyFilter;
+            ResultSet r = util.doQuery(query);
+            if (r.next()) {
+                int maxBarcode = r.getInt(1);
+                if (maxBarcode >= 1000) {
+                    barcode = maxBarcode + 1;
+                }
+            }
+            h17.setSelectedItem("" + barcode);
+        } catch (ClassNotFoundException | SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
     final void get_sug1() {
         try {
             int count = 0;
-            String query = "select distinct hsn from item";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select distinct hsn from item" + companyFilter;
             ResultSet set = util.doQuery(query);
             while (set.next()) {
                 count = count + 1;
             }
-            query = "select distinct hsn from item";
+            query = "select distinct hsn from item" + companyFilter;
             set = util.doQuery(query);
             String f[] = new String[count];
             int index = 0;
@@ -116,12 +143,15 @@ public final class item_master extends javax.swing.JInternalFrame {
     final void get_sug2() {
         try {
             int count = 0;
-            String query = "select distinct cat from item";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select distinct cat from item" + companyFilter;
             ResultSet set = util.doQuery(query);
             while (set.next()) {
                 count = count + 1;
             }
-            query = "select distinct cat from item";
+            query = "select distinct cat from item" + companyFilter;
             set = util.doQuery(query);
             String f[] = new String[count];
             int index = 0;
@@ -138,12 +168,15 @@ public final class item_master extends javax.swing.JInternalFrame {
     final void get_sug3() {
         try {
             int count = 0;
-            String query = "select distinct rack from item";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select distinct rack from item" + companyFilter;
             ResultSet set = util.doQuery(query);
             while (set.next()) {
                 count = count + 1;
             }
-            query = "select distinct rack from item";
+            query = "select distinct rack from item" + companyFilter;
             set = util.doQuery(query);
             Object f[] = new Object[count];
             int index = 0;
@@ -160,7 +193,11 @@ public final class item_master extends javax.swing.JInternalFrame {
     void get_sug4() {
         try {
             int count = 0;
-            String query = "select distinct udes from item union select distinct subunit from item;";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select distinct udes from item" + companyFilter + " union select distinct subunit from item"
+                    + companyFilter;
             ResultSet set = util.doQuery(query);
             ArrayList<String> unitsList = new ArrayList<>();
             while (set.next()) {
@@ -179,12 +216,15 @@ public final class item_master extends javax.swing.JInternalFrame {
     final void get_sug5() {
         try {
             int count = 0;
-            String query = "select distinct iname from item";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select distinct iname from item" + companyFilter;
             ResultSet set = util.doQuery(query);
             while (set.next()) {
                 count = count + 1;
             }
-            query = "select distinct iname from item order by iname";
+            query = "select distinct iname from item" + companyFilter + " order by iname";
             set = util.doQuery(query);
             Object f[] = new Object[count];
             int index = 0;
@@ -202,12 +242,15 @@ public final class item_master extends javax.swing.JInternalFrame {
     final void get_sug6() {
         try {
             int count = 0;
-            String query = "select distinct manu from item";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select distinct manu from item" + companyFilter;
             ResultSet set = util.doQuery(query);
             while (set.next()) {
                 count = count + 1;
             }
-            query = "select distinct manu from item";
+            query = "select distinct manu from item" + companyFilter;
             set = util.doQuery(query);
             Object f[] = new Object[count];
             int index = 0;
@@ -224,12 +267,15 @@ public final class item_master extends javax.swing.JInternalFrame {
     final void get_sug7() {
         try {
             int count = 0;
-            String query = "select barcode from item";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select barcode from item" + companyFilter;
             ResultSet set = util.doQuery(query);
             while (set.next()) {
                 count = count + 1;
             }
-            query = "select barcode from item";
+            query = "select barcode from item" + companyFilter;
             set = util.doQuery(query);
             Object f[] = new Object[count];
             int index = 0;
@@ -249,9 +295,6 @@ public final class item_master extends javax.swing.JInternalFrame {
         }
         if (h4.getText().equals("")) {
             h4.setText("" + 0);
-        }
-        if (h5.getText().equals("")) {
-            h5.setText("" + 0);
         }
         if (h6.getText().equals("")) {
             h6.setText("" + 0);
@@ -302,29 +345,17 @@ public final class item_master extends javax.swing.JInternalFrame {
 
             get_defaults();
 
-            int taxp;
-            try {
-                taxp = Integer.parseInt(h5.getText());
-            } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(this, "Tax % must be a number.", "Invalid Tax",
-                        JOptionPane.ERROR_MESSAGE);
-                h5.requestFocus();
-                return;
-            }
+            int taxp = Integer.parseInt(h5.getSelectedItem().toString());
 
-            if (taxp != 0 && taxp != 5 && taxp != 12 && taxp != 18 && taxp != 28) {
-                JOptionPane.showMessageDialog(this, "<html><h4>Allowed Tax %: 0%, 5%, 12%, 18%, 28%</h4></html>",
-                        "Invalid Tax", JOptionPane.ERROR_MESSAGE);
-                h5.requestFocus();
-                return;
-            }
-
-            if (batchField.getText().isBlank()) {
+            boolean isClothingShop = "Clothing".equals(getShopType());
+            String batchValue = isClothingShop
+                    ? (sizeCombo.getSelectedItem() != null ? sizeCombo.getSelectedItem().toString() : "")
+                    : batchField.getText();
+            if (!isClothingShop && batchValue.isBlank()) {
                 JOptionPane.showMessageDialog(
                         this,
-                        "<html><h4>" + (CompanySettingUtil.getInstance().isDisplayBatch() ? "Batch is required."
-                                : "Size is required.") + "</html>",
-                        "Invalid Tax",
+                        "<html><h4>Batch is required.</html>",
+                        "Validation Error",
                         JOptionPane.ERROR_MESSAGE);
                 batchField.requestFocus();
                 return;
@@ -343,7 +374,7 @@ public final class item_master extends javax.swing.JInternalFrame {
             get_ino();
 
             if (h17.getSelectedItem() == null || h17.getSelectedItem().toString().isBlank()) {
-                h17.setSelectedItem(h1.getText());
+                get_barcode();
             }
 
             String ino = h1.getText();
@@ -362,13 +393,16 @@ public final class item_master extends javax.swing.JInternalFrame {
             String maxstock = h14.getText().trim();
             String rack = h15.getSelectedItem().toString().trim();
             String disp = h16.getText().trim();
-            String batch = batchField.getText();
+            String batch = batchValue;
             String exp = expDateField.getText().isBlank() ? null : expDateField.getText();
             String mfg = mfgDateField.getText().isBlank() ? null : mfgDateField.getText();
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             ResultSet rs;
             if (fromSave) {
                 // Check for existing item name and barcode
-                rs = util.doQuery("SELECT iname FROM item WHERE iname = '" + iname + "'");
+                rs = util.doQuery("SELECT iname FROM item WHERE iname = '" + iname + "'" + companyFilter);
                 if (rs.next()) {
                     JOptionPane.showMessageDialog(this, "Item Name already exists!", "Duplicate Entry",
                             JOptionPane.ERROR_MESSAGE);
@@ -377,7 +411,7 @@ public final class item_master extends javax.swing.JInternalFrame {
                 }
             }
 
-            rs = util.doQuery("SELECT barcode FROM item WHERE barcode = '" + barcode + "'");
+            rs = util.doQuery("SELECT barcode FROM item WHERE barcode = '" + barcode + "'" + companyFilter);
             if (rs.next()) {
                 if (fromSave) {
                     JOptionPane.showMessageDialog(this, "Barcode already exists!", "Duplicate Entry",
@@ -423,13 +457,15 @@ public final class item_master extends javax.swing.JInternalFrame {
                     return;
                 }
             }
+            String shopTypeForSave = getShopType();
+            boolean useBatchCol = !"Clothing".equals(shopTypeForSave);
             String insertItemSQL;
-            if (CompanySettingUtil.getInstance().isDisplayBatch()) {
-                insertItemSQL = "INSERT INTO item (ino, barcode, iname, iname1, prate, taxp, mrp, rprice, wprice, cat, manu, hsn, udes, minstock, maxstock, rack, disp, ostock, subunit, subconv, batch, exp_date, mfg_date) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?)";
+            if (useBatchCol) {
+                insertItemSQL = "INSERT INTO item (ino, barcode, iname, iname1, prate, taxp, mrp, rprice, wprice, cat, manu, hsn, udes, minstock, maxstock, rack, disp, ostock, subunit, subconv, batch, exp_date, mfg_date, tax_inclusion, company_id) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,?)";
             } else {
-                insertItemSQL = "INSERT INTO item (ino, barcode, iname, iname1, prate, taxp, mrp, rprice, wprice, cat, manu, hsn, udes, minstock, maxstock, rack, disp, ostock, subunit, subconv, size,exp_date, mfg_date) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?)";
+                insertItemSQL = "INSERT INTO item (ino, barcode, iname, iname1, prate, taxp, mrp, rprice, wprice, cat, manu, hsn, udes, minstock, maxstock, rack, disp, ostock, subunit, subconv, size, color, exp_date, mfg_date, tax_inclusion, company_id) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,?,?)";
             }
             // INSERT INTO item
             try (PreparedStatement pstmt = Database.getInstance().getConnection().prepareStatement(insertItemSQL)) {
@@ -458,14 +494,26 @@ public final class item_master extends javax.swing.JInternalFrame {
                     pstmt.setDouble(20, subconvValue);
                 }
                 pstmt.setString(21, batch);
-                pstmt.setString(22, exp);
-                pstmt.setString(23, mfg);
+                if (!useBatchCol) {
+                    // Clothing: color at 22, exp_date at 23, mfg_date at 24, tax_inclusion at 25,
+                    // company_id at 26
+                    pstmt.setString(22, colorField.getText().trim());
+                    pstmt.setString(23, exp);
+                    pstmt.setString(24, mfg);
+                    pstmt.setString(25, taxInclusionCombo.getSelectedItem().toString());
+                    pstmt.setString(26, UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "");
+                } else {
+                    pstmt.setString(22, exp);
+                    pstmt.setString(23, mfg);
+                    pstmt.setString(24, taxInclusionCombo.getSelectedItem().toString());
+                    pstmt.setString(25, UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "");
+                }
                 pstmt.executeUpdate();
             }
 
             // INSERT INTO stock
-            String sQuery = "INSERT INTO stock (barcode, ino, iname, mrp, rprice, wprice, prate, quan, cat, entry) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String sQuery = "INSERT INTO stock (barcode, ino, iname, mrp, rprice, wprice, prate, quan, cat, entry, company_id) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             try (PreparedStatement pstmt = Database.getInstance().getConnection().prepareStatement(sQuery)) {
                 pstmt.setString(1, barcode);
                 pstmt.setString(2, ino);
@@ -477,6 +525,7 @@ public final class item_master extends javax.swing.JInternalFrame {
                 pstmt.setDouble(8, stock);
                 pstmt.setString(9, cat);
                 pstmt.setString(10, "purchase");
+                pstmt.setString(11, UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "");
                 pstmt.executeUpdate();
             }
 
@@ -522,13 +571,12 @@ public final class item_master extends javax.swing.JInternalFrame {
             h7.setText("");
             h8.setText("");
             h11.setSelectedItem("");
-            h5.setText("");
+            h5.setSelectedIndex(0);
             h9.setSelectedItem("");
             h10.setSelectedItem("");
             h13.setText("");
             h14.setText("");
             h16.setText("");
-            h18.setText("");
             h20.setText("");
             h15.setSelectedItem("");
             h12.setSelectedItem("");
@@ -541,8 +589,11 @@ public final class item_master extends javax.swing.JInternalFrame {
             subUnitValuePerUnit.setText("");
             mainUnitField.setText("");
             batchField.setText("");
+            sizeCombo.setSelectedIndex(0);
+            colorField.setText("");
             expDateField.setText("");
             mfgDateField.setText("");
+            taxInclusionCombo.setSelectedIndex(0);
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
@@ -551,12 +602,16 @@ public final class item_master extends javax.swing.JInternalFrame {
     void view(String ino) {
         try {
             String query;
-            if (CompanySettingUtil.getInstance().isDisplayBatch()) {
-                query = "select ino,barcode,iname,iname1,prate,taxp,mrp,rprice,wprice,cat,manu,hsn,udes,minstock,maxstock,rack,disp,ostock,subunit,subconv,batch,exp_date,mfg_date from item where ino='"
-                        + ino + "' ";
+            boolean useBatchColV = !"Clothing".equals(getShopType());
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            if (useBatchColV) {
+                query = "select ino,barcode,iname,iname1,prate,taxp,mrp,rprice,wprice,cat,manu,hsn,udes,minstock,maxstock,rack,disp,ostock,subunit,subconv,batch,exp_date,mfg_date,tax_inclusion from item where ino='"
+                        + ino + "'" + companyFilter;
             } else {
-                query = "select ino,barcode,iname,iname1,prate,taxp,mrp,rprice,wprice,cat,manu,hsn,udes,minstock,maxstock,rack,disp,ostock,subunit,subconv,size,exp_date,mfg_date from item where ino='"
-                        + ino + "' ";
+                query = "select ino,barcode,iname,iname1,prate,taxp,mrp,rprice,wprice,cat,manu,hsn,udes,minstock,maxstock,rack,disp,ostock,subunit,subconv,size,color,exp_date,mfg_date,tax_inclusion from item where ino='"
+                        + ino + "'" + companyFilter;
             }
             ResultSet set1 = util.doQuery(query);
             boolean selva = false;
@@ -566,7 +621,7 @@ public final class item_master extends javax.swing.JInternalFrame {
                 h2.setSelectedItem(set1.getString(3));
                 h3.setText(set1.getString(4));
                 h4.setText(set1.getString(5));
-                h5.setText(set1.getString(6));
+                h5.setSelectedItem(set1.getString(6));
                 h6.setText(set1.getString(7));
                 h7.setText(set1.getString(8));
                 h8.setText(set1.getString(9));
@@ -583,9 +638,21 @@ public final class item_master extends javax.swing.JInternalFrame {
                 subUnitCombobox.setSelectedItem(set1.getString(19));
                 mainUnitField.setText(set1.getString(13));
                 subUnitValuePerUnit.setText(set1.getString(20));
-                batchField.setText(set1.getString(21));
-                expDateField.setText(set1.getString(22));
-                mfgDateField.setText(set1.getString(23));
+                String batchOrSize = set1.getString(21);
+                batchField.setText(batchOrSize != null ? batchOrSize : "");
+                if ("Clothing".equals(getShopType())) {
+                    if (batchOrSize != null)
+                        sizeCombo.setSelectedItem(batchOrSize);
+                    String colorVal = set1.getString(22);
+                    colorField.setText(colorVal != null ? colorVal : "");
+                    String taxIncVal = set1.getString(25);
+                    taxInclusionCombo.setSelectedItem(taxIncVal != null ? taxIncVal : "Inclusive of Tax");
+                } else {
+                    expDateField.setText(set1.getString(22));
+                    mfgDateField.setText(set1.getString(23));
+                    String taxIncVal = set1.getString(24);
+                    taxInclusionCombo.setSelectedItem(taxIncVal != null ? taxIncVal : "Inclusive of Tax");
+                }
                 selva = true;
             }
             if (selva == true) {
@@ -624,9 +691,13 @@ public final class item_master extends javax.swing.JInternalFrame {
             }
 
             // Check if item exists
-            String checkQuery = "SELECT 1 FROM item WHERE ino = ?";
+            String companyFilter = UserSession.hasSelectedCompany() ? " AND company_id = ?" : "";
+            String checkQuery = "SELECT 1 FROM item WHERE ino = ?" + companyFilter;
             try (PreparedStatement checkStmt = Database.getInstance().getConnection().prepareStatement(checkQuery)) {
                 checkStmt.setInt(1, Integer.parseInt(ino));
+                if (UserSession.hasSelectedCompany()) {
+                    checkStmt.setString(2, UserSession.getSelectedCompanyID());
+                }
                 try (ResultSet rs = checkStmt.executeQuery()) {
                     if (!rs.next()) {
                         JOptionPane.showMessageDialog(this, "Item not found!", "Error", JOptionPane.ERROR_MESSAGE);
@@ -636,17 +707,25 @@ public final class item_master extends javax.swing.JInternalFrame {
             }
 
             // Delete from stock
-            String deleteStock = "DELETE FROM stock WHERE ino = ?";
+            String deleteStock = "DELETE FROM stock WHERE ino = ?"
+                    + (UserSession.hasSelectedCompany() ? " AND company_id = ?" : "");
             try (PreparedStatement pstmt = Database.getInstance().getConnection().prepareStatement(deleteStock)) {
                 pstmt.setInt(1, Integer.parseInt(ino));
+                if (UserSession.hasSelectedCompany()) {
+                    pstmt.setString(2, UserSession.getSelectedCompanyID());
+                }
                 pstmt.executeUpdate();
             }
 
             // Delete from item
-            String deleteItem = "DELETE FROM item WHERE ino = ?";
+            String deleteItem = "DELETE FROM item WHERE ino = ?"
+                    + (UserSession.hasSelectedCompany() ? " AND company_id = ?" : "");
             int rowsDeleted = 0;
             try (PreparedStatement pstmt = Database.getInstance().getConnection().prepareStatement(deleteItem)) {
                 pstmt.setInt(1, Integer.parseInt(ino));
+                if (UserSession.hasSelectedCompany()) {
+                    pstmt.setString(2, UserSession.getSelectedCompanyID());
+                }
                 rowsDeleted = pstmt.executeUpdate();
             }
 
@@ -677,29 +756,17 @@ public final class item_master extends javax.swing.JInternalFrame {
 
             get_defaults();
 
-            int taxp;
-            try {
-                taxp = Integer.parseInt(h5.getText().trim());
-            } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(this, "Tax % must be a valid number.", "Invalid Tax",
-                        JOptionPane.ERROR_MESSAGE);
-                h5.requestFocus();
-                return;
-            }
+            int taxp = Integer.parseInt(h5.getSelectedItem().toString());
 
-            if (taxp != 0 && taxp != 5 && taxp != 12 && taxp != 18 && taxp != 28) {
-                JOptionPane.showMessageDialog(this, "<html><h4>Allowed: 0%, 5%, 12%, 18%, 28%</h4></html>",
-                        "Invalid Tax", JOptionPane.ERROR_MESSAGE);
-                h5.requestFocus();
-                return;
-            }
-
-            if (batchField.getText().isBlank()) {
+            boolean isClothingShopU = "Clothing".equals(getShopType());
+            String batchValueU = isClothingShopU
+                    ? (sizeCombo.getSelectedItem() != null ? sizeCombo.getSelectedItem().toString() : "")
+                    : batchField.getText();
+            if (!isClothingShopU && batchValueU.isBlank()) {
                 JOptionPane.showMessageDialog(
                         this,
-                        "<html><h4>" + (CompanySettingUtil.getInstance().isDisplayBatch() ? "Batch is required."
-                                : "Size is required.") + "</html>",
-                        "Invalid Tax",
+                        "<html><h4>Batch is required.</html>",
+                        "Validation Error",
                         JOptionPane.ERROR_MESSAGE);
                 batchField.requestFocus();
                 return;
@@ -740,7 +807,7 @@ public final class item_master extends javax.swing.JInternalFrame {
             String disp = h16.getText().trim();
             String subunit = subUnitField.getText().trim();
             String subconv = subUnitValuePerUnit.getText().trim();
-            String batch = batchField.getText();
+            String batch = batchValueU;
             String exp = expDateField.getText().isBlank() ? null : expDateField.getText();
             String mfg = mfgDateField.getText().isBlank() ? null : mfgDateField.getText();
 
@@ -797,12 +864,16 @@ public final class item_master extends javax.swing.JInternalFrame {
             itemQuery.append("rack='").append(rack).append("', ");
             itemQuery.append("disp=").append(disp).append(", ");
             itemQuery.append("ostock=").append(stock).append(", ");
-            if (CompanySettingUtil.getInstance().isDisplayBatch()) {
+            String shopTypeForUpd = getShopType();
+            boolean useBatchColU = !"Clothing".equals(shopTypeForUpd);
+            boolean showMfgExpU = "Pharmacy".equals(shopTypeForUpd) || "Grocery".equals(shopTypeForUpd);
+            if (useBatchColU) {
                 itemQuery.append("batch='").append(batch).append("', ");
             } else {
                 itemQuery.append("size='").append(batch).append("', ");
+                itemQuery.append("color='").append(colorField.getText().trim()).append("', ");
             }
-            if (CompanySettingUtil.getInstance().isDisplayExp()) {
+            if (showMfgExpU) {
                 if (exp != null) {
                     itemQuery.append("exp_date='").append(exp).append("', ");
                 } else {
@@ -810,7 +881,7 @@ public final class item_master extends javax.swing.JInternalFrame {
                 }
             }
 
-            if (CompanySettingUtil.getInstance().isDisplayMfg()) {
+            if (showMfgExpU) {
                 if (mfg != null) {
                     itemQuery.append("mfg_date='").append(mfg).append("', ");
                 } else {
@@ -820,12 +891,16 @@ public final class item_master extends javax.swing.JInternalFrame {
 
             if (!subunit.isBlank()) {
                 itemQuery.append("subunit='").append(subunit).append("', ");
-                itemQuery.append("subconv=").append(subconvValue);
+                itemQuery.append("subconv=").append(subconvValue).append(", ");
             } else {
-                itemQuery.append("subunit=NULL, subconv=NULL");
+                itemQuery.append("subunit=NULL, subconv=NULL, ");
             }
+            itemQuery.append("tax_inclusion='").append(taxInclusionCombo.getSelectedItem().toString()).append("'");
 
             itemQuery.append(" WHERE ino='").append(ino).append("'");
+            if (UserSession.hasSelectedCompany()) {
+                itemQuery.append(" AND company_id='").append(UserSession.getSelectedCompanyID()).append("'");
+            }
 
             ArrayList<String> queryList = new ArrayList<>();
             queryList.add(itemQuery.toString());
@@ -838,7 +913,9 @@ public final class item_master extends javax.swing.JInternalFrame {
                     + "prate=" + prate + ", "
                     + "quan=" + stock + ", "
                     + "cat='" + cat + "' "
-                    + "WHERE ino='" + ino + "'");
+                    + "WHERE ino='" + ino + "'"
+                    + (UserSession.hasSelectedCompany() ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                            : ""));
             // ========== Run All Updates ==========
             int affected = util.doManipulation_Batch(queryList);
             if (affected > 0) {
@@ -853,6 +930,68 @@ public final class item_master extends javax.swing.JInternalFrame {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Exception", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    String getShopType() {
+        try {
+            String where = UserSession.hasSelectedCompany()
+                    ? " WHERE companyID='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            ResultSet rs = util.doQuery("SELECT shop_type FROM company" + where + " LIMIT 1");
+            if (rs != null && rs.next()) {
+                String st = rs.getString("shop_type");
+                if (st != null && !st.isEmpty())
+                    return st;
+            }
+        } catch (Exception ignored) {
+        }
+        return "General";
+    }
+
+    void applyShopTypeVisibility() {
+        String shopType = getShopType();
+        boolean isClothing = "Clothing".equals(shopType);
+        boolean showMfgExp = "Pharmacy".equals(shopType) || "Grocery".equals(shopType);
+        boolean isHardware = "Hardware".equals(shopType);
+        boolean isElectronics = "Electronics".equals(shopType);
+
+        // ── Batch / Size label + field toggle ───────────────────────
+        batchLabel.setText(isClothing ? "Size" : "Batch");
+        batchField.setVisible(!isClothing);
+        sizeCombo.setVisible(isClothing);
+
+        // ── Color — only Clothing ────────────────────────────────────
+        colorLabel.setVisible(isClothing);
+        colorField.setVisible(isClothing);
+
+        // ── HSN Code (jLabel5 + h11) — always visible ──────────
+        jLabel5.setVisible(true);
+        h11.setVisible(true);
+
+        // ── Tax Per % (jLabel19 + h5) — always visible ─────────
+        jLabel19.setVisible(true);
+        h5.setVisible(true);
+
+        // ── MRP (jLabel16 + h6) — always visible ────────────────────
+        jLabel16.setVisible(true);
+        h6.setVisible(true);
+
+        // ── Manufacturer label text ──────────────────────────────────
+        jLabel8.setText(isClothing ? "Brand" : "Manufacturer");
+
+        // ── Wholesale Price (jLabel4 + h8) — always visible ────────
+        jLabel4.setVisible(true);
+        h8.setVisible(true);
+
+        // ── Exp Date — only Pharmacy / Grocery ──────────────────────
+        expLabel.setVisible(showMfgExp);
+        expDateField.setVisible(showMfgExp);
+        expJcalendarButton.setVisible(showMfgExp);
+
+        // ── Mfg Date — only Pharmacy / Grocery ──────────────────────
+        mfgLabel.setVisible(showMfgExp);
+        mfgDateField.setVisible(showMfgExp);
+        mfgJcalendarButton.setVisible(showMfgExp);
     }
 
     public item_master(DataUtil util) {
@@ -871,30 +1010,7 @@ public final class item_master extends javax.swing.JInternalFrame {
         updatebutton.setVisible(false);
         deletebutton.setVisible(false);
         copyButton.setVisible(false);
-        if (CompanySettingUtil.getInstance().isDisplayBatch()) {
-            batchLabel.setText(" Batch");
-        } else {
-            batchLabel.setText("Size");
-        }
-        if (CompanySettingUtil.getInstance().isDisplayExp()) {
-            expLabel.setVisible(true);
-            expDateField.setVisible(true);
-            expJcalendarButton.setVisible(true);
-        } else {
-            expLabel.setVisible(false);
-            expDateField.setVisible(false);
-            expJcalendarButton.setVisible(false);
-        }
-        if (CompanySettingUtil.getInstance().isDisplayMfg()) {
-            mfgLabel.setVisible(true);
-            mfgDateField.setVisible(true);
-            mfgJcalendarButton.setVisible(true);
-        } else {
-            mfgLabel.setVisible(false);
-            mfgDateField.setVisible(false);
-            mfgJcalendarButton.setVisible(false);
-        }
-
+        applyShopTypeVisibility();
     }
 
     @SuppressWarnings("unchecked")
@@ -915,7 +1031,7 @@ public final class item_master extends javax.swing.JInternalFrame {
         h11 = new javax.swing.JComboBox<>();
         h1 = new javax.swing.JTextField();
         h10 = new javax.swing.JComboBox<>();
-        h5 = new javax.swing.JTextField();
+        h5 = new javax.swing.JComboBox<>(new String[] { "0", "5", "12", "18", "28" });
         h16 = new javax.swing.JTextField();
         h13 = new javax.swing.JTextField();
         savebutton = new javax.swing.JButton();
@@ -944,15 +1060,12 @@ public final class item_master extends javax.swing.JInternalFrame {
         jButton1 = new javax.swing.JButton();
         jButton2 = new javax.swing.JButton();
         jLabel19 = new javax.swing.JLabel();
-        h18 = new javax.swing.JTextField();
         nextbutton = new javax.swing.JButton();
         prebutton = new javax.swing.JButton();
-        exclusiveButton = new javax.swing.JButton();
         jLabel6 = new javax.swing.JLabel();
         h19 = new javax.swing.JTextField();
         h20 = new javax.swing.JTextField();
         jButton4 = new javax.swing.JButton();
-        inclusiveButton = new javax.swing.JButton();
         barcodeGenerateButton = new javax.swing.JButton();
         jLabel21 = new javax.swing.JLabel();
         jLabel22 = new javax.swing.JLabel();
@@ -988,6 +1101,7 @@ public final class item_master extends javax.swing.JInternalFrame {
         jLabel3.setText(" Opening Stock");
         getContentPane().add(jLabel3);
         jLabel3.setBounds(310, 410, 100, 30);
+        jLabel3.setVisible(false);
 
         h14.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         getContentPane().add(h14);
@@ -1042,12 +1156,12 @@ public final class item_master extends javax.swing.JInternalFrame {
         h10.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         h10.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "." }));
         getContentPane().add(h10);
-        h10.setBounds(120, 260, 450, 30);
+        h10.setBounds(120, 260, 180, 30);
 
         h5.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        h5.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusLost(java.awt.event.FocusEvent evt) {
-                h5FocusLost(evt);
+        h5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                h5ActionPerformed(evt);
             }
         });
         getContentPane().add(h5);
@@ -1255,18 +1369,6 @@ public final class item_master extends javax.swing.JInternalFrame {
         getContentPane().add(jLabel19);
         jLabel19.setBounds(310, 140, 110, 30);
 
-        h18.setEditable(false);
-        h18.setBackground(new java.awt.Color(255, 255, 204));
-        h18.setFont(new java.awt.Font("Arial", 2, 14)); // NOI18N
-        h18.setHorizontalAlignment(javax.swing.JTextField.CENTER);
-        h18.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusGained(java.awt.event.FocusEvent evt) {
-                h18FocusGained(evt);
-            }
-        });
-        getContentPane().add(h18);
-        h18.setBounds(310, 170, 200, 30);
-
         nextbutton.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         nextbutton.setIcon(ColorConstants.loadIcon("/icons/next45.png")); // NOI18N
         nextbutton.setMnemonic('n');
@@ -1291,17 +1393,6 @@ public final class item_master extends javax.swing.JInternalFrame {
         getContentPane().add(prebutton);
         prebutton.setBounds(270, 480, 150, 50);
 
-        exclusiveButton.setBackground(new java.awt.Color(153, 153, 153));
-        exclusiveButton.setIcon(ColorConstants.loadIcon("/icons/search22.png")); // NOI18N
-        exclusiveButton.setMnemonic('v');
-        exclusiveButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                exclusiveButtonActionPerformed(evt);
-            }
-        });
-        getContentPane().add(exclusiveButton);
-        exclusiveButton.setBounds(540, 170, 30, 30);
-
         jLabel6.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jLabel6.setText("Barcode");
         getContentPane().add(jLabel6);
@@ -1310,6 +1401,8 @@ public final class item_master extends javax.swing.JInternalFrame {
         h19.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         getContentPane().add(h19);
         h19.setBounds(420, 410, 150, 30);
+        h19.setVisible(false);
+        h19.setText("0");
 
         h20.setFont(new java.awt.Font("Arial Unicode MS", 0, 14)); // NOI18N
         h20.addActionListener(new java.awt.event.ActionListener() {
@@ -1329,17 +1422,6 @@ public final class item_master extends javax.swing.JInternalFrame {
         });
         getContentPane().add(jButton4);
         jButton4.setBounds(540, 140, 30, 30);
-
-        inclusiveButton.setBackground(new java.awt.Color(204, 204, 204));
-        inclusiveButton.setIcon(ColorConstants.loadIcon("/icons/search22.png")); // NOI18N
-        inclusiveButton.setMnemonic('v');
-        inclusiveButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                inclusiveButtonActionPerformed(evt);
-            }
-        });
-        getContentPane().add(inclusiveButton);
-        inclusiveButton.setBounds(510, 170, 30, 30);
 
         barcodeGenerateButton.setFont(new java.awt.Font("Arial", 0, 12)); // NOI18N
         barcodeGenerateButton.setIcon(ColorConstants.loadIcon("/icons/barcodeIcon.png")); // NOI18N
@@ -1391,6 +1473,27 @@ public final class item_master extends javax.swing.JInternalFrame {
         getContentPane().add(batchField);
         batchField.setBounds(420, 230, 150, 30);
 
+        sizeCombo = new javax.swing.JComboBox<>(new String[] {
+                "XXS", "XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL",
+                "26", "28", "30", "32", "34", "36", "38", "40", "42", "44",
+                "Free Size"
+        });
+        sizeCombo.setFont(new java.awt.Font("Arial", 0, 14));
+        sizeCombo.setVisible(false);
+        getContentPane().add(sizeCombo);
+        sizeCombo.setBounds(420, 230, 150, 30);
+
+        colorLabel = new javax.swing.JLabel("Color");
+        colorLabel.setFont(new java.awt.Font("Arial", 0, 14));
+        colorLabel.setVisible(false);
+        getContentPane().add(colorLabel);
+        colorLabel.setBounds(305, 260, 55, 30);
+        colorField = new javax.swing.JTextField();
+        colorField.setFont(new java.awt.Font("Arial", 0, 14));
+        colorField.setVisible(false);
+        getContentPane().add(colorField);
+        colorField.setBounds(362, 260, 190, 30);
+
         expLabel.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         expLabel.setText(" Exp Date");
         getContentPane().add(expLabel);
@@ -1432,6 +1535,17 @@ public final class item_master extends javax.swing.JInternalFrame {
         getContentPane().add(copyButton);
         copyButton.setBounds(10, 530, 110, 50);
 
+        taxInclusionLabel = new javax.swing.JLabel("Tax Type");
+        taxInclusionLabel.setFont(new java.awt.Font("Arial", 0, 14));
+        getContentPane().add(taxInclusionLabel);
+        taxInclusionLabel.setBounds(310, 170, 100, 30);
+
+        taxInclusionCombo = new javax.swing.JComboBox<>(new String[] {
+                "Inclusive of Tax", "Exclusive of Tax", "No Tax", "Inclusive Model-II" });
+        taxInclusionCombo.setFont(new java.awt.Font("Arial", 0, 14));
+        getContentPane().add(taxInclusionCombo);
+        taxInclusionCombo.setBounds(420, 170, 150, 30);
+
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
@@ -1466,7 +1580,11 @@ public final class item_master extends javax.swing.JInternalFrame {
         try {
             String ino = "";
             boolean selva = false;
-            String query = "select distinct ino from item where barcode='" + h17.getSelectedItem() + "'";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select distinct ino from item where barcode='" + h17.getSelectedItem() + "'"
+                    + companyFilter;
             ResultSet set = util.doQuery(query);
             while (set.next()) {
                 ino = set.getString(1);
@@ -1491,9 +1609,12 @@ public final class item_master extends javax.swing.JInternalFrame {
         }
         try {
             String selectedName = h2.getSelectedItem().toString();
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             String query = "SELECT ino, iname, barcode,"
                     + (CompanySettingUtil.getInstance().isDisplayBatch() ? "batch" : "size")
-                    + " FROM item WHERE iname = '" + selectedName + "'";
+                    + " FROM item WHERE iname = '" + selectedName + "'" + companyFilter;
             ResultSet set = util.doQuery(query);
 
             List<Object[]> rows = new ArrayList<>();
@@ -1592,24 +1713,18 @@ public final class item_master extends javax.swing.JInternalFrame {
 
     }// GEN-LAST:event_h6FocusLost
 
-    private void h5FocusLost(java.awt.event.FocusEvent evt) {// GEN-FIRST:event_h5FocusLost
+    private void h5ActionPerformed(java.awt.event.ActionEvent evt) {
+        if (h5.getSelectedItem() == null)
+            return;
         if (h4.getText().equals("")) {
             h4.setText("" + 0);
         }
-        if (h5.getText().equals("")) {
-            h5.setText("" + 0);
-        }
         double prate = Double.parseDouble(h4.getText());
-        int taxp = Integer.parseInt(h5.getText());
+        int taxp = Integer.parseInt(h5.getSelectedItem().toString());
         double taxamt = (taxp * prate) / 100;
         double basic = prate + taxamt;
         String basic2 = String.format("%." + hmany + "f", basic);
-        h18.setText("Basic Cost: " + basic2 + "   (Ex.Tax)");
-    }// GEN-LAST:event_h5FocusLost
-
-    private void h18FocusGained(java.awt.event.FocusEvent evt) {// GEN-FIRST:event_h18FocusGained
-        h7.requestFocus();
-    }// GEN-LAST:event_h18FocusGained
+    }
 
     private void h7FocusGained(java.awt.event.FocusEvent evt) {// GEN-FIRST:event_h7FocusGained
         if (h7.getText().equals("")) {
@@ -1644,7 +1759,10 @@ public final class item_master extends javax.swing.JInternalFrame {
                 JOptionPane.showMessageDialog(this, "No Records Were Found!", "No Records", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            String query = "select ino from item where ino > '" + ino + "' order by ino limit 1";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select ino from item where ino > '" + ino + "'" + companyFilter + " order by ino limit 1";
             ResultSet set1 = util.doQuery(query);
             boolean selva = false;
             String search_ino = "";
@@ -1667,10 +1785,17 @@ public final class item_master extends javax.swing.JInternalFrame {
         try {
             String ino = h1.getText();
             String query;
+            String companyFilterW = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String companyFilterA = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             if (ino.equalsIgnoreCase("--")) {
-                query = "select max(ino) from item";
+                query = "select max(ino) from item" + companyFilterW;
             } else {
-                query = "select ino from item where ino < '" + ino + "' order by ino desc limit 1";
+                query = "select ino from item where ino < '" + ino + "'" + companyFilterA
+                        + " order by ino desc limit 1";
             }
 
             ResultSet set1 = util.doQuery(query);
@@ -1690,19 +1815,6 @@ public final class item_master extends javax.swing.JInternalFrame {
         }
     }// GEN-LAST:event_prebuttonActionPerformed
 
-    private void exclusiveButtonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_exclusiveButtonActionPerformed
-        try {
-            double basePrice = Double.parseDouble(h4.getText().trim());
-            double taxPercent = Double.parseDouble(h5.getText().trim());
-            double totalPrice = basePrice + (basePrice * taxPercent / 100);
-            h18.setText(String.format("Exclusive Price: %.2f", totalPrice));
-            h18.setBackground(new Color(204, 232, 212));
-        } catch (NumberFormatException ex) {
-            h18.setText("Invalid input");
-        }
-
-    }// GEN-LAST:event_exclusiveButtonActionPerformed
-
     private void h12ItemStateChanged(java.awt.event.ItemEvent evt) {// GEN-FIRST:event_h12ItemStateChanged
         if (h12.getSelectedItem() == null || h12.getSelectedItem() == "" || h12.getSelectedItem().equals(".")) {
         } else {
@@ -1710,36 +1822,21 @@ public final class item_master extends javax.swing.JInternalFrame {
         }
     }// GEN-LAST:event_h12ItemStateChanged
 
-    private void inclusiveButtonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_inclusiveButtonActionPerformed
-        try {
-            double mrp = Double.parseDouble(h4.getText().trim());
-            double taxPercent = Double.parseDouble(h5.getText().trim());
-            double basePrice = mrp / (1 + (taxPercent / 100));
-            h18.setText(String.format("Inclusive Price: %.2f", basePrice));
-            h18.setBackground(new Color(204, 232, 112));
-        } catch (NumberFormatException ex) {
-            h18.setText("Invalid input");
-        }
-    }// GEN-LAST:event_inclusiveButtonActionPerformed
-
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton4ActionPerformed
         if (h4.getText().equals("")) {
             JOptionPane.showMessageDialog(this, "Enter Purchase Price ?", "Invalid", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        if (h5.getText().equals("")) {
-            JOptionPane.showMessageDialog(this, "Enter Tax Per% ?", "Invalid", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
         double prate = Double.parseDouble(h4.getText());
-        double taxp = Double.parseDouble(h5.getText());
+        double taxp = Double.parseDouble(h5.getSelectedItem().toString());
         double devide = 100 + taxp;
         devide = prate * (100 / devide);
         double taxamt = prate - devide;
         prate = prate - taxamt;
         String prate1 = String.format("%." + hmany + "f", prate);
         JOptionPane.showMessageDialog(this,
-                "<html><b>Cost Price: " + prate1 + "\nPurchase Price - Inclusive of Tax '" + h5.getText() + "'%",
+                "<html><b>Cost Price: " + prate1 + "\nPurchase Price - Inclusive of Tax '"
+                        + h5.getSelectedItem().toString() + "'%",
                 "Inclusive of Tax", JOptionPane.PLAIN_MESSAGE);
 
     }// GEN-LAST:event_jButton4ActionPerformed
@@ -1921,7 +2018,6 @@ public final class item_master extends javax.swing.JInternalFrame {
     private javax.swing.JButton closebutton;
     private javax.swing.JButton copyButton;
     private javax.swing.JButton deletebutton;
-    private javax.swing.JButton exclusiveButton;
     private javax.swing.JTextField expDateField;
     private net.sourceforge.jcalendarbutton.JCalendarButton expJcalendarButton;
     private javax.swing.JLabel expLabel;
@@ -1934,18 +2030,16 @@ public final class item_master extends javax.swing.JInternalFrame {
     private javax.swing.JComboBox<String> h15;
     private javax.swing.JTextField h16;
     private javax.swing.JComboBox<String> h17;
-    private javax.swing.JTextField h18;
     private javax.swing.JTextField h19;
     private javax.swing.JComboBox<String> h2;
     private javax.swing.JTextField h20;
     private javax.swing.JTextField h3;
     private javax.swing.JTextField h4;
-    private javax.swing.JTextField h5;
+    private javax.swing.JComboBox<String> h5;
     private javax.swing.JTextField h6;
     private javax.swing.JTextField h7;
     private javax.swing.JTextField h8;
     private javax.swing.JComboBox<String> h9;
-    private javax.swing.JButton inclusiveButton;
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton4;
@@ -1983,4 +2077,10 @@ public final class item_master extends javax.swing.JInternalFrame {
     private javax.swing.JLabel titlelablel;
     private javax.swing.JButton updatebutton;
     // End of variables declaration//GEN-END:variables
+
+    private javax.swing.JComboBox<String> sizeCombo;
+    private javax.swing.JLabel colorLabel;
+    private javax.swing.JTextField colorField;
+    private javax.swing.JComboBox<String> taxInclusionCombo;
+    private javax.swing.JLabel taxInclusionLabel;
 }

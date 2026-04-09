@@ -22,6 +22,7 @@ import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import menupack.menu_form;
 import menupack.sample2;
+import menupack.UserSession;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -90,13 +91,17 @@ public final class sales_summary_item extends javax.swing.JInternalFrame {
             Connection conn = util.getConnection();
             PreparedStatement ps;
 
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " and company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+
             if (all.isSelected()) {
-                query = "select ino,iname,sum(quan),sum(amount) from sales_items where dat between ? and ? group by ino, iname order by ino";
+                query = "select ino,iname,sum(quan),sum(amount) from sales_items where dat between ? and ?" + companyFilter + " group by ino, iname order by ino";
                 ps = conn.prepareStatement(query);
                 ps.setString(1, lk);
                 ps.setString(2, lk1);
             } else {
-                query = "select distinct a.ino,a.iname,sum(quan),sum(amount) from sales_items a,item b where dat between ? and ? and cat=? and a.ino=b.ino group by a.ino, a.iname order by a.ino";
+                query = "select a.ino,a.iname,sum(quan),sum(amount) from sales_items a,item b where dat between ? and ? and cat=? and a.ino=b.ino" + companyFilter + " group by a.ino, a.iname order by a.ino";
                 ps = conn.prepareStatement(query);
                 ps.setString(1, lk);
                 ps.setString(2, lk1);
@@ -137,7 +142,10 @@ public final class sales_summary_item extends javax.swing.JInternalFrame {
     void get_category() {
         try {
             h3.removeAllItems();
-            String query = "select distinct cat from item";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select distinct cat from item" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 h3.addItem(r.getString(1));

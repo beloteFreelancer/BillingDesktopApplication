@@ -1,15 +1,19 @@
 package stockpack;
 
 import Utils.ColorConstants;
+import Utils.CompanySettingUtil;
 import ca.odell.glazedlists.GlazedLists;
 import ca.odell.glazedlists.swing.AutoCompleteSupport;
 import com.selrom.db.DataUtil;
 import itempack.item_master;
+import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Frame;
 import java.awt.HeadlessException;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.Window;
 import java.awt.event.KeyEvent;
 import java.io.BufferedReader;
 import java.io.File;
@@ -23,15 +27,25 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JDesktopPane;
+import javax.swing.JDialog;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import menupack.menu_form;
+import menupack.UserSession;
 
 /**
  *
@@ -173,7 +187,10 @@ public final class stock_entry extends javax.swing.JInternalFrame {
 
     final void get_defaults() {
         try {
-            String query = "select pur_rate_edit,rprice,wprice,rdis,wdis,hmany,round from setting_bill";
+            String companyWhere = UserSession.hasSelectedCompany()
+                    ? " WHERE companyID='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select pur_rate_edit,rprice,wprice,rdis,wdis,hmany,round from company" + companyWhere;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 pur_rate_edit = r.getString(1);
@@ -198,7 +215,10 @@ public final class stock_entry extends javax.swing.JInternalFrame {
     void get_grn_no() {
         try {
             int sno = 1;
-            String query = "select max(grn) from stock_entry";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select max(grn) from stock_entry" + companyFilter;
             ResultSet r = util.doQuery(query);
             boolean selva = false;
             while (r.next()) {
@@ -218,12 +238,15 @@ public final class stock_entry extends javax.swing.JInternalFrame {
         try {
             String cname = h3.getText();
             String scode = "", actual_code = "";
-            String query = "select distinct scode from vendor where cname='" + cname + "' ";
+            String venCompanyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select distinct scode from vendor where cname='" + cname + "'" + venCompanyFilter + " ";
             ResultSet set1 = util.doQuery(query);
             while (set1.next()) {
                 scode = set1.getString(1);
             }
-            query = "select distinct scode from setting_bill";
+            query = "select distinct scode from company";
             set1 = util.doQuery(query);
             while (set1.next()) {
                 actual_code = set1.getString(1);
@@ -240,8 +263,11 @@ public final class stock_entry extends javax.swing.JInternalFrame {
 
     void get_item_details_using_item_no() {
         try {
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             String query = "select ino,iname,barcode,prate,mrp,rprice,wprice,taxp from item where ino='" + h8.getText()
-                    + "' order by ino limit 1";
+                    + "'" + companyFilter + " order by ino limit 1";
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 h8.setText(r.getString(1));
@@ -260,8 +286,11 @@ public final class stock_entry extends javax.swing.JInternalFrame {
 
     void get_item_details_using_barcode() {
         try {
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             String query = "select ino,iname,prate,mrp,rprice,wprice,taxp from item where barcode='" + h7.getText()
-                    + "' order by ino limit 1";
+                    + "'" + companyFilter + " order by ino limit 1";
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 h8.setText(r.getString(1));
@@ -282,7 +311,10 @@ public final class stock_entry extends javax.swing.JInternalFrame {
         try {
             String cat = ".", manu = ".", hsn = ".", iname1 = "";
             boolean selva = false;
-            String query = "select distinct cat,manu,hsn,iname1 from item where ino='" + ino + "'";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select distinct cat,manu,hsn,iname1 from item where ino='" + ino + "'" + companyFilter;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 cat = r.getString(1);
@@ -520,7 +552,10 @@ public final class stock_entry extends javax.swing.JInternalFrame {
                 get_grn_no();
             }
             boolean selva = false;
-            String query = "select grn from stock_entry where grn='" + h1.getText() + "'";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select grn from stock_entry where grn='" + h1.getText() + "'" + companyFilter;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 selva = true;
@@ -534,7 +569,7 @@ public final class stock_entry extends javax.swing.JInternalFrame {
 
             selva = false;
             query = "select billno from stock_entry where cname='" + h3.getText() + "' and billno='" + h4.getText()
-                    + "'";
+                    + "'" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 selva = true;
@@ -547,7 +582,10 @@ public final class stock_entry extends javax.swing.JInternalFrame {
                 return;
             }
             int due_days = 0;
-            query = "select duedays from vendor where cname='" + h3.getText() + "'";
+            String venCompanyFilter2 = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            query = "select duedays from vendor where cname='" + h3.getText() + "'" + venCompanyFilter2;
             r = util.doQuery(query);
             while (r.next()) {
                 due_days = r.getInt(1);
@@ -586,6 +624,7 @@ public final class stock_entry extends javax.swing.JInternalFrame {
             String entry = "purchase";
             String ttype1 = "No Tax";
             String dis1 = h30.getText();
+            String cid = UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "";
             ArrayList query_batch = new ArrayList();
 
             for (int i = 0; i < jTable1.getRowCount(); i++) {
@@ -618,33 +657,47 @@ public final class stock_entry extends javax.swing.JInternalFrame {
                 double old_rate = 0;
                 boolean selvak = false;
                 query = "select distinct prate from stock where barcode='" + barcode + "' and ino='" + ino
-                        + "' and iname='" + iname + "' and entry='" + entry + "'";
+                        + "' and iname='" + iname + "' and entry='" + entry + "' and company_id='" + cid + "'";
                 r = util.doQuery(query);
                 while (r.next()) {
                     selvak = true;
                     old_rate = r.getDouble(1);
                 }
                 if (selvak == true && old_rate == prate) {
-                    query_batch.add("update stock set quan=quan+" + quan + "  where barcode='" + barcode + "' and ino='"
-                            + ino + "' and iname='" + iname + "' and entry='" + entry + "'");
+                    query_batch.add("update stock set quan=quan+" + quan + " where barcode='" + barcode + "' and ino='"
+                            + ino + "' and iname='" + iname + "' and entry='" + entry + "' and company_id='" + cid
+                            + "'");
                 } else if (selvak == true && old_rate != prate) {
                     query_batch.add("update stock set quan=quan+" + quan + ",mrp='" + mrp + "',rprice='" + rprice
-                            + "',wprice='" + wprice + "',prate='" + prate + "'  where barcode='" + barcode
-                            + "' and ino='" + ino + "' and iname='" + iname + "' and entry='" + entry + "'");
+                            + "',wprice='" + wprice + "',prate='" + prate + "' where barcode='" + barcode
+                            + "' and ino='" + ino + "' and iname='" + iname + "' and entry='" + entry
+                            + "' and company_id='" + cid + "'");
                     query_batch.add("update item set mrp='" + mrp + "',rprice='" + rprice + "',wprice='" + wprice
                             + "',prate='" + prate + "'  where barcode='" + barcode + "' and ino='" + ino
-                            + "' and iname='" + iname + "'");
+                            + "' and iname='" + iname + "'"
+                            + (UserSession.hasSelectedCompany()
+                                    ? " and company_id='" + UserSession.getSelectedCompanyID() + "'"
+                                    : "")
+                            + "");
                 } else if (selvak == false) {
-                    query_batch.add("insert into stock values ('" + barcode + "','" + ino + "','" + iname + "','" + mrp
-                            + "','" + rprice + "','" + wprice + "','" + prate + "','" + quan + "','" + cat + "','"
-                            + entry + "')");
+                    query_batch.add(
+                            "insert into stock (barcode, ino, iname, mrp, rprice, wprice, prate, quan, cat, entry, company_id) values ('"
+                                    + barcode + "','" + ino + "','" + iname + "','" + mrp
+                                    + "','" + rprice + "','" + wprice + "','" + prate + "','" + quan + "','" + cat
+                                    + "','"
+                                    + entry + "','" + cid + "')");
                 }
             } // jtable row counts ends
-            query_batch.add("insert into stock_entry values ('" + grn + "','" + date + "','" + cname + "','" + billno
-                    + "','" + bdate + "','" + billamount + "','" + items + "','" + quans + "','" + sub + "','" + disamt
-                    + "','" + gross + "','" + taxamt + "','" + fright + "','" + other + "','" + grant + "','" + round
-                    + "','" + net + "','" + pby + "','" + username + "','" + last + "','" + ttype1 + "','" + dis1
-                    + "')");
+            query_batch.add(
+                    "insert into stock_entry (grn, dat, cname, billno, bdate, bamount, items, quans, sub, dis, gross, tax, fright, other, gt, round, net, pby, user, last, ttype, dis1, company_id) values ('"
+                            + grn + "','" + date + "','" + cname + "','" + billno
+                            + "','" + bdate + "','" + billamount + "','" + items + "','" + quans + "','" + sub + "','"
+                            + disamt
+                            + "','" + gross + "','" + taxamt + "','" + fright + "','" + other + "','" + grant + "','"
+                            + round
+                            + "','" + net + "','" + pby + "','" + username + "','" + last + "','" + ttype1 + "','"
+                            + dis1
+                            + "','" + cid + "')");
 
             if (pby.equalsIgnoreCase("Credit")) {
                 int paid1 = 0;
@@ -654,8 +707,9 @@ public final class stock_entry extends javax.swing.JInternalFrame {
                 c.add(Calendar.DAY_OF_MONTH, due_days);
                 String ddate = sdf.format(c.getTime());
 
-                query_batch.add("insert into ven_bal values ('" + billno + "','" + date + "','" + ddate + "','" + cname
-                        + "','" + net + "','" + paid1 + "','" + last + "')");
+                query_batch.add("insert into ven_bal (billno, dat, ddate, cname, tot, paid, last, company_id) values ('"
+                        + billno + "','" + date + "','" + ddate + "','" + cname
+                        + "','" + net + "','" + paid1 + "','" + last + "','" + cid + "')");
             } // credit bill ends
 
             int count = util.doManipulation_Batch(query_batch);
@@ -721,7 +775,9 @@ public final class stock_entry extends javax.swing.JInternalFrame {
 
     void view(String grn) {
         try {
-            String query = "select distinct grn from stock_entry where grn='" + grn + "'";
+            String query = "select distinct grn from stock_entry where grn='" + grn + "'"
+                    + (UserSession.hasSelectedCompany() ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                            : "");
             ResultSet set1 = util.doQuery(query);
             boolean selva = false;
             while (set1.next()) {
@@ -742,7 +798,10 @@ public final class stock_entry extends javax.swing.JInternalFrame {
                 }
 
                 query = "select distinct grn,date_format(dat,'%d/%m/%Y'),cname,billno,date_format(bdate,'%d/%m/%Y'),bamount,items,quans,sub,dis,gross,tax,fright,other,gt,round,net,pby,ttype,dis1 from stock_entry where grn='"
-                        + grn + "'";
+                        + grn + "'"
+                        + (UserSession.hasSelectedCompany()
+                                ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                                : "");
                 set1 = util.doQuery(query);
                 while (set1.next()) {
                     h1.setText(set1.getString(1));
@@ -1054,15 +1113,24 @@ public final class stock_entry extends javax.swing.JInternalFrame {
                 String iname = jTable1.getValueAt(i, 2).toString();
                 String quan = jTable1.getValueAt(i, 7).toString();
                 query_batch.add("update stock set quan=quan-" + quan + "  where barcode='" + barcode + "' and ino='"
-                        + ino + "' and iname='" + iname + "' and entry='" + entry + "' ");
+                        + ino + "' and iname='" + iname + "' and entry='" + entry + "'"
+                        + (UserSession.hasSelectedCompany()
+                                ? " and company_id='" + UserSession.getSelectedCompanyID() + "'"
+                                : "")
+                        + " ");
             } // jtable row counts ends
 
-            query_batch.add("delete from stock_entry where grn='" + grn + "'");
+            query_batch.add("delete from stock_entry where grn='" + grn + "'"
+                    + (UserSession.hasSelectedCompany() ? " and company_id='" + UserSession.getSelectedCompanyID() + "'"
+                            : ""));
             query_batch.add("delete from stock_entry_items where grn='" + grn + "'");
 
             if (h28.getSelectedItem().equals("Credit")) {
                 query_batch.add(
-                        "delete from ven_bal where billno='" + h4.getText() + "' and cname='" + h3.getText() + "' ");
+                        "delete from ven_bal where billno='" + h4.getText() + "' and cname='" + h3.getText() + "'"
+                                + (UserSession.hasSelectedCompany()
+                                        ? " and company_id='" + UserSession.getSelectedCompanyID() + "'"
+                                        : ""));
             }
             int count = util.doManipulation_Batch(query_batch);
             if (count > 0) {
@@ -1123,14 +1191,22 @@ public final class stock_entry extends javax.swing.JInternalFrame {
                 for (int i = 0; i < barcode.size(); i++) {
                     query_batch.add("update stock set quan=quan-" + quan.get(i) + " where barcode='" + barcode.get(i)
                             + "' and ino='" + ino.get(i) + "' and iname='" + iname.get(i) + "' and entry='" + entry
-                            + "'");
+                            + "'"
+                            + (UserSession.hasSelectedCompany()
+                                    ? " and company_id='" + UserSession.getSelectedCompanyID() + "'"
+                                    : ""));
                 }
             } // selva true ends
-            query_batch.add("delete from stock_entry where grn='" + grn + "'");
+            query_batch.add("delete from stock_entry where grn='" + grn + "'"
+                    + (UserSession.hasSelectedCompany() ? " and company_id='" + UserSession.getSelectedCompanyID() + "'"
+                            : ""));
             query_batch.add("delete from stock_entry_items where grn='" + grn + "'");
             if (h28.getSelectedItem().equals("Credit")) {
                 query_batch.add(
-                        "delete from ven_bal where billno='" + h4.getText() + "' and cname='" + h3.getText() + "' ");
+                        "delete from ven_bal where billno='" + h4.getText() + "' and cname='" + h3.getText() + "'"
+                                + (UserSession.hasSelectedCompany()
+                                        ? " and company_id='" + UserSession.getSelectedCompanyID() + "'"
+                                        : ""));
             }
             int count = util.doManipulation_Batch(query_batch);
             if (count > 0) {
@@ -1237,12 +1313,15 @@ public final class stock_entry extends javax.swing.JInternalFrame {
     final void get_sug() {
         try {
             int count = 0;
-            String query = "select iname from item";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select iname from item" + companyFilter;
             ResultSet set = util.doQuery(query);
             while (set.next()) {
                 count = count + 1;
             }
-            query = "select iname from item";
+            query = "select iname from item" + companyFilter;
             set = util.doQuery(query);
             Object f[] = new Object[count];
             int index = 0;
@@ -2041,7 +2120,8 @@ public final class stock_entry extends javax.swing.JInternalFrame {
 
         h28.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         h28.setModel(
-                new javax.swing.DefaultComboBoxModel<>(new String[] { "Credit", "Cash", "Card", "Cheque", "Others" }));
+                new javax.swing.DefaultComboBoxModel<>(
+                        new String[] { "Credit", "Cash", "Card", "Cheque", "Others", "Multi Pay" }));
         h28.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
                 h28KeyPressed(evt);
@@ -2218,7 +2298,11 @@ public final class stock_entry extends javax.swing.JInternalFrame {
                 JOptionPane.showMessageDialog(this, "No Records Were Found!", "No Records", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            String query = "select grn from stock_entry where grn > '" + grn + "' order by grn limit 1";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select grn from stock_entry where grn > '" + grn + "'" + companyFilter
+                    + " order by grn limit 1";
             ResultSet set1 = util.doQuery(query);
             boolean selva = false;
             String search_grn = "";
@@ -2241,10 +2325,17 @@ public final class stock_entry extends javax.swing.JInternalFrame {
         try {
             String grn = h1.getText();
             String query;
+            String companyFilterW = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String companyFilterA = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             if (grn.equalsIgnoreCase("--")) {
-                query = "select max(grn) from stock_entry";
+                query = "select max(grn) from stock_entry" + companyFilterW;
             } else {
-                query = "select grn from stock_entry where grn < '" + grn + "' order by grn desc limit 1";
+                query = "select grn from stock_entry where grn < '" + grn + "'" + companyFilterA
+                        + " order by grn desc limit 1";
             }
 
             ResultSet set1 = util.doQuery(query);
@@ -2534,8 +2625,11 @@ public final class stock_entry extends javax.swing.JInternalFrame {
                     cname_list.setLocation(l.x, l.y + h3.getHeight());
                     cname_list.setSize(857, 438);
                     cname_list.setVisible(true);
+                    String companyFilter = UserSession.hasSelectedCompany()
+                            ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                            : "";
                     String query = "select cname,city from vendor where cname like '" + h3.getText()
-                            + "%' order by cname limit 300";
+                            + "%'" + companyFilter + " order by cname limit 300";
                     ResultSet r = util.doQuery(query);
                     while (r.next()) {
                         s3.addRow(new Object[] { r.getString(1), r.getString(2) });
@@ -2581,7 +2675,7 @@ public final class stock_entry extends javax.swing.JInternalFrame {
 
     private void jTable3MouseClicked(java.awt.event.MouseEvent evt) {// GEN-FIRST:event_jTable3MouseClicked
         if (jTable3.getRowCount() > 0) {
-            h8.setText(jTable3.getValueAt(jTable3.getSelectedRow(), 0).toString());
+            selectItemFromJTable();
         }
         get_item_details_using_item_no();
         h14.requestFocus();
@@ -2592,7 +2686,7 @@ public final class stock_entry extends javax.swing.JInternalFrame {
 
         if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
             if (jTable3.getRowCount() > 0) {
-                h8.setText(jTable3.getValueAt(jTable3.getSelectedRow(), 0).toString());
+                selectItemFromJTable();
             }
             get_item_details_using_item_no();
             h14.requestFocus();
@@ -2632,7 +2726,11 @@ public final class stock_entry extends javax.swing.JInternalFrame {
                     iname_list.setSize(1100, 382);
                     iname_list.setVisible(true);
                     String query = "select ino,barcode,iname,cat,manu from item where iname like '" + h8.getText()
-                            + "%' order by ino limit 500";
+                            + "%'"
+                            + (UserSession.hasSelectedCompany()
+                                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                                    : "")
+                            + " order by ino limit 500";
                     ResultSet r = util.doQuery(query);
                     while (r.next()) {
                         s4.addRow(new Object[] { r.getString(1), r.getString(2), r.getString(3), r.getString(4),
@@ -2704,6 +2802,139 @@ public final class stock_entry extends javax.swing.JInternalFrame {
             print_barcode();
         }
     }// GEN-LAST:event_printbuttonActionPerformed
+
+    private void selectItemFromJTable() {
+        if (jTable3.getRowCount() > 0) {
+            try {
+                String selectedName = jTable3.getValueAt(jTable3.getSelectedRow(), 2).toString();
+                String companyFilter = UserSession.hasSelectedCompany()
+                        ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                        : "";
+                String query = "SELECT ino, iname, barcode, "
+                        + (CompanySettingUtil.getInstance().isDisplayBatch() ? "batch, " : "")
+                        + "IFNULL(size,'') as size, IFNULL(color,'') as color, IFNULL(brand,'') as brand, rprice, wprice FROM item WHERE iname = '"
+                        + selectedName + "'" + companyFilter;
+                ResultSet set = util.doQuery(query);
+
+                List<Object[]> rows = new ArrayList<>();
+                Map<String, String> valueMap = new HashMap<>();
+                while (set.next()) {
+                    List<Object> row = new ArrayList<>();
+                    row.add(set.getString("ino"));
+                    row.add(set.getString("iname"));
+                    row.add(set.getString("barcode"));
+                    if (CompanySettingUtil.getInstance().isDisplayBatch()) {
+                        row.add(set.getString("batch"));
+                    }
+                    row.add(set.getString("size"));
+                    row.add(set.getString("color"));
+                    row.add(set.getString("brand"));
+                    row.add(set.getString("rprice"));
+                    row.add(set.getString("wprice"));
+                    rows.add(row.toArray());
+
+                    valueMap.put("ino", set.getString("ino"));
+                    valueMap.put("iname", set.getString("iname"));
+                }
+                if (rows.size() == 1) {
+                    h8.setText(valueMap.get("ino"));
+                } else if (rows.size() > 1) {
+                    String selectedIno = showSelectionDialog(rows);
+                    if (selectedIno != null) {
+                        h8.setText(selectedIno);
+                    } else {
+                        JOptionPane.showMessageDialog(this, "No item selected.", "Cancelled",
+                                JOptionPane.INFORMATION_MESSAGE);
+                    }
+                }
+            } catch (ClassNotFoundException | SQLException e) {
+                System.out.println(e.getMessage());
+                JOptionPane.showMessageDialog(this, "Error: " + e.getMessage(), "Exception", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private String showSelectionDialog(List<Object[]> data) {
+        List<String> colList = new ArrayList<>();
+        colList.add("Item No");
+        colList.add("Item Name");
+        colList.add("Barcode");
+        if (CompanySettingUtil.getInstance().isDisplayBatch()) {
+            colList.add("Batch");
+        }
+        colList.add("Size");
+        colList.add("Color");
+        colList.add("Brand");
+        colList.add("RPrice");
+        colList.add("WPrice");
+
+        String[] columns = colList.toArray(new String[0]);
+
+        Object[][] tableData = new Object[data.size()][columns.length];
+        for (int i = 0; i < data.size(); i++) {
+            Object[] row = data.get(i);
+            for (int j = 0; j < columns.length; j++) {
+                tableData[i][j] = row[j];
+            }
+        }
+
+        JTable table = new JTable(tableData, columns);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setPreferredSize(new Dimension(700, 300));
+
+        JButton okButton = new JButton("Select");
+        JButton cancelButton = new JButton("Cancel");
+
+        final String[] selectedIno = { null };
+
+        okButton.addActionListener(e -> {
+            int selectedRow = table.getSelectedRow();
+            if (selectedRow >= 0) {
+                selectedIno[0] = table.getValueAt(selectedRow, 0).toString();
+            }
+            SwingUtilities.getWindowAncestor(okButton).dispose();
+        });
+
+        table.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
+                    int selectedRow = table.getSelectedRow();
+                    if (selectedRow >= 0) {
+                        selectedIno[0] = table.getValueAt(selectedRow, 0).toString();
+                        SwingUtilities.invokeLater(() -> {
+                            Window window = SwingUtilities.getWindowAncestor(table);
+                            if (window != null) {
+                                window.dispose();
+                            }
+                        });
+                        evt.consume();
+                    }
+                }
+            }
+        });
+
+        cancelButton.addActionListener(e -> {
+            SwingUtilities.getWindowAncestor(cancelButton).dispose();
+        });
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(okButton);
+        buttonPanel.add(cancelButton);
+
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(scrollPane, BorderLayout.CENTER);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+
+        JDialog dialog = new JDialog((Frame) null, "Select Item", true);
+        dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        dialog.setContentPane(panel);
+        dialog.pack();
+        dialog.setLocationRelativeTo(null);
+        dialog.setVisible(true);
+
+        return selectedIno[0];
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton alterbutton;

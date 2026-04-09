@@ -1,5 +1,6 @@
 package estimatepack;
 
+import Utils.ColorConstants;
 import com.selrom.db.DataUtil;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -20,8 +21,10 @@ public class daily_estimate_select extends javax.swing.JInternalFrame {
         generatebutton.setText("<html><b>Select</b> (Alt+T)</h6><html>");
         setTitle("Date Selection");
         this.setSize(421, 160);
-        ImageIcon icon = new ImageIcon(ClassLoader.getSystemResource("images/icon.png"));
-        this.setFrameIcon(icon);
+        javax.swing.ImageIcon icon = ColorConstants.loadIcon("/images/icon.png");
+        if (icon != null) {
+            this.setFrameIcon(icon);
+        }
     }
 
     public daily_estimate_select(DataUtil util) {

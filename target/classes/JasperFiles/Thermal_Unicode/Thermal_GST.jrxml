@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Thermal_Unicode_Without_GST" language="groovy" pageWidth="216" pageHeight="842" columnWidth="216" leftMargin="0" rightMargin="0" topMargin="5" bottomMargin="5" uuid="b6af8ed7-efd7-4ae4-a964-63c71476369a">
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Thermal_Unicode_Without_GST" language="java" pageWidth="216" pageHeight="842" columnWidth="216" leftMargin="0" rightMargin="0" topMargin="5" bottomMargin="5" uuid="b6af8ed7-efd7-4ae4-a964-63c71476369a">
 	<property name="ireport.zoom" value="1.5"/>
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="2"/>
@@ -583,7 +583,7 @@
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="SansSerif" size="9" isUnderline="false"/>
 				</textElement>
-				<text><![CDATA[இந்த நாள் இனிய நாளாக அமைய வாழ்த்துக்கள்]]></text>
+				<text><![CDATA[à®à®¨à¯à®¤ à®¨à®¾à®³à¯ à®à®©à®¿à®¯ à®¨à®¾à®³à®¾à® à®à®®à¯à®¯ à®µà®¾à®´à¯à®¤à¯à®¤à¯à®à¯à®à®³à¯]]></text>
 			</staticText>
 			<textField isBlankWhenNull="true">
 				<reportElement x="5" y="252" width="200" height="19" uuid="bc6a9beb-e3e7-4cb7-875d-323ce1348160"/>

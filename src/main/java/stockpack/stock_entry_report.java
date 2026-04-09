@@ -296,7 +296,8 @@ public class stock_entry_report extends javax.swing.JInternalFrame {
 
         h3.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         h3.setModel(
-                new javax.swing.DefaultComboBoxModel<>(new String[] { "Credit", "Cash", "Card", "Cheque", "Others" }));
+                new javax.swing.DefaultComboBoxModel<>(
+                        new String[] { "Credit", "Cash", "Card", "Cheque", "Others", "Multi Pay" }));
         getContentPane().add(h3);
         h3.setBounds(470, 40, 220, 30);
 

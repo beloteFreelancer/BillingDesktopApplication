@@ -16,6 +16,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import menupack.menu_form;
+import menupack.UserSession;
 import menupack.sample2;
 
 /**
@@ -109,7 +110,11 @@ public final class stock_alter extends javax.swing.JInternalFrame {
 
     void get_item_details_using_item_no() {
         try {
-            String query = "select ino,iname from item where barcode='" + h4.getText() + "' order by ino limit 1";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select ino,iname from item where barcode='" + h4.getText() + "'" + companyFilter
+                    + " order by ino limit 1";
             r = util.doQuery(query);
             while (r.next()) {
                 h4.setText(r.getString(1));
@@ -137,8 +142,12 @@ public final class stock_alter extends javax.swing.JInternalFrame {
                 h6.requestFocus();
                 return;
             }
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             String entry = "purchase", stock_type = "new_stock";
-            String query = "select entry from stock where ino='" + h4.getText() + "' order by ino limit 1";
+            String query = "select entry from stock where ino='" + h4.getText() + "'" + companyFilter
+                    + " order by ino limit 1";
             r = util.doQuery(query);
             while (r.next()) {
                 entry = r.getString(1);
@@ -146,7 +155,7 @@ public final class stock_alter extends javax.swing.JInternalFrame {
             }
             String cat = ".", mrp = "" + 0, rprice = "" + 0, wprice = "" + 0, prate = "" + 0, barcode = ".";
             query = "select cat,mrp,rprice,wprice,prate,barcode from item where ino='" + h4.getText()
-                    + "' order by ino limit 1";
+                    + "'" + companyFilter + " order by ino limit 1";
             r = util.doQuery(query);
             while (r.next()) {
                 cat = r.getString(1);
@@ -249,17 +258,18 @@ public final class stock_alter extends javax.swing.JInternalFrame {
                         + "','" + iname + "','" + quan + "','" + entry + "','" + stock_type + "','" + items + "','"
                         + quans + "','" + username + "','" + last + "')");
 
+                String cid = UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "";
                 if (stock_type.equalsIgnoreCase("new_stock") && type.equalsIgnoreCase("Add")) {
                     query_list.add("insert into stock values ('" + barcode + "','" + ino + "','" + iname + "','" + mrp
                             + "','" + rprice + "','" + wprice + "','" + prate + "','" + quan + "','" + cat + "','"
-                            + entry + "')");
+                            + entry + "','" + cid + "')");
                 } // new stock ends here
                 else if (stock_type.equalsIgnoreCase("old_stock") && type.equalsIgnoreCase("Add")) {
                     query_list.add("update stock set quan=quan+" + quan + " where ino='" + ino + "' and iname='" + iname
-                            + "' and entry='" + entry + "' ");
+                            + "' and entry='" + entry + "' and company_id='" + cid + "'");
                 } else if (stock_type.equalsIgnoreCase("old_stock") && type.equalsIgnoreCase("Less")) {
                     query_list.add("update stock set quan=quan-" + quan + " where ino='" + ino + "' and iname='" + iname
-                            + "' and entry='" + entry + "' ");
+                            + "' and entry='" + entry + "' and company_id='" + cid + "'");
                 }
             }
             int a = util.doManipulation_Batch(query_list);
@@ -686,8 +696,11 @@ public final class stock_alter extends javax.swing.JInternalFrame {
                     iname_list.setLocation(l.x, l.y + jLabel17.getHeight());
                     iname_list.setSize(840, 432);
                     iname_list.setVisible(true);
+                    String companyFilter = UserSession.hasSelectedCompany()
+                            ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                            : "";
                     String query = "select ino,barcode,iname,cat from item where iname like '" + h4.getText()
-                            + "%' order by ino limit 500";
+                            + "%'" + companyFilter + " order by ino limit 500";
                     r = util.doQuery(query);
                     while (r.next()) {
                         s4.addRow(new Object[] { r.getString(1), r.getString(2), r.getString(3), r.getString(4) });

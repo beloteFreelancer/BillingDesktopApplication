@@ -1,5 +1,6 @@
 package estimatepack;
 
+import menupack.UserSession;
 import Utils.ColorConstants;
 import com.selrom.db.DataUtil;
 import java.awt.Font;
@@ -40,8 +41,10 @@ public class estimate_summary_userwise extends javax.swing.JInternalFrame {
         titlelablel.setText("<html><u>Cashier Wise Estimate Summary</u></html>");
         setTitle("Cashier Wise Estimate Summary");
         this.setSize(1017, 650);
-        ImageIcon icon = new ImageIcon(ClassLoader.getSystemResource("images/icon.png"));
-        this.setFrameIcon(icon);
+        javax.swing.ImageIcon icon = ColorConstants.loadIcon("/images/icon.png");
+        if (icon != null) {
+            this.setFrameIcon(icon);
+        }
     }
 
     public final void load_list_table() {
@@ -86,8 +89,11 @@ public class estimate_summary_userwise extends javax.swing.JInternalFrame {
             boolean selva = false;
 
             String query;
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " and company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             query = "select cashier,count(billno),sum(cash),sum(card),sum(credit),sum(upi),sum(others),sum(net) from estimate where dat between '"
-                    + lk + "' and '" + lk1 + "' group by cashier order by cashier";
+                    + lk + "' and '" + lk1 + "'" + companyFilter + " group by cashier order by cashier";
             r = util.doQuery(query);
             while (r.next()) {
                 String cash = String.format("%." + hmany + "f", r.getDouble(3));

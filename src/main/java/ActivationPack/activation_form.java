@@ -22,6 +22,7 @@ import java.sql.SQLException;
 import javax.swing.UIManager;
 import java.sql.PreparedStatement;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Properties;
 import javax.swing.JOptionPane;
@@ -269,6 +270,8 @@ public final class activation_form extends javax.swing.JFrame {
                 key_status = r.getString(1);
             }
             // customer type is old
+            System.out.println("Selected Customer Type: " + h19.getSelectedItem());
+
             if (h19.getSelectedIndex() == 1) {
                 boolean cust_type = false;
                 t = c.prepareStatement("select cid from customers where cid=?");
@@ -291,10 +294,12 @@ public final class activation_form extends javax.swing.JFrame {
                 while (r.next()) {
                     ch = true;
                     billno = r.getInt(1);
+                    System.out.println("Max Customer ID: " + billno);
                 }
                 if (ch == true) {
                     billno = billno + 1;
                 }
+                System.out.println("New Customer ID to be assigned: " + billno);
                 h20.setText(billno + "");
             } // New Customer Ends
 
@@ -321,10 +326,12 @@ public final class activation_form extends javax.swing.JFrame {
                 sno = sno + 1;
             }
             h1.setText("" + sno);
-            Date d = new Date();
+
             SimpleDateFormat g = new SimpleDateFormat("yyyy-MM-dd");
-            SimpleDateFormat g1 = new SimpleDateFormat("hh:mm:ss a");
+            SimpleDateFormat g1 = new SimpleDateFormat("HH:mm:ss");
             SimpleDateFormat g2 = new SimpleDateFormat("dd-MM-yyyy");
+
+            Date d = new Date();
             String date = g.format(d);
             String time = g1.format(d);
             String last = g2.format(d) + "  " + g1.format(d);
@@ -335,8 +342,44 @@ public final class activation_form extends javax.swing.JFrame {
             String mother = get_mother_board_id();
             String bname = h7.getText();
             cid = h20.getText();
+
+            // Ensure expiry_date column exists in customers table (DDL before transaction)
+            try {
+                c.createStatement().execute("ALTER TABLE customers ADD COLUMN expiry_date date DEFAULT NULL");
+                System.out.println("expiry_date column added to customers table");
+            } catch (SQLException ignore) {
+                System.out.println("expiry_date column already exists or ALTER failed: " + ignore.getMessage());
+            }
+
             c.setAutoCommit(false);
-            t = c.prepareStatement("insert into customers values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+
+            // Fetch key_type and validity from call_logs using key1
+            String keyType = "";
+            int validity = 0;
+            t = c.prepareStatement("select key_type, validity from call_logs where key1=?");
+            t.setObject(1, key1);
+            r = t.executeQuery();
+            while (r.next()) {
+                keyType = r.getString(1);
+                validity = r.getInt(2);
+            }
+            System.out.println("Key Type: " + keyType + ", Validity: " + validity);
+
+            // Calculate expiry date based on key_type (years/months/days)
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(d);
+            if (keyType != null && keyType.equalsIgnoreCase("years")) {
+                cal.add(Calendar.YEAR, validity);
+            } else if (keyType != null && keyType.equalsIgnoreCase("months")) {
+                cal.add(Calendar.MONTH, validity);
+            } else {
+                cal.add(Calendar.DAY_OF_MONTH, validity);
+            }
+            String expiryDate = g.format(cal.getTime());
+            System.out.println("Expiry Date : " + expiryDate);
+
+            t = c.prepareStatement(
+                    "insert into customers (sno,dat,tim,version,pname,pdetails,license,ctype,cid,bname,category,cname,mobile,phone,email,country,state,remarks,ref,rdetails,expiry_date) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             t.setObject(1, h1.getText());
             t.setObject(2, date);
             t.setObject(3, time);
@@ -357,9 +400,15 @@ public final class activation_form extends javax.swing.JFrame {
             t.setObject(18, h15.getText());
             t.setObject(19, h16.getSelectedItem());
             t.setObject(20, h17.getText());
+            t.setObject(21, expiryDate);
             int as = t.executeUpdate();
-            t = c.prepareStatement("update call_logs set status='Activated', eno='" + eno + "', cid='" + cid
-                    + "', last='" + last + "' where key1='" + key1 + "' ");
+            System.err.println("as="+as);
+           System.out.println("Customer record inserted with sno: " + h1.getText() + ", License: " + h18.getText() + ", Expiry Date: " + expiryDate);   
+            System.out.println("aDAtE======" + date);
+
+            t = c.prepareStatement(
+                    "update call_logs set status='Activated', eno='" + eno + "', cid='" + cid + "', adate='" + date
+                            + "', last='" + last + "' where key1='" + key1 + "' ");
             int vb = t.executeUpdate();
             if (as > 0 && vb > 0) {
                 status = AES.encrypt(status, secretKey);
@@ -382,13 +431,16 @@ public final class activation_form extends javax.swing.JFrame {
                     selvakumar = true;
                 }
                 if (selvakumar == false) {
+                    String encExpiryDate = AES.encrypt(expiryDate, secretKey);
+                    String encCreateDate = AES.encrypt(g.format(new Date()), secretKey);
                     query1 = "insert into setting_user values ('" + status + "','" + date + "','" + version + "','"
                             + hard + "','" + mother + "','" + cid + "','" + bname + "','" + key1 + "','" + eno + "',"
-                            + "NULL,NULL,NULL,NULL,'" + g.format(new Date()) + "')";
+                            + "NULL,NULL,NULL,'" + encExpiryDate + "','" + encCreateDate + "')";
                 } else if (selvakumar == true) {
+                    String encExpiryDate = AES.encrypt(expiryDate, secretKey);
                     query1 = "update setting_user set status='" + status + "',dat='" + date + "',vname='" + version
                             + "',hname='" + hard + "',mname='" + mother + "',cid='" + cid + "',cname='" + bname
-                            + "',uname='" + key1 + "',eno='" + eno + "' ";
+                            + "',uname='" + key1 + "',eno='" + eno + "',user_valid_date='" + encExpiryDate + "' ";
                 }
                 int a = util.doManipulation(query1);
                 if (a > 0) {
@@ -480,9 +532,8 @@ public final class activation_form extends javax.swing.JFrame {
                 }
             }
         } catch (Exception e) {
-            System.out.println(e.toString());
+            e.printStackTrace();
         }
-
     }
 
     void update() {
@@ -528,8 +579,28 @@ public final class activation_form extends javax.swing.JFrame {
 
     void customer_type() {
         if (h19.getSelectedIndex() == 0) {
-            h20.setText("--");
-            h20.setEnabled(false);
+            // New Customer selected: assign next available customer id
+            try {
+                PreparedStatement t;
+                ResultSet r;
+                int billno = 3114;
+                t = c.prepareStatement("select max(cid) from customers");
+                r = t.executeQuery();
+                boolean found = false;
+                while (r.next()) {
+                    found = true;
+                    billno = r.getInt(1);
+                }
+                if (found) {
+                    billno = billno + 1;
+                }
+                h20.setText(billno + "");
+                h20.setEnabled(false);
+            } catch (Exception ex) {
+                h20.setText("--");
+                h20.setEnabled(false);
+                ex.printStackTrace();
+            }
         } else {
             h20.setText("");
             h20.setEnabled(true);
@@ -752,12 +823,10 @@ public final class activation_form extends javax.swing.JFrame {
         jLabel15.setText("Reference");
         jPanel1.add(jLabel15);
         jLabel15.setBounds(20, 450, 100, 30);
-
         h3.setEditable(false);
         h3.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jPanel1.add(h3);
         h3.setBounds(460, 50, 120, 30);
-
         h18.setBackground(new java.awt.Color(255, 204, 204));
         h18.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         h18.setForeground(new java.awt.Color(0, 0, 204));
@@ -765,12 +834,10 @@ public final class activation_form extends javax.swing.JFrame {
         h18.setBorder(null);
         jPanel1.add(h18);
         h18.setBounds(120, 600, 460, 40);
-
         h2.setEditable(false);
         h2.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jPanel1.add(h2);
         h2.setBounds(360, 50, 100, 30);
-
         h1.setEditable(false);
         h1.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         h1.setText("--");
@@ -781,19 +848,16 @@ public final class activation_form extends javax.swing.JFrame {
         });
         jPanel1.add(h1);
         h1.setBounds(120, 50, 240, 30);
-
         h4.setEditable(false);
         h4.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        h4.setText("Swayam Bill BOOK");
+        h4.setText(" Swayam Billing Software ");
         jPanel1.add(h4);
         h4.setBounds(120, 80, 240, 30);
-
         h5.setEditable(false);
         h5.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         h5.setText("Version 1.0");
         jPanel1.add(h5);
         h5.setBounds(360, 80, 220, 30);
-
         h6.setEditable(false);
         h6.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         h6.setText("General Retail & Wholesale Software");
@@ -816,46 +880,38 @@ public final class activation_form extends javax.swing.JFrame {
         h10.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jPanel1.add(h10);
         h10.setBounds(120, 280, 110, 30);
-
         h11.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jPanel1.add(h11);
         h11.setBounds(340, 280, 240, 30);
-
         h12.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jPanel1.add(h12);
         h12.setBounds(120, 310, 460, 30);
-
         h13.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jPanel1.add(h13);
         h13.setBounds(120, 340, 460, 30);
-
         h15.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jPanel1.add(h15);
         h15.setBounds(120, 400, 460, 30);
-
         jLabel16.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jLabel16.setText("Country ");
         jPanel1.add(jLabel16);
         jLabel16.setBounds(20, 340, 100, 30);
-
         h14.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jPanel1.add(h14);
         h14.setBounds(120, 370, 460, 30);
-
         jLabel17.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jLabel17.setText("Ref.Details");
         jPanel1.add(jLabel17);
         jLabel17.setBounds(20, 480, 100, 30);
-
         h17.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jPanel1.add(h17);
         h17.setBounds(120, 480, 460, 30);
-
         jButton1.setBackground(new java.awt.Color(204, 0, 59));
         jButton1.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
         jButton1.setForeground(new java.awt.Color(153, 153, 255));
         jButton1.setText("Exit");
         jButton1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(204, 0, 51)));
+
         jButton1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
@@ -863,7 +919,6 @@ public final class activation_form extends javax.swing.JFrame {
         });
         jPanel1.add(jButton1);
         jButton1.setBounds(500, 680, 70, 40);
-
         jButton3.setBackground(new java.awt.Color(204, 0, 59));
         jButton3.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
         jButton3.setForeground(new java.awt.Color(153, 153, 255));
@@ -876,20 +931,16 @@ public final class activation_form extends javax.swing.JFrame {
         });
         jPanel1.add(jButton3);
         jButton3.setBounds(430, 680, 70, 40);
-
         jPanel2.setBackground(new java.awt.Color(204, 0, 102));
         jPanel2.setLayout(null);
-
         jLabel2.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
         jLabel2.setForeground(new java.awt.Color(204, 204, 255));
         jLabel2.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel2.setText(" Activation Form");
         jPanel2.add(jLabel2);
         jLabel2.setBounds(0, 0, 610, 40);
-
         jPanel1.add(jPanel2);
         jPanel2.setBounds(0, 0, 610, 40);
-
         savebutton.setBackground(new java.awt.Color(204, 0, 59));
         savebutton.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
         savebutton.setForeground(new java.awt.Color(153, 153, 255));
@@ -902,12 +953,10 @@ public final class activation_form extends javax.swing.JFrame {
         });
         jPanel1.add(savebutton);
         savebutton.setBounds(100, 680, 180, 40);
-
         jLabel18.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jLabel18.setText("Business Name");
         jPanel1.add(jLabel18);
         jLabel18.setBounds(20, 190, 100, 30);
-
         h19.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         h19.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "New Customer", "Existing Customer" }));
         h19.addActionListener(new java.awt.event.ActionListener() {
@@ -932,11 +981,9 @@ public final class activation_form extends javax.swing.JFrame {
                 "Online Search", "Employee Reference", "Other Sources" }));
         jPanel1.add(h16);
         h16.setBounds(120, 450, 460, 30);
-
         jButton2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/search22.png"))); // NOI18N
         jPanel1.add(jButton2);
         jButton2.setBounds(550, 160, 30, 30);
-
         updatebutton.setBackground(new java.awt.Color(204, 0, 59));
         updatebutton.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
         updatebutton.setForeground(new java.awt.Color(153, 153, 255));
@@ -1003,7 +1050,6 @@ public final class activation_form extends javax.swing.JFrame {
     }// GEN-LAST:event_h1FocusGained
 
     public static void main(String args[]) {
-
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {

@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import menupack.UserSession;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -131,7 +132,8 @@ public class vendor_import_excel extends javax.swing.JInternalFrame {
     void load_items() {
         try {
             String query;
-            query = "select distinct cname,add1,add2,add3,city,mobile,phone,email,gstno,sname,scode,duedays,remarks from vendor order by cname";
+            String companyFilter = UserSession.hasSelectedCompany() ? " where company_id='" + UserSession.getSelectedCompanyID() + "'" : "";
+            query = "select distinct cname,add1,add2,add3,city,mobile,phone,email,gstno,sname,scode,duedays,remarks from vendor" + companyFilter + " order by cname";
             r = util.doQuery(query);
             while (r.next()) {
                 s2.addRow(new Object[] { r.getString(1), r.getString(2), r.getString(3), r.getString(4), r.getString(5),
@@ -176,7 +178,7 @@ public class vendor_import_excel extends javax.swing.JInternalFrame {
                 String remarks = jTable1.getValueAt(i, 12).toString();
                 query_list.add("insert into vendor values ('" + cname + "','" + add1 + "','" + add2 + "','" + add3
                         + "','" + area + "','" + mobile + "','" + phone + "','" + gstno + "','" + state + "','" + scode
-                        + "','" + ddays + "','" + remarks + "','" + email + "')");
+                        + "','" + ddays + "','" + remarks + "','" + email + "','" + (UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "") + "')");
             }
             int aa = util.doManipulation_Batch(query_list);
             if (aa > 0) {

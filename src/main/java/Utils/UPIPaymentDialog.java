@@ -26,9 +26,10 @@ public class UPIPaymentDialog extends JDialog {
         setSize(400, 500);
         setLocationRelativeTo(parent);
 
-        upiId = fetchUpiIdFromDatabase(); // Read from setting_bill
+        upiId = fetchUpiIdFromDatabase(); // Read from company
         if (upiId == null || upiId.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "UPI ID not configured in settings!", "Missing UPI ID", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "UPI ID not configured in settings!", "Missing UPI ID",
+                    JOptionPane.WARNING_MESSAGE);
             dispose(); // close the dialog
             return;
         }
@@ -113,7 +114,7 @@ public class UPIPaymentDialog extends JDialog {
     private String fetchUpiIdFromDatabase() {
         String upi = "";
         try {
-            ResultSet rs = new DataUtil().doQuery("SELECT upi_id FROM setting_bill LIMIT 1;");
+            ResultSet rs = new DataUtil().doQuery("SELECT upi_id FROM company LIMIT 1;");
             if (rs.next()) {
                 upi = rs.getString("upi_id");
             }

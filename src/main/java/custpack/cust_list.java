@@ -15,12 +15,13 @@ import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import menupack.menu_form;
 import menupack.sample2;
+import menupack.UserSession;
 import smspack.manual_sms;
 
 /**
  *
  * @author K.SELVAKUMAR, copyrights K.SELVAKUMAR, +91 99427 32229,
- * mysoft.java@gmail.com
+ *         mysoft.java@gmail.com
  */
 public class cust_list extends javax.swing.JInternalFrame {
 
@@ -91,15 +92,28 @@ public class cust_list extends javax.swing.JInternalFrame {
         try {
 
             boolean selva = false;
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             String query;
             if (all.isSelected()) {
-                query = "select cid,ctype,cname,cardno,mobile,add1,add2,add3,city,phone,email,gstno,sname,scode,climit,duedays,remarks from cust order by cid";
+                if (companyFilter.isEmpty()) {
+                    query = "select cid,ctype,cname,cardno,mobile,add1,add2,add3,city,phone,email,gstno,sname,scode,climit,duedays,remarks from cust order by cid";
+                } else {
+                    query = "select cid,ctype,cname,cardno,mobile,add1,add2,add3,city,phone,email,gstno,sname,scode,climit,duedays,remarks from cust where"
+                            + companyFilter + " order by cid";
+                }
             } else {
-                query = "select cid,ctype,cname,cardno,mobile,add1,add2,add3,city,phone,email,gstno,sname,scode,climit,duedays,remarks from cust where ctype='" + h3.getSelectedItem() + "' order by cid";
+                query = "select cid,ctype,cname,cardno,mobile,add1,add2,add3,city,phone,email,gstno,sname,scode,climit,duedays,remarks from cust where ctype='"
+                        + h3.getSelectedItem() + "'"
+                        + (companyFilter.isEmpty() ? "" : " and" + companyFilter) + " order by cid";
             }
             r = util.doQuery(query);
             while (r.next()) {
-                s2.addRow(new Object[]{r.getString(1), r.getString(2), r.getString(3), r.getString(4), r.getString(5), r.getString(6), r.getString(7), r.getString(8), r.getString(9), r.getString(10), r.getString(11), r.getString(12), r.getString(13), r.getString(14), r.getString(15), r.getString(16), r.getString(17)});
+                s2.addRow(new Object[] { r.getString(1), r.getString(2), r.getString(3), r.getString(4), r.getString(5),
+                        r.getString(6), r.getString(7), r.getString(8), r.getString(9), r.getString(10),
+                        r.getString(11), r.getString(12), r.getString(13), r.getString(14), r.getString(15),
+                        r.getString(16), r.getString(17) });
                 selva = true;
             }
             totl.setText(" Total Records: " + jTable1.getRowCount());
@@ -121,7 +135,8 @@ public class cust_list extends javax.swing.JInternalFrame {
     }
 
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated
+    // Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         titlelablel = new javax.swing.JLabel();
@@ -148,16 +163,15 @@ public class cust_list extends javax.swing.JInternalFrame {
 
         jTable1.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
-        ));
+                new Object[][] {
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null }
+                },
+                new String[] {
+                        "Title 1", "Title 2", "Title 3", "Title 4"
+                }));
         jTable1.setRowHeight(25);
         jTable1.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -271,16 +285,16 @@ public class cust_list extends javax.swing.JInternalFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MouseClicked
+    private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {// GEN-FIRST:event_jTable1MouseClicked
 
-    }//GEN-LAST:event_jTable1MouseClicked
+    }// GEN-LAST:event_jTable1MouseClicked
 
-    private void generatebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_generatebuttonActionPerformed
+    private void generatebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_generatebuttonActionPerformed
         load_report();
 
-    }//GEN-LAST:event_generatebuttonActionPerformed
+    }// GEN-LAST:event_generatebuttonActionPerformed
 
-    private void smsbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_smsbuttonActionPerformed
+    private void smsbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_smsbuttonActionPerformed
         if (s2.getRowCount() <= 0) {
             JOptionPane.showMessageDialog(this, "Sorry, No Records Were Found!", "Oops", JOptionPane.ERROR_MESSAGE);
             return;
@@ -306,9 +320,9 @@ public class cust_list extends javax.swing.JInternalFrame {
         oe.setLocation((desktopSize.width - jInternalFrameSize.width) / 2,
                 (desktopSize.height - jInternalFrameSize.height) / 2);
 
-    }//GEN-LAST:event_smsbuttonActionPerformed
+    }// GEN-LAST:event_smsbuttonActionPerformed
 
-    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearbuttonActionPerformed
+    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_clearbuttonActionPerformed
         if (s2.getRowCount() > 0) {
             s2.getDataVector().removeAllElements();
             s2.fireTableDataChanged();
@@ -321,21 +335,21 @@ public class cust_list extends javax.swing.JInternalFrame {
         cnamel.setText("");
         totl.setText("");
 
-    }//GEN-LAST:event_clearbuttonActionPerformed
+    }// GEN-LAST:event_clearbuttonActionPerformed
 
-    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closebuttonActionPerformed
+    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_closebuttonActionPerformed
         this.dispose();
-    }//GEN-LAST:event_closebuttonActionPerformed
+    }// GEN-LAST:event_closebuttonActionPerformed
 
-    private void jTable1FocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jTable1FocusGained
+    private void jTable1FocusGained(java.awt.event.FocusEvent evt) {// GEN-FIRST:event_jTable1FocusGained
 
-    }//GEN-LAST:event_jTable1FocusGained
+    }// GEN-LAST:event_jTable1FocusGained
 
-    private void h3ItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_h3ItemStateChanged
+    private void h3ItemStateChanged(java.awt.event.ItemEvent evt) {// GEN-FIRST:event_h3ItemStateChanged
 
-    }//GEN-LAST:event_h3ItemStateChanged
+    }// GEN-LAST:event_h3ItemStateChanged
 
-    private void allActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_allActionPerformed
+    private void allActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_allActionPerformed
         if (all.isSelected()) {
             h3.setEnabled(false);
         } else {
@@ -343,9 +357,9 @@ public class cust_list extends javax.swing.JInternalFrame {
         }
 
         // TODO add your handling code here:
-    }//GEN-LAST:event_allActionPerformed
+    }// GEN-LAST:event_allActionPerformed
 
-    private void excelbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_excelbuttonActionPerformed
+    private void excelbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_excelbuttonActionPerformed
         if (s2.getRowCount() <= 0) {
             JOptionPane.showMessageDialog(this, "Sorry, No Records Were Found!", "Oops", JOptionPane.ERROR_MESSAGE);
             return;
@@ -363,8 +377,8 @@ public class cust_list extends javax.swing.JInternalFrame {
             Utils.AppConfig.openFile(file.getAbsolutePath());
         } catch (IOException e) {
             System.out.println(e.getMessage());
-        }        // TODO add your handling code here:
-    }//GEN-LAST:event_excelbuttonActionPerformed
+        } // TODO add your handling code here:
+    }// GEN-LAST:event_excelbuttonActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JCheckBox all;

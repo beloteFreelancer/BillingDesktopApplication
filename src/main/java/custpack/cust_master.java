@@ -1,5 +1,6 @@
 package custpack;
 
+import Utils.ColorConstants;
 import ca.odell.glazedlists.GlazedLists;
 import ca.odell.glazedlists.swing.AutoCompleteSupport;
 import com.selrom.db.DataUtil;
@@ -7,12 +8,13 @@ import java.awt.HeadlessException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import javax.swing.ImageIcon;
+import menupack.UserSession;
 import javax.swing.JOptionPane;
 
 /**
  *
  * @author K.SELVAKUMAR, copyrights K.SELVAKUMAR, +91 99427 32229,
- * mysoft.java@gmail.com
+ *         mysoft.java@gmail.com
  */
 public final class cust_master extends javax.swing.JInternalFrame {
 
@@ -30,10 +32,9 @@ public final class cust_master extends javax.swing.JInternalFrame {
         titlelablel.setText("<html><u>Customer Master</u></html>");
 
         setTitle("Customer Master");
-        this.setSize(666, 617);
-        java.net.URL imgUrl = getClass().getResource("/images/icon.png");
-        if (imgUrl != null) {
-            ImageIcon icon = new ImageIcon(imgUrl);
+        this.setSize(666, 677);
+        ImageIcon icon = ColorConstants.loadIcon("/images/icon.png");
+        if (icon != null) {
             this.setFrameIcon(icon);
         }
     }
@@ -41,7 +42,10 @@ public final class cust_master extends javax.swing.JInternalFrame {
     void get_cid() {
         try {
             int sno = 1;
-            String query = "select max(cid) from cust";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select max(cid) from cust" + companyFilter;
             ResultSet r = util.doQuery(query);
             boolean selva = false;
             while (r.next()) {
@@ -59,7 +63,7 @@ public final class cust_master extends javax.swing.JInternalFrame {
 
     void get_state_name_code() {
         try {
-            String query = "select state,scode from setting_bill";
+            String query = "select state,scode from company";
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 state_name = r.getString(1);
@@ -73,12 +77,15 @@ public final class cust_master extends javax.swing.JInternalFrame {
     void get_sug1() {
         try {
             int count = 0;
-            String query = "select distinct cname from cust";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select distinct cname from cust" + companyFilter;
             ResultSet set = util.doQuery(query);
             while (set.next()) {
                 count = count + 1;
             }
-            query = "select distinct cname from cust";
+            query = "select distinct cname from cust" + companyFilter;
             set = util.doQuery(query);
             Object f[] = new Object[count];
             int index = 0;
@@ -95,12 +102,15 @@ public final class cust_master extends javax.swing.JInternalFrame {
     void get_sug2() {
         try {
             int count = 0;
-            String query = "select distinct city from cust";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select distinct city from cust" + companyFilter;
             ResultSet set = util.doQuery(query);
             while (set.next()) {
                 count = count + 1;
             }
-            query = "select distinct city from cust";
+            query = "select distinct city from cust" + companyFilter;
             set = util.doQuery(query);
             Object f[] = new Object[count];
             int index = 0;
@@ -117,12 +127,15 @@ public final class cust_master extends javax.swing.JInternalFrame {
     void get_sug3() {
         try {
             int count = 0;
-            String query = "select distinct sname from cust";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select distinct sname from cust" + companyFilter;
             ResultSet set = util.doQuery(query);
             while (set.next()) {
                 count = count + 1;
             }
-            query = "select distinct sname from cust";
+            query = "select distinct sname from cust" + companyFilter;
             set = util.doQuery(query);
             Object f[] = new Object[count];
             int index = 0;
@@ -139,12 +152,15 @@ public final class cust_master extends javax.swing.JInternalFrame {
     void get_sug4() {
         try {
             int count = 0;
-            String query = "select distinct scode from cust";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select distinct scode from cust" + companyFilter;
             ResultSet set = util.doQuery(query);
             while (set.next()) {
                 count = count + 1;
             }
-            query = "select distinct scode from cust";
+            query = "select distinct scode from cust" + companyFilter;
             set = util.doQuery(query);
             Object f[] = new Object[count];
             int index = 0;
@@ -161,12 +177,15 @@ public final class cust_master extends javax.swing.JInternalFrame {
     void get_sug5() {
         try {
             int count = 0;
-            String query = "select distinct mobile from cust";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select distinct mobile from cust" + companyFilter;
             ResultSet set = util.doQuery(query);
             while (set.next()) {
                 count = count + 1;
             }
-            query = "select distinct mobile from cust";
+            query = "select distinct mobile from cust" + companyFilter;
             set = util.doQuery(query);
             Object f[] = new Object[count];
             int index = 0;
@@ -211,18 +230,25 @@ public final class cust_master extends javax.swing.JInternalFrame {
         if (h15.getText().equals("")) {
             h15.setText("" + 0);
         }
+        if (h18.getText().equals("")) {
+            h18.setText("" + 0);
+        }
         if (h16.getText().equals("")) {
             h16.setText(".");
         }
         if (h17.getText().equals("")) {
             h17.setText(".");
         }
+        if (h19.getText().equals("")) {
+            h19.setText(".");
+        }
     }
 
     void save() {
         try {
             if (h4.getSelectedItem() == null || h4.getSelectedItem() == "") {
-                JOptionPane.showMessageDialog(this, "Enter Customer Name ?", "Customer Name", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Enter Customer Name ?", "Customer Name",
+                        JOptionPane.ERROR_MESSAGE);
                 h4.requestFocus();
                 return;
             }
@@ -256,10 +282,33 @@ public final class cust_master extends javax.swing.JInternalFrame {
             String gstno = h11.getText();
             String sname = h12.getSelectedItem().toString();
             String scode = h13.getSelectedItem().toString();
-            String climit = h14.getText();
-            String duedays = h15.getText();
+            String climitRaw = h14.getText().trim();
+            String climit;
+            try {
+                Double.parseDouble(climitRaw.isEmpty() ? "0" : climitRaw);
+                climit = climitRaw.isEmpty() ? "0" : climitRaw;
+            } catch (NumberFormatException ex) {
+                climit = "0";
+            }
+            String duedaysRaw = h15.getText().trim();
+            String duedays;
+            try {
+                Integer.parseInt(duedaysRaw.isEmpty() ? "0" : duedaysRaw);
+                duedays = duedaysRaw.isEmpty() ? "0" : duedaysRaw;
+            } catch (NumberFormatException ex) {
+                duedays = "0";
+            }
+            String interestRaw = h18.getText().trim();
+            String interest_rate;
+            try {
+                Double.parseDouble(interestRaw.isEmpty() ? "0" : interestRaw);
+                interest_rate = interestRaw.isEmpty() ? "0" : interestRaw;
+            } catch (NumberFormatException ex) {
+                interest_rate = "0";
+            }
             String remarks = h16.getText();
             String email = h17.getText();
+            String dl = h19.getText();
             if (sname.equals(".")) {
                 sname = state_name;
             }
@@ -267,7 +316,10 @@ public final class cust_master extends javax.swing.JInternalFrame {
                 scode = state_code;
             }
             boolean selva = false;
-            String query = "select distinct cname from cust where cname='" + cname + "'";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " and company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select distinct cname from cust where cname='" + cname + "'" + companyFilter;
             ResultSet set = util.doQuery(query);
             while (set.next()) {
                 selva = true;
@@ -276,7 +328,13 @@ public final class cust_master extends javax.swing.JInternalFrame {
                 JOptionPane.showMessageDialog(this, "Already Exist!", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            query = "insert into cust values ('" + cid + "','" + ctype + "','" + cardno + "','" + cname + "','" + add1 + "','" + add2 + "','" + add3 + "','" + area + "','" + mobile + "','" + phone + "','" + gstno + "','" + sname + "','" + scode + "','" + climit + "','" + duedays + "','" + remarks + "','" + email + "')";
+            query = "insert into cust (cid,ctype,cardno,cname,add1,add2,add3,city,mobile,phone,gstno,sname,scode,climit,duedays,remarks,email,interest_rate,company_id,dl) values ('"
+                    + cid + "','" + ctype + "','" + cardno + "','" + cname + "','" + add1
+                    + "','" + add2 + "','" + add3 + "','" + area + "','" + mobile + "','" + phone + "','" + gstno
+                    + "','" + sname + "','" + scode + "'," + climit + "," + duedays + ",'"
+                    + remarks + "','" + email + "'," + interest_rate
+                    + ",'" + (UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "") + "','" + dl
+                    + "')";
             int count = util.doManipulation(query);
             if (count > 0) {
                 JOptionPane.showMessageDialog(this, "Saved Successfully", "Saved", JOptionPane.PLAIN_MESSAGE);
@@ -290,7 +348,8 @@ public final class cust_master extends javax.swing.JInternalFrame {
     void update() {
         try {
             if (h4.getSelectedItem() == null || h4.getSelectedItem() == "") {
-                JOptionPane.showMessageDialog(this, "Enter Customer Name ?", "Customer Name", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Enter Customer Name ?", "Customer Name",
+                        JOptionPane.ERROR_MESSAGE);
                 h4.requestFocus();
                 return;
             }
@@ -323,10 +382,33 @@ public final class cust_master extends javax.swing.JInternalFrame {
             String gstno = h11.getText();
             String sname = h12.getSelectedItem().toString();
             String scode = h13.getSelectedItem().toString();
-            String climit = h14.getText();
-            String duedays = h15.getText();
+            String climitRaw = h14.getText().trim();
+            String climit;
+            try {
+                Double.parseDouble(climitRaw.isEmpty() ? "0" : climitRaw);
+                climit = climitRaw.isEmpty() ? "0" : climitRaw;
+            } catch (NumberFormatException ex) {
+                climit = "0";
+            }
+            String duedaysRaw = h15.getText().trim();
+            String duedays;
+            try {
+                Integer.parseInt(duedaysRaw.isEmpty() ? "0" : duedaysRaw);
+                duedays = duedaysRaw.isEmpty() ? "0" : duedaysRaw;
+            } catch (NumberFormatException ex) {
+                duedays = "0";
+            }
+            String interestRaw = h18.getText().trim();
+            String interest_rate;
+            try {
+                Double.parseDouble(interestRaw.isEmpty() ? "0" : interestRaw);
+                interest_rate = interestRaw.isEmpty() ? "0" : interestRaw;
+            } catch (NumberFormatException ex) {
+                interest_rate = "0";
+            }
             String remarks = h16.getText();
             String email = h17.getText();
+            String dl = h19.getText();
             if (sname.equals(".")) {
                 sname = state_name;
             }
@@ -334,16 +416,25 @@ public final class cust_master extends javax.swing.JInternalFrame {
                 scode = state_code;
             }
             boolean selva = false;
-            String query = "select distinct cname from cust where cid='" + cid + "'";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " and company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select distinct cname from cust where cid='" + cid + "'" + companyFilter;
             ResultSet set = util.doQuery(query);
             while (set.next()) {
                 selva = true;
             }
             if (selva == false) {
-                JOptionPane.showMessageDialog(this, "Customer Details Not Found!", "No Records", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Customer Details Not Found!", "No Records",
+                        JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            query = "update cust set  cardno='" + cardno + "',ctype='" + ctype + "',cname='" + cname + "',add1='" + add1 + "',add2='" + add2 + "',add3='" + add3 + "',city='" + area + "',mobile='" + mobile + "',phone='" + phone + "',gstno='" + gstno + "',sname='" + sname + "',scode='" + scode + "',climit='" + climit + "',duedays='" + duedays + "',remarks='" + remarks + "',email='" + email + "' where cid='" + cid + "' ";
+            query = "update cust set  cardno='" + cardno + "',ctype='" + ctype + "',cname='" + cname + "',add1='" + add1
+                    + "',add2='" + add2 + "',add3='" + add3 + "',city='" + area + "',mobile='" + mobile + "',phone='"
+                    + phone + "',gstno='" + gstno + "',sname='" + sname + "',scode='" + scode + "',climit=" + climit
+                    + ",duedays=" + duedays + ",interest_rate=" + interest_rate + ",remarks='" + remarks
+                    + "',email='" + email + "',dl='" + dl + "' where cid='" + cid
+                    + "'" + companyFilter;
 
             int count = util.doManipulation(query);
             if (count > 0) {
@@ -380,9 +471,11 @@ public final class cust_master extends javax.swing.JInternalFrame {
             h11.setText("");
             h15.setText("");
             h16.setText("");
+            h18.setText("");
             h4.setEnabled(true);
             h2.requestFocus();
             h17.setText("");
+            h19.setText("");
             h2.setSelectedIndex(0);
             h3.setText("");
             h14.setText("");
@@ -395,7 +488,11 @@ public final class cust_master extends javax.swing.JInternalFrame {
 
     void view(String cid) {
         try {
-            String query = "select distinct cid,ctype,cardno,cname,mobile,add1,add2,add3,city,phone,gstno,sname,scode,climit,duedays,remarks,email from cust where cid='" + cid + "' ";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " and company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select distinct cid,ctype,cardno,cname,mobile,add1,add2,add3,city,phone,gstno,sname,scode,climit,duedays,interest_rate,remarks,email,dl from cust where cid='"
+                    + cid + "'" + companyFilter;
             ResultSet set1 = util.doQuery(query);
             boolean selva = false;
             while (set1.next()) {
@@ -414,8 +511,10 @@ public final class cust_master extends javax.swing.JInternalFrame {
                 h13.setSelectedItem(set1.getString(13));
                 h14.setText(set1.getString(14));
                 h15.setText(set1.getString(15));
-                h16.setText(set1.getString(16));
-                h17.setText(set1.getString(17));
+                h18.setText(set1.getString(16));
+                h16.setText(set1.getString(17));
+                h17.setText(set1.getString(18));
+                h19.setText(set1.getString(19));
                 selva = true;
             }
             if (selva == true) {
@@ -439,7 +538,10 @@ public final class cust_master extends javax.swing.JInternalFrame {
             }
             boolean selva = false;
             String cid = h1.getText();
-            String query = "select distinct cname from cust where cid='" + cid + "'";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " and company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select distinct cname from cust where cid='" + cid + "'" + companyFilter;
             ResultSet set = util.doQuery(query);
             while (set.next()) {
                 selva = true;
@@ -448,7 +550,7 @@ public final class cust_master extends javax.swing.JInternalFrame {
                 JOptionPane.showMessageDialog(this, "No Records Were Found!", "No Records", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            query = "delete from cust where cid='" + h1.getText() + "'";
+            query = "delete from cust where cid='" + h1.getText() + "'" + companyFilter;
             int count = util.doManipulation(query);
             if (count > 0) {
                 JOptionPane.showMessageDialog(this, "Deleted Successfully", "Deleted", JOptionPane.PLAIN_MESSAGE);
@@ -468,15 +570,39 @@ public final class cust_master extends javax.swing.JInternalFrame {
         get_sug3();
         get_sug4();
         get_sug5();
+        applyShopTypeVisibility();
+    }
 
+    private String getShopType() {
+        try {
+            String query = "select shop_type from company";
+            ResultSet r = util.doQuery(query);
+            if (r.next()) {
+                String st = r.getString(1);
+                return st != null ? st : "General";
+            }
+        } catch (ClassNotFoundException | SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return "General";
+    }
+
+    private void applyShopTypeVisibility() {
+        String shopType = getShopType();
+        boolean isPharmacy = "Pharmacy".equals(shopType);
+        jLabel19.setVisible(isPharmacy);
+        h19.setVisible(isPharmacy);
     }
 
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated
+    // Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         titlelablel = new javax.swing.JLabel();
         h16 = new javax.swing.JTextField();
+        h18 = new javax.swing.JTextField();
+        jLabel18 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
         jLabel7 = new javax.swing.JLabel();
         jLabel8 = new javax.swing.JLabel();
@@ -516,6 +642,8 @@ public final class cust_master extends javax.swing.JInternalFrame {
         jButton1 = new javax.swing.JButton();
         h5 = new javax.swing.JComboBox<>();
         jButton2 = new javax.swing.JButton();
+        h19 = new javax.swing.JTextField();
+        jLabel19 = new javax.swing.JLabel();
 
         setClosable(true);
         getContentPane().setLayout(null);
@@ -525,9 +653,27 @@ public final class cust_master extends javax.swing.JInternalFrame {
         getContentPane().add(titlelablel);
         titlelablel.setBounds(10, 0, 180, 30);
 
+        h18.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+        getContentPane().add(h18);
+        h18.setBounds(150, 470, 290, 30);
+
+        jLabel18.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+        jLabel18.setText("Interest Rate %");
+        getContentPane().add(jLabel18);
+        jLabel18.setBounds(30, 470, 120, 30);
+
         h16.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         getContentPane().add(h16);
-        h16.setBounds(150, 470, 470, 30);
+        h16.setBounds(150, 500, 470, 30);
+
+        jLabel19.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+        jLabel19.setText("Drug Licence");
+        getContentPane().add(jLabel19);
+        jLabel19.setBounds(30, 530, 120, 30);
+
+        h19.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+        getContentPane().add(h19);
+        h19.setBounds(150, 530, 470, 30);
 
         jLabel3.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jLabel3.setText("Credit Limit");
@@ -554,7 +700,7 @@ public final class cust_master extends javax.swing.JInternalFrame {
         h13.setBounds(520, 410, 100, 30);
 
         savebutton.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        savebutton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/save45.png"))); // NOI18N
+        savebutton.setIcon(ColorConstants.loadIcon("/icons/save45.png")); // NOI18N
         savebutton.setMnemonic('s');
         savebutton.setText("Save");
         savebutton.addActionListener(new java.awt.event.ActionListener() {
@@ -563,10 +709,10 @@ public final class cust_master extends javax.swing.JInternalFrame {
             }
         });
         getContentPane().add(savebutton);
-        savebutton.setBounds(100, 520, 130, 50);
+        savebutton.setBounds(100, 580, 130, 50);
 
         viewbutton.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        viewbutton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/view45.png"))); // NOI18N
+        viewbutton.setIcon(ColorConstants.loadIcon("/icons/view45.png")); // NOI18N
         viewbutton.setMnemonic('v');
         viewbutton.setText("View");
         viewbutton.addActionListener(new java.awt.event.ActionListener() {
@@ -575,10 +721,10 @@ public final class cust_master extends javax.swing.JInternalFrame {
             }
         });
         getContentPane().add(viewbutton);
-        viewbutton.setBounds(230, 520, 130, 50);
+        viewbutton.setBounds(230, 580, 130, 50);
 
         clearbutton.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        clearbutton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/clear45.png"))); // NOI18N
+        clearbutton.setIcon(ColorConstants.loadIcon("/icons/clear45.png")); // NOI18N
         clearbutton.setMnemonic('c');
         clearbutton.setText("Clear");
         clearbutton.addActionListener(new java.awt.event.ActionListener() {
@@ -587,10 +733,10 @@ public final class cust_master extends javax.swing.JInternalFrame {
             }
         });
         getContentPane().add(clearbutton);
-        clearbutton.setBounds(360, 520, 130, 50);
+        clearbutton.setBounds(360, 580, 130, 50);
 
         closebutton.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        closebutton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/close45.png"))); // NOI18N
+        closebutton.setIcon(ColorConstants.loadIcon("/icons/close45.png")); // NOI18N
         closebutton.setMnemonic('o');
         closebutton.setText("Close");
         closebutton.addActionListener(new java.awt.event.ActionListener() {
@@ -599,7 +745,7 @@ public final class cust_master extends javax.swing.JInternalFrame {
             }
         });
         getContentPane().add(closebutton);
-        closebutton.setBounds(490, 520, 130, 50);
+        closebutton.setBounds(490, 580, 130, 50);
 
         jLabel11.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jLabel11.setText("Address");
@@ -607,7 +753,7 @@ public final class cust_master extends javax.swing.JInternalFrame {
         jLabel11.setBounds(30, 200, 120, 30);
 
         deletebutton.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        deletebutton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/delete45.png"))); // NOI18N
+        deletebutton.setIcon(ColorConstants.loadIcon("/icons/delete45.png")); // NOI18N
         deletebutton.setMnemonic('d');
         deletebutton.setText("Delete");
         deletebutton.addActionListener(new java.awt.event.ActionListener() {
@@ -616,10 +762,10 @@ public final class cust_master extends javax.swing.JInternalFrame {
             }
         });
         getContentPane().add(deletebutton);
-        deletebutton.setBounds(230, 520, 130, 50);
+        deletebutton.setBounds(230, 580, 130, 50);
 
         updatebutton.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        updatebutton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/load45.jpg.png"))); // NOI18N
+        updatebutton.setIcon(ColorConstants.loadIcon("/icons/load45.jpg.png")); // NOI18N
         updatebutton.setMnemonic('u');
         updatebutton.setText("Update");
         updatebutton.addActionListener(new java.awt.event.ActionListener() {
@@ -628,7 +774,7 @@ public final class cust_master extends javax.swing.JInternalFrame {
             }
         });
         getContentPane().add(updatebutton);
-        updatebutton.setBounds(100, 520, 130, 50);
+        updatebutton.setBounds(100, 580, 130, 50);
 
         h9.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         h9.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "." }));
@@ -670,7 +816,7 @@ public final class cust_master extends javax.swing.JInternalFrame {
         jLabel10.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jLabel10.setText("Remarks");
         getContentPane().add(jLabel10);
-        jLabel10.setBounds(30, 470, 120, 30);
+        jLabel10.setBounds(30, 500, 120, 30);
 
         h12.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         h12.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "." }));
@@ -748,7 +894,7 @@ public final class cust_master extends javax.swing.JInternalFrame {
         getContentPane().add(h17);
         h17.setBounds(150, 350, 470, 30);
 
-        jButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/search22.png"))); // NOI18N
+        jButton1.setIcon(ColorConstants.loadIcon("/icons/search22.png")); // NOI18N
         jButton1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
@@ -761,7 +907,7 @@ public final class cust_master extends javax.swing.JInternalFrame {
         getContentPane().add(h5);
         h5.setBounds(150, 170, 430, 30);
 
-        jButton2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/search22.png"))); // NOI18N
+        jButton2.setIcon(ColorConstants.loadIcon("/icons/search22.png")); // NOI18N
         jButton2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton2ActionPerformed(evt);
@@ -773,18 +919,18 @@ public final class cust_master extends javax.swing.JInternalFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closebuttonActionPerformed
+    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_closebuttonActionPerformed
         this.dispose();
         // TODO add your handling code here:
-    }//GEN-LAST:event_closebuttonActionPerformed
+    }// GEN-LAST:event_closebuttonActionPerformed
 
-    private void savebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_savebuttonActionPerformed
+    private void savebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_savebuttonActionPerformed
 
         save();
         // TODO add your handling code here:
-    }//GEN-LAST:event_savebuttonActionPerformed
+    }// GEN-LAST:event_savebuttonActionPerformed
 
-    private void viewbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_viewbuttonActionPerformed
+    private void viewbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_viewbuttonActionPerformed
         Object cid = JOptionPane.showInputDialog(this, "Enter Customer Id ?", "Customer Id", JOptionPane.PLAIN_MESSAGE);
         if ("".equals(cid) || cid == null) {
             JOptionPane.showMessageDialog(this, "Invalid Customer Id!", "Invalid", JOptionPane.ERROR_MESSAGE);
@@ -792,28 +938,28 @@ public final class cust_master extends javax.swing.JInternalFrame {
         }
         view(cid.toString());
 
-    }//GEN-LAST:event_viewbuttonActionPerformed
+    }// GEN-LAST:event_viewbuttonActionPerformed
 
-    private void deletebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deletebuttonActionPerformed
+    private void deletebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_deletebuttonActionPerformed
         delete();
-    }//GEN-LAST:event_deletebuttonActionPerformed
+    }// GEN-LAST:event_deletebuttonActionPerformed
 
-    private void updatebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updatebuttonActionPerformed
+    private void updatebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_updatebuttonActionPerformed
         update();
         // TODO add your handling code here:
-    }//GEN-LAST:event_updatebuttonActionPerformed
+    }// GEN-LAST:event_updatebuttonActionPerformed
 
-    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearbuttonActionPerformed
+    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_clearbuttonActionPerformed
         clear();
         // TODO add your handling code here:
-    }//GEN-LAST:event_clearbuttonActionPerformed
+    }// GEN-LAST:event_clearbuttonActionPerformed
 
-    private void h1FocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_h1FocusGained
+    private void h1FocusGained(java.awt.event.FocusEvent evt) {// GEN-FIRST:event_h1FocusGained
         h2.requestFocus();
-// TODO add your handling code here:
-    }//GEN-LAST:event_h1FocusGained
+        // TODO add your handling code here:
+    }// GEN-LAST:event_h1FocusGained
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton1ActionPerformed
         try {
             if (h5.getSelectedItem() == null || h5.getSelectedItem() == "") {
                 JOptionPane.showMessageDialog(this, "Enter Mobile No ?", "Mobile No", JOptionPane.ERROR_MESSAGE);
@@ -837,9 +983,9 @@ public final class cust_master extends javax.swing.JInternalFrame {
             System.out.println(e.getMessage());
         }
 
-    }//GEN-LAST:event_jButton1ActionPerformed
+    }// GEN-LAST:event_jButton1ActionPerformed
 
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton2ActionPerformed
         try {
             if (h4.getSelectedItem() == null || h4.getSelectedItem() == "") {
                 JOptionPane.showMessageDialog(this, "Enter Name ?", "Name", JOptionPane.ERROR_MESSAGE);
@@ -862,7 +1008,7 @@ public final class cust_master extends javax.swing.JInternalFrame {
         } catch (HeadlessException | ClassNotFoundException | SQLException e) {
             System.out.println(e.getMessage());
         }
-    }//GEN-LAST:event_jButton2ActionPerformed
+    }// GEN-LAST:event_jButton2ActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton clearbutton;
@@ -888,6 +1034,8 @@ public final class cust_master extends javax.swing.JInternalFrame {
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
     private javax.swing.JLabel jLabel10;
+    private javax.swing.JLabel jLabel18;
+    private javax.swing.JTextField h18;
     private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel13;
@@ -906,5 +1054,7 @@ public final class cust_master extends javax.swing.JInternalFrame {
     private javax.swing.JLabel titlelablel;
     private javax.swing.JButton updatebutton;
     private javax.swing.JButton viewbutton;
+    private javax.swing.JTextField h19;
+    private javax.swing.JLabel jLabel19;
     // End of variables declaration//GEN-END:variables
 }

@@ -4,10 +4,9 @@ import ca.odell.glazedlists.swing.AutoCompleteSupport;
 import com.selrom.db.DataUtil;
 import java.awt.Font;
 import java.awt.HeadlessException;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
@@ -23,8 +22,6 @@ public final class user_permissions extends javax.swing.JInternalFrame {
 
     DataUtil util = null;
     sample2 s2 = new sample2();
-    ResultSet r;
-    DecimalFormat df2 = new DecimalFormat("#.##");
     AutoCompleteSupport support;
 
     final void button_short() {
@@ -69,9 +66,9 @@ public final class user_permissions extends javax.swing.JInternalFrame {
         try {
             h3.removeAllItems();
             String query = "select `user` from users where utype='User' ";
-            r = util.doQuery(query);
-            while (r.next()) {
-                h3.addItem(r.getString(1));
+            ResultSet rs = util.doQuery(query);
+            while (rs.next()) {
+                h3.addItem(rs.getString(1));
             }
         } catch (ClassNotFoundException | SQLException e) {
             System.out.println(e.getMessage());
@@ -81,18 +78,24 @@ public final class user_permissions extends javax.swing.JInternalFrame {
     // UPDATED: Optimized to fetch all permissions at once
     void get_permission_list() {
         try {
+            if (h3.getSelectedItem() == null)
+                return;
+            String selectedUser = h3.getSelectedItem().toString();
+
             // 1. Reset all permissions to "No" initially
             for (int i = 0; i < jTable1.getRowCount(); i++) {
                 jTable1.setValueAt("No", i, 1);
             }
 
             // 2. Fetch all enabled permissions for this user
-            String query = "select fname, option1 from users_permissions where `user`='" + h3.getSelectedItem() + "'";
-            r = util.doQuery(query);
+            String query = "SELECT fname, option1 FROM users_permissions WHERE `user` = ?";
+            PreparedStatement ps = util.getPreparedStatement(query);
+            ps.setString(1, selectedUser);
+            ResultSet rs = ps.executeQuery();
 
-            while (r.next()) {
-                String dbFname = r.getString(1);
-                String dbOption = r.getString(2);
+            while (rs.next()) {
+                String dbFname = rs.getString(1);
+                String dbOption = rs.getString(2);
 
                 // 3. Find the matching row in our table and update it
                 for (int i = 0; i < jTable1.getRowCount(); i++) {
@@ -110,26 +113,47 @@ public final class user_permissions extends javax.swing.JInternalFrame {
 
     void save() {
         try {
+            if (h3.getSelectedItem() == null)
+                return;
+            String selectedUser = h3.getSelectedItem().toString();
+
             int as = JOptionPane.showConfirmDialog(this, "Want to Save ?", "Are You Sure", JOptionPane.YES_NO_OPTION);
             if (as == JOptionPane.NO_OPTION) {
                 return;
             }
-            ArrayList query_batch = new ArrayList();
-            query_batch.add("delete from users_permissions where `user`='" + h3.getSelectedItem() + "'");
-            for (int i = 0; i < jTable1.getRowCount(); i++) {
-                String fname = jTable1.getValueAt(i, 0).toString();
-                String option = jTable1.getValueAt(i, 1).toString();
-                query_batch.add("insert into users_permissions values ('" + h3.getSelectedItem() + "','" + fname + "','"
-                        + option + "')");
-            }
-            int count = util.doManipulation_Batch(query_batch);
-            if (count > 0) {
+
+            java.sql.Connection conn = util.getConnection();
+            conn.setAutoCommit(false);
+            try {
+                // 1. Delete existing permissions for this user
+                PreparedStatement deletePs = conn.prepareStatement(
+                        "DELETE FROM users_permissions WHERE `user` = ?");
+                deletePs.setString(1, selectedUser);
+                deletePs.executeUpdate();
+
+                // 2. Insert all permissions from the table
+                PreparedStatement insertPs = conn.prepareStatement(
+                        "INSERT INTO users_permissions (`user`, fname, option1) VALUES (?, ?, ?)");
+                for (int i = 0; i < jTable1.getRowCount(); i++) {
+                    String fname = jTable1.getValueAt(i, 0).toString();
+                    String option = jTable1.getValueAt(i, 1).toString();
+                    insertPs.setString(1, selectedUser);
+                    insertPs.setString(2, fname);
+                    insertPs.setString(3, option);
+                    insertPs.addBatch();
+                }
+                insertPs.executeBatch();
+                conn.commit();
+
                 JOptionPane.showMessageDialog(this, "<html><h1>Saved Successfully</h1></html>", "Saved",
                         JOptionPane.PLAIN_MESSAGE);
-                clear();
                 load_report();
+                get_permission_list();
+            } catch (SQLException ex) {
+                conn.rollback();
+                throw ex;
             }
-        } catch (HeadlessException | ClassNotFoundException | SQLException e) {
+        } catch (HeadlessException | SQLException e) {
             System.out.println(e.getMessage());
         }
     }
@@ -151,6 +175,7 @@ public final class user_permissions extends javax.swing.JInternalFrame {
         load_list_table();
         get_user_name();
         load_report();
+        get_permission_list();
     }
 
     @SuppressWarnings("unchecked")
@@ -301,7 +326,10 @@ public final class user_permissions extends javax.swing.JInternalFrame {
     }// GEN-LAST:event_jTable1FocusGained
 
     private void h3ItemStateChanged(java.awt.event.ItemEvent evt) {// GEN-FIRST:event_h3ItemStateChanged
-
+        if (evt.getStateChange() == java.awt.event.ItemEvent.SELECTED) {
+            load_report();
+            get_permission_list();
+        }
     }// GEN-LAST:event_h3ItemStateChanged
 
     private void savebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_savebuttonActionPerformed

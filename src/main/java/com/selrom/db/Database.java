@@ -17,7 +17,7 @@ public class Database {
     private static Connection con;
 
     // MySQL Database Defaults
-    private static final String DEFAULT_DB_URL = "jdbc:mysql://localhost:3306/Swayam_main?createDatabaseIfNotExist=true";
+    private static final String DEFAULT_DB_URL = "jdbc:mysql://localhost:3306/swayam_main?createDatabaseIfNotExist=true";
     private static final String DEFAULT_USER = "root";
     private static final String DEFAULT_PASS = "admin";
     private static final String CONFIG_FILE = "db_main.properties";
@@ -38,7 +38,8 @@ public class Database {
      * 
      * @return true if db_main.properties exists, false otherwise.
      */
-    public boolean isConfigured() {
+    public boolean isConfigured()
+     {
         File f = new File(CONFIG_FILE);
         return f.exists();
     }

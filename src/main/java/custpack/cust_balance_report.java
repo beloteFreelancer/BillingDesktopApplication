@@ -16,13 +16,14 @@ import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
+import menupack.UserSession;
 import menupack.menu_form;
 import menupack.sample2;
 
 /**
  *
  * @author K.SELVAKUMAR, copyrights K.SELVAKUMAR, +91 99427 32229,
- * mysoft.java@gmail.com
+ *         mysoft.java@gmail.com
  */
 public final class cust_balance_report extends javax.swing.JInternalFrame {
 
@@ -77,16 +78,22 @@ public final class cust_balance_report extends javax.swing.JInternalFrame {
         try {
             boolean selva = false;
             String query;
+            String compCo = UserSession.hasSelectedCompany()
+                    ? " AND a.company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             if (all.isSelected()) {
-                query = "select a.cid,a.cname,city,mobile,sum(tot-paid) from cust_bal a,cust b where a.cid=b.cid group by a.cid having sum(tot-paid)>0 order by city";
+                query = "select a.cid,a.cname,city,mobile,sum(tot-paid) from cust_bal a,cust b where a.cid=b.cid"
+                        + compCo + " group by a.cid,a.cname,city,mobile having sum(tot-paid)>0 order by city";
             } else {
-                query = "select a.cid,a.cname,city,mobile,sum(tot-paid) from cust_bal a,cust b where a.cid=b.cid and city='" + h3.getSelectedItem() + "' group by a.cid having sum(tot-paid)>0 order by a.cid";
+                query = "select a.cid,a.cname,city,mobile,sum(tot-paid) from cust_bal a,cust b where a.cid=b.cid and city='"
+                        + h3.getSelectedItem()
+                        + "'" + compCo + " group by a.cid,a.cname,city,mobile having sum(tot-paid)>0 order by a.cid";
             }
             r = util.doQuery(query);
             while (r.next()) {
                 double tot = r.getDouble(5);
                 String tot2 = String.format("%." + hmany + "f", tot);
-                s2.addRow(new Object[]{r.getString(1), r.getString(2), r.getString(3), r.getString(4), tot2});
+                s2.addRow(new Object[] { r.getString(1), r.getString(2), r.getString(3), r.getString(4), tot2 });
                 selva = true;
             }
 
@@ -109,7 +116,10 @@ public final class cust_balance_report extends javax.swing.JInternalFrame {
     void get_cid() {
         try {
             h3.removeAllItems();
-            String query = "select distinct city from cust";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select distinct city from cust" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 h3.addItem(r.getString(1));
@@ -125,7 +135,8 @@ public final class cust_balance_report extends javax.swing.JInternalFrame {
                 JOptionPane.showMessageDialog(this, "Sorry, No Records Were Found!", "Oops", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            int as = JOptionPane.showConfirmDialog(this, "Want to Send SMS ?", "Are You Sure", JOptionPane.YES_NO_OPTION);
+            int as = JOptionPane.showConfirmDialog(this, "Want to Send SMS ?", "Are You Sure",
+                    JOptionPane.YES_NO_OPTION);
             if (as == JOptionPane.NO_OPTION) {
                 return;
             }
@@ -149,11 +160,13 @@ public final class cust_balance_report extends javax.swing.JInternalFrame {
                 String phone = jTable1.getValueAt(i, 3).toString();
 
                 if (phone.length() == 10) {
-                    String message = "Dear " + cname + ", Your Total Balance: " + amount + " as on " + g.format(d) + ". Kindly make Payment early, Ignore if Already Paid.\n\n" + cname1;
+                    String message = "Dear " + cname + ", Your Total Balance: " + amount + " as on " + g.format(d)
+                            + ". Kindly make Payment early, Ignore if Already Paid.\n\n" + cname1;
                     new smspack.SMS_Sender_Single().getData(smsuser, smspass, sender, phone, message);
                 }
-            }//row counts ends
-            JOptionPane.showMessageDialog(this, "<html><h1>Send Successfully</h1></html>", "Send", JOptionPane.PLAIN_MESSAGE);
+            } // row counts ends
+            JOptionPane.showMessageDialog(this, "<html><h1>Send Successfully</h1></html>", "Send",
+                    JOptionPane.PLAIN_MESSAGE);
         } catch (HeadlessException | ClassNotFoundException | SQLException e) {
             System.out.println(e.getMessage());
         }
@@ -169,7 +182,8 @@ public final class cust_balance_report extends javax.swing.JInternalFrame {
     }
 
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated
+    // Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         titlelablel = new javax.swing.JLabel();
@@ -280,16 +294,15 @@ public final class cust_balance_report extends javax.swing.JInternalFrame {
 
         jTable1.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
-        ));
+                new Object[][] {
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null }
+                },
+                new String[] {
+                        "Title 1", "Title 2", "Title 3", "Title 4"
+                }));
         jTable1.setRowHeight(25);
         jScrollPane2.setViewportView(jTable1);
 
@@ -303,12 +316,12 @@ public final class cust_balance_report extends javax.swing.JInternalFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void generatebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_generatebuttonActionPerformed
+    private void generatebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_generatebuttonActionPerformed
         load_report();
 
-    }//GEN-LAST:event_generatebuttonActionPerformed
+    }// GEN-LAST:event_generatebuttonActionPerformed
 
-    private void excelbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_excelbuttonActionPerformed
+    private void excelbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_excelbuttonActionPerformed
         if (s2.getRowCount() <= 0) {
             JOptionPane.showMessageDialog(this, "Sorry, No Records Were Found!", "Oops", JOptionPane.ERROR_MESSAGE);
             return;
@@ -329,9 +342,9 @@ public final class cust_balance_report extends javax.swing.JInternalFrame {
             System.out.println(e.getMessage());
         }
 
-    }//GEN-LAST:event_excelbuttonActionPerformed
+    }// GEN-LAST:event_excelbuttonActionPerformed
 
-    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearbuttonActionPerformed
+    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_clearbuttonActionPerformed
         if (s2.getRowCount() > 0) {
             s2.getDataVector().removeAllElements();
             s2.fireTableDataChanged();
@@ -342,28 +355,28 @@ public final class cust_balance_report extends javax.swing.JInternalFrame {
         generatebutton.setEnabled(true);
         h3.setSelectedItem("");
 
-    }//GEN-LAST:event_clearbuttonActionPerformed
+    }// GEN-LAST:event_clearbuttonActionPerformed
 
-    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closebuttonActionPerformed
+    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_closebuttonActionPerformed
         this.dispose();
-    }//GEN-LAST:event_closebuttonActionPerformed
+    }// GEN-LAST:event_closebuttonActionPerformed
 
-    private void h3ItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_h3ItemStateChanged
+    private void h3ItemStateChanged(java.awt.event.ItemEvent evt) {// GEN-FIRST:event_h3ItemStateChanged
 
-    }//GEN-LAST:event_h3ItemStateChanged
+    }// GEN-LAST:event_h3ItemStateChanged
 
-    private void allActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_allActionPerformed
+    private void allActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_allActionPerformed
         if (all.isSelected()) {
             h3.setEnabled(false);
         } else {
             h3.setEnabled(true);
         }
 
-    }//GEN-LAST:event_allActionPerformed
+    }// GEN-LAST:event_allActionPerformed
 
-    private void smsbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_smsbuttonActionPerformed
+    private void smsbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_smsbuttonActionPerformed
         send_sms();
-    }//GEN-LAST:event_smsbuttonActionPerformed
+    }// GEN-LAST:event_smsbuttonActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JCheckBox all;

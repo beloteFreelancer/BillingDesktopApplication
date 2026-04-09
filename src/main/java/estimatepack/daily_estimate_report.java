@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.swing.JFrame;
 import menupack.SelRomJasper;
+import menupack.UserSession;
 import menupack.menu_form;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperFillManager;
@@ -54,10 +55,15 @@ public class daily_estimate_report {
             Map<String, Object> parameters = new HashMap<>();
 
             String sname = "";
-            String query = "select cname from setting_bill";
+            String companyNameFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE companyID='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select cname from company" + companyNameFilter;
             r = util.doQuery(query);
-            while (r.next()) {
-                sname = r.getString(1);
+            if (r != null) {
+                while (r.next()) {
+                    sname = r.getString(1);
+                }
             }
 
             parameters.put("parameter1", "" + sname + "".trim().toUpperCase());
@@ -66,7 +72,11 @@ public class daily_estimate_report {
 
             ArrayList terminal = new ArrayList();
             ArrayList cashier = new ArrayList();
-            query = "select distinct terminal,cashier from estimate where dat between '" + lk + "' and '" + lk1 + "' order by terminal,cashier";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " and company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            query = "select distinct terminal,cashier from estimate where dat between '" + lk + "' and '" + lk1
+                    + "'" + companyFilter + " order by terminal,cashier";
             r = util.doQuery(query);
             while (r.next()) {
                 terminal.add(r.getString(1));
@@ -87,14 +97,17 @@ public class daily_estimate_report {
             for (int i = 0; i < terminal.size(); i++) {
                 date.add("");
                 time.add("");
-                billno.add("Counter: " + terminal.get(i).toString().toUpperCase() + ", " + cashier.get(i).toString().toUpperCase());
+                billno.add("Counter: " + terminal.get(i).toString().toUpperCase() + ", "
+                        + cashier.get(i).toString().toUpperCase());
                 items.add("");
                 quans.add("");
                 net.add("");
                 pby.add("");
                 price_type.add("");
                 double total = 0;
-                query = "select date_format(dat,'%d/%m/%Y'),tim,billno,items,quans,pby,price_type,net from estimate where dat between '" + lk + "' and '" + lk1 + "' and terminal='" + terminal.get(i) + "' and cashier='" + cashier.get(i) + "' order by dat,billno";
+                query = "select date_format(dat,'%d/%m/%Y'),tim,billno,items,quans,pby,price_type,net from estimate where dat between '"
+                        + lk + "' and '" + lk1 + "' and terminal='" + terminal.get(i) + "' and cashier='"
+                        + cashier.get(i) + "'" + companyFilter + " order by dat,billno";
                 r = util.doQuery(query);
                 while (r.next()) {
                     date.add(r.getString(1));
@@ -147,7 +160,7 @@ public class daily_estimate_report {
                 net.add("");
                 pby.add("");
                 price_type.add("");
-            }//terminal array size
+            } // terminal array size
 
             ArrayList k = new ArrayList();
 
@@ -165,13 +178,14 @@ public class daily_estimate_report {
                 k.add(selRomJasper);
             }
 
-            //sales ends
+            // sales ends
             String tnet1 = String.format("%." + hmany + "f", tnet);
             parameters.put("parameter3", "Total: " + tbills);
             parameters.put("parameter4", "" + tnet1);
 
             double cash = 0, card = 0, credit = 0, others = 0;
-            query = "select Sum(CASE WHEN t.pby = 'Cash' THEN t.net ELSE NULL END) AS Cash,Sum(CASE WHEN t.pby = 'Card' THEN t.net ELSE NULL END) AS Card,Sum(CASE WHEN t.pby = 'Credit' THEN t.net ELSE NULL END) AS Credit,Sum(CASE WHEN t.pby = 'Others' THEN t.net ELSE NULL END) AS Others from estimate t where dat between '" + lk + "' and '" + lk1 + "'";
+            query = "select Sum(CASE WHEN t.pby = 'Cash' THEN t.net ELSE NULL END) AS Cash,Sum(CASE WHEN t.pby = 'Card' THEN t.net ELSE NULL END) AS Card,Sum(CASE WHEN t.pby = 'Credit' THEN t.net ELSE NULL END) AS Credit,Sum(CASE WHEN t.pby = 'Others' THEN t.net ELSE NULL END) AS Others from estimate t where dat between '"
+                    + lk + "' and '" + lk1 + "'" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 cash = r.getDouble(1);
@@ -195,8 +209,7 @@ public class daily_estimate_report {
 
             jasperReport = JasperReportCompiler.compileReport("/JasperFiles/Reports/Daily_Sales_Report.jrxml");
 
-            JRBeanCollectionDataSource beanColDataSource
-                    = new JRBeanCollectionDataSource(k);
+            JRBeanCollectionDataSource beanColDataSource = new JRBeanCollectionDataSource(k);
             jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, beanColDataSource);
             jasperViewer = new JasperViewer(jasperPrint);
             jasperViewer.setVisible(true);

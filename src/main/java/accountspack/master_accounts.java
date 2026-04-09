@@ -1,5 +1,6 @@
 package accountspack;
 
+import Utils.ColorConstants;
 import com.selrom.db.DataUtil;
 import java.awt.Font;
 import java.awt.HeadlessException;
@@ -16,7 +17,7 @@ import menupack.sample2;
 /**
  *
  * @author K.SELVAKUMAR, copyrights K.SELVAKUMAR, +91 99427 32229,
- * mysoft.java@gmail.com
+ *         mysoft.java@gmail.com
  */
 public final class master_accounts extends javax.swing.JInternalFrame {
 
@@ -34,9 +35,8 @@ public final class master_accounts extends javax.swing.JInternalFrame {
         titlelablel.setText("<html><u>Account Group Master</u></html>");
         setTitle("Account Group Master");
         this.setSize(1022, 536);
-        java.net.URL imgUrl = getClass().getResource("/images/icon.png");
-        if (imgUrl != null) {
-            ImageIcon icon = new ImageIcon(imgUrl);
+        ImageIcon icon = ColorConstants.loadIcon("/images/icon.png");
+        if (icon != null) {
             this.setFrameIcon(icon);
         }
         menupack.menu_form me = new menu_form();
@@ -85,7 +85,8 @@ public final class master_accounts extends javax.swing.JInternalFrame {
             String query = "select head,under,debit,credit from account_master order by head";
             r = util.doQuery(query);
             while (r.next()) {
-                s2.addRow(new Object[]{r.getString(1), r.getString(2), (long) r.getDouble(3) + ".00", (long) r.getDouble(4) + ".00"});
+                s2.addRow(new Object[] { r.getString(1), r.getString(2), (long) r.getDouble(3) + ".00",
+                        (long) r.getDouble(4) + ".00" });
             }
             totl.setText(" Total Records: " + jTable1.getRowCount());
         } catch (ClassNotFoundException | SQLException e) {
@@ -117,7 +118,8 @@ public final class master_accounts extends javax.swing.JInternalFrame {
             if (h4.getText().equals("")) {
                 h4.setText("" + 0);
             }
-            query = "insert into account_master values ('" + h1.getText() + "','" + h2.getSelectedItem() + "','" + h3.getText() + "','" + h4.getText() + "' )";
+            query = "insert into account_master values ('" + h1.getText() + "','" + h2.getSelectedItem() + "','"
+                    + h3.getText() + "','" + h4.getText() + "' )";
             int count = util.doManipulation(query);
             if (count > 0) {
                 JOptionPane.showMessageDialog(this, "Saved Successfully", "Saved", JOptionPane.PLAIN_MESSAGE);
@@ -153,7 +155,8 @@ public final class master_accounts extends javax.swing.JInternalFrame {
             if (h4.getText().equals("")) {
                 h4.setText("" + 0);
             }
-            query = "update account_master set under='" + h2.getSelectedItem() + "',debit='" + h3.getText() + "',credit='" + h4.getText() + "' where head='" + h1.getText() + "' ";
+            query = "update account_master set under='" + h2.getSelectedItem() + "',debit='" + h3.getText()
+                    + "',credit='" + h4.getText() + "' where head='" + h1.getText() + "' ";
             int count = util.doManipulation(query);
             if (count > 0) {
                 JOptionPane.showMessageDialog(this, "Updated Successfully", "Updated", JOptionPane.PLAIN_MESSAGE);
@@ -238,7 +241,8 @@ public final class master_accounts extends javax.swing.JInternalFrame {
     }
 
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated
+    // Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         closebutton = new javax.swing.JButton();
@@ -265,7 +269,7 @@ public final class master_accounts extends javax.swing.JInternalFrame {
         getContentPane().setLayout(null);
 
         closebutton.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        closebutton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/close45.png"))); // NOI18N
+        closebutton.setIcon(ColorConstants.loadIcon("/icons/close45.png")); // NOI18N
         closebutton.setMnemonic('o');
         closebutton.setText("Close");
         closebutton.addActionListener(new java.awt.event.ActionListener() {
@@ -278,16 +282,15 @@ public final class master_accounts extends javax.swing.JInternalFrame {
 
         jTable1.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
-        ));
+                new Object[][] {
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null }
+                },
+                new String[] {
+                        "Title 1", "Title 2", "Title 3", "Title 4"
+                }));
         jTable1.setRowHeight(25);
         jTable1.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -312,7 +315,7 @@ public final class master_accounts extends javax.swing.JInternalFrame {
         jLabel7.setBounds(0, 80, 120, 30);
 
         clearbutton.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        clearbutton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/clear45.png"))); // NOI18N
+        clearbutton.setIcon(ColorConstants.loadIcon("/icons/clear45.png")); // NOI18N
         clearbutton.setMnemonic('c');
         clearbutton.setText("Clear");
         clearbutton.addActionListener(new java.awt.event.ActionListener() {
@@ -333,7 +336,9 @@ public final class master_accounts extends javax.swing.JInternalFrame {
         jLabel8.setBounds(0, 0, 40, 30);
 
         h2.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        h2.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Incomes", "Expenses", "Current Assets", "Fixed Assets", "Loans (Liability)", "Current Liabilities", "Capital Account", "Suspense Account", "Bank Accounts" }));
+        h2.setModel(new javax.swing.DefaultComboBoxModel<>(
+                new String[] { "Incomes", "Expenses", "Current Assets", "Fixed Assets", "Loans (Liability)",
+                        "Current Liabilities", "Capital Account", "Suspense Account", "Bank Accounts" }));
         jPanel1.add(h2);
         h2.setBounds(40, 30, 380, 30);
 
@@ -356,7 +361,7 @@ public final class master_accounts extends javax.swing.JInternalFrame {
         h4.setBounds(260, 110, 160, 30);
 
         updatebutton.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        updatebutton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/upload45.png"))); // NOI18N
+        updatebutton.setIcon(ColorConstants.loadIcon("/icons/upload45.png")); // NOI18N
         updatebutton.setMnemonic('u');
         updatebutton.setText("Update");
         updatebutton.addActionListener(new java.awt.event.ActionListener() {
@@ -368,7 +373,7 @@ public final class master_accounts extends javax.swing.JInternalFrame {
         updatebutton.setBounds(0, 160, 140, 50);
 
         deletebutton.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        deletebutton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/delete45.png"))); // NOI18N
+        deletebutton.setIcon(ColorConstants.loadIcon("/icons/delete45.png")); // NOI18N
         deletebutton.setMnemonic('d');
         deletebutton.setText("Delete");
         deletebutton.addActionListener(new java.awt.event.ActionListener() {
@@ -380,7 +385,7 @@ public final class master_accounts extends javax.swing.JInternalFrame {
         deletebutton.setBounds(140, 160, 140, 50);
 
         savebutton.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        savebutton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/save45.png"))); // NOI18N
+        savebutton.setIcon(ColorConstants.loadIcon("/icons/save45.png")); // NOI18N
         savebutton.setMnemonic('s');
         savebutton.setText("Save");
         savebutton.addActionListener(new java.awt.event.ActionListener() {
@@ -406,29 +411,29 @@ public final class master_accounts extends javax.swing.JInternalFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void savebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_savebuttonActionPerformed
+    private void savebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_savebuttonActionPerformed
         save();
-    }//GEN-LAST:event_savebuttonActionPerformed
+    }// GEN-LAST:event_savebuttonActionPerformed
 
-    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closebuttonActionPerformed
+    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_closebuttonActionPerformed
         this.dispose();
-    }//GEN-LAST:event_closebuttonActionPerformed
+    }// GEN-LAST:event_closebuttonActionPerformed
 
-    private void deletebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deletebuttonActionPerformed
+    private void deletebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_deletebuttonActionPerformed
         delete();
-    }//GEN-LAST:event_deletebuttonActionPerformed
+    }// GEN-LAST:event_deletebuttonActionPerformed
 
-    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearbuttonActionPerformed
+    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_clearbuttonActionPerformed
         clear();
-    }//GEN-LAST:event_clearbuttonActionPerformed
+    }// GEN-LAST:event_clearbuttonActionPerformed
 
-    private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MouseClicked
+    private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {// GEN-FIRST:event_jTable1MouseClicked
         view();
-    }//GEN-LAST:event_jTable1MouseClicked
+    }// GEN-LAST:event_jTable1MouseClicked
 
-    private void updatebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updatebuttonActionPerformed
+    private void updatebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_updatebuttonActionPerformed
         update();
-    }//GEN-LAST:event_updatebuttonActionPerformed
+    }// GEN-LAST:event_updatebuttonActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton clearbutton;

@@ -6,11 +6,12 @@ import com.selrom.db.DataUtil;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import javax.swing.ImageIcon;
+import menupack.UserSession;
 
 /**
  *
  * @author K.SELVAKUMAR, copyrights K.SELVAKUMAR, +91 99427 32229,
- * mysoft.java@gmail.com
+ *         mysoft.java@gmail.com
  */
 public class item_search extends javax.swing.JInternalFrame {
 
@@ -34,12 +35,15 @@ public class item_search extends javax.swing.JInternalFrame {
     final void get_sug() {
         try {
             int count = 0;
-            String query = "select iname from item";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select iname from item" + companyFilter;
             ResultSet set = util.doQuery(query);
             while (set.next()) {
                 count = count + 1;
             }
-            query = "select iname from item";
+            query = "select iname from item" + companyFilter;
             set = util.doQuery(query);
             Object f[] = new Object[count];
             int index = 0;
@@ -56,7 +60,10 @@ public class item_search extends javax.swing.JInternalFrame {
 
     void get_item_no() {
         try {
-            String query = "select ino from item where iname='" + h1.getSelectedItem() + "'";
+                String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+                String query = "select ino from item where iname='" + h1.getSelectedItem() + "'" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 h2.setText(r.getString(1));
@@ -73,7 +80,10 @@ public class item_search extends javax.swing.JInternalFrame {
             h.append(" ------------------------------------------------------------------------");
             h.append("\n Barcode                               Stock-in-Hand                Entry");
             h.append("\n ------------------------------------------------------------------------\n");
-            String query = "select barcode,quan,entry from stock where ino='" + h2.getText() + "' ";
+                String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+                String query = "select barcode,quan,entry from stock where ino='" + h2.getText() + "'" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 String barcode = r.getString(1);
@@ -116,7 +126,10 @@ public class item_search extends javax.swing.JInternalFrame {
 
     void get_item_name() {
         try {
-            String query = "select iname from item where ino='" + h2.getText() + "'";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select iname from item where ino='" + h2.getText() + "'" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 h1.setSelectedItem(r.getString(1));
@@ -135,7 +148,8 @@ public class item_search extends javax.swing.JInternalFrame {
     }
 
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated
+    // Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         titlelablel = new javax.swing.JLabel();
@@ -216,23 +230,23 @@ public class item_search extends javax.swing.JInternalFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearbuttonActionPerformed
+    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_clearbuttonActionPerformed
         h1.setSelectedItem("");
         h.setText("");
         h1.requestFocus();
-    }//GEN-LAST:event_clearbuttonActionPerformed
+    }// GEN-LAST:event_clearbuttonActionPerformed
 
-    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closebuttonActionPerformed
+    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_closebuttonActionPerformed
         this.dispose();
-    }//GEN-LAST:event_closebuttonActionPerformed
+    }// GEN-LAST:event_closebuttonActionPerformed
 
-    private void h1ItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_h1ItemStateChanged
+    private void h1ItemStateChanged(java.awt.event.ItemEvent evt) {// GEN-FIRST:event_h1ItemStateChanged
         get_item_no();
-    }//GEN-LAST:event_h1ItemStateChanged
+    }// GEN-LAST:event_h1ItemStateChanged
 
-    private void h2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_h2ActionPerformed
+    private void h2ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h2ActionPerformed
         get_item_name();
-    }//GEN-LAST:event_h2ActionPerformed
+    }// GEN-LAST:event_h2ActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton clearbutton;

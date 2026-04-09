@@ -19,6 +19,7 @@ import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import menupack.menu_form;
 import menupack.sample2;
+import menupack.UserSession;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CreationHelper;
@@ -83,9 +84,10 @@ public class sales_summary_manu extends javax.swing.JInternalFrame {
             boolean selva = false;
             double sub;
 
+            String companyFilter = UserSession.hasSelectedCompany() ? " and a.company_id='" + UserSession.getSelectedCompanyID() + "'" : "";
             String query;
             query = "select manu,sum(quan),sum(amount) from sales_items a,item b where dat between '" + lk + "' and '"
-                    + lk1 + "' and a.ino=b.ino group by manu order by manu";
+                    + lk1 + "' and a.ino=b.ino" + companyFilter + " group by manu order by manu";
             r = util.doQuery(query);
             while (r.next()) {
                 sub = r.getDouble(3);

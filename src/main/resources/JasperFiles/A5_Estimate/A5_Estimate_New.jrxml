@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="A5_Estimate" language="groovy" pageWidth="421" pageHeight="595" columnWidth="381" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="f986782f-c61d-4610-a1a9-071725d3a70b">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="A5_Estimate" language="java" pageWidth="421" pageHeight="595" columnWidth="381" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="f986782f-c61d-4610-a1a9-071725d3a70b">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
@@ -53,6 +53,7 @@
 	<parameter name="parameter48" class="java.lang.String"/>
 	<parameter name="parameter49" class="java.lang.String"/>
 	<parameter name="parameter50" class="java.lang.String"/>
+	<parameter name="TermsAndConditions" class="java.lang.String"/>
 	<field name="field1" class="java.lang.String"/>
 	<field name="field2" class="java.lang.String"/>
 	<field name="field3" class="java.lang.String"/>
@@ -596,12 +597,12 @@ Value]]></text>
 				<text><![CDATA[Terms & Conditions:]]></text>
 			</staticText>
 			
-			<textField isBlankWhenNull="true">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
 				<reportElement x="0" y="120" width="381" height="25" uuid="c1d2e3f4-5a6b-7c8d-9e0f-a1b2c3d4e5f6"/>
 				<textElement>
 					<font fontName="Arial" size="7"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$P{parameter12}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$P{TermsAndConditions}]]></textFieldExpression>
 			</textField>
 		</band>
 	</summary>

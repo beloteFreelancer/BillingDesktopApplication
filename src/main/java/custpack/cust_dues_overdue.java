@@ -21,7 +21,7 @@ import menupack.sample2;
 /**
  *
  * @author K.SELVAKUMAR, copyrights K.SELVAKUMAR, +91 99427 32229,
- * mysoft.java@gmail.com
+ *         mysoft.java@gmail.com
  */
 public final class cust_dues_overdue extends javax.swing.JInternalFrame {
 
@@ -56,21 +56,30 @@ public final class cust_dues_overdue extends javax.swing.JInternalFrame {
         s2.addColumn("Cust_Id");
         s2.addColumn("Name");
         s2.addColumn("Due Amount");
+        s2.addColumn("Int Rate %");
+        s2.addColumn("Interest");
+        s2.addColumn("Total With Int");
         s2.addColumn("Mobile No");
         jTable1.setModel(s2);
         DefaultTableCellRenderer dtcr1 = new DefaultTableCellRenderer();
         dtcr1.setHorizontalAlignment(SwingConstants.RIGHT);
         jTable1.getColumnModel().getColumn(6).setCellRenderer(dtcr1);
         jTable1.getColumnModel().getColumn(7).setCellRenderer(dtcr1);
+        jTable1.getColumnModel().getColumn(8).setCellRenderer(dtcr1);
+        jTable1.getColumnModel().getColumn(9).setCellRenderer(dtcr1);
+        jTable1.getColumnModel().getColumn(10).setCellRenderer(dtcr1);
         jTable1.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         jTable1.getColumnModel().getColumn(0).setPreferredWidth(100);
         jTable1.getColumnModel().getColumn(1).setPreferredWidth(100);
         jTable1.getColumnModel().getColumn(2).setPreferredWidth(100);
-        jTable1.getColumnModel().getColumn(3).setPreferredWidth(100);
-        jTable1.getColumnModel().getColumn(4).setPreferredWidth(100);
-        jTable1.getColumnModel().getColumn(5).setPreferredWidth(274);
+        jTable1.getColumnModel().getColumn(3).setPreferredWidth(80);
+        jTable1.getColumnModel().getColumn(4).setPreferredWidth(70);
+        jTable1.getColumnModel().getColumn(5).setPreferredWidth(200);
         jTable1.getColumnModel().getColumn(6).setPreferredWidth(110);
-        jTable1.getColumnModel().getColumn(7).setPreferredWidth(110);
+        jTable1.getColumnModel().getColumn(7).setPreferredWidth(80);
+        jTable1.getColumnModel().getColumn(8).setPreferredWidth(110);
+        jTable1.getColumnModel().getColumn(9).setPreferredWidth(120);
+        jTable1.getColumnModel().getColumn(10).setPreferredWidth(110);
         String Ta = "Arial";
         int Bold = 0, size = 14;
         jTable1.getTableHeader().setFont(new Font(Ta, Bold, size));
@@ -84,21 +93,38 @@ public final class cust_dues_overdue extends javax.swing.JInternalFrame {
             Date d = new Date();
             SimpleDateFormat g = new SimpleDateFormat("yyyy-MM-dd");
             String today = g.format(d);
-            query = "select billno,date_format(dat,'%d/%m/%Y'),date_format(ddate,'%d/%m/%Y'),datediff(ddate,'" + today + "'), a.cid,a.cname,tot-paid,mobile from cust_bal a,cust b where ddate < '" + today + "' and tot-paid>0 and a.cid=b.cid order by ddate,billno";
+            query = "select billno,date_format(dat,'%d/%m/%Y'),date_format(ddate,'%d/%m/%Y'),datediff('" + today
+                    + "',ddate), a.cid,a.cname,tot-paid,mobile,b.interest_rate from cust_bal a,cust b where ddate < '"
+                    + today + "' and tot-paid>0 and a.cid=b.cid order by ddate,billno";
             ResultSet r = util.doQuery(query);
             while (r.next()) {
-                double tot = r.getDouble(7);
-                String tot2 = String.format("%." + hmany + "f", tot);
-                s2.addRow(new Object[]{r.getString(1), r.getString(2), r.getString(3), r.getString(4), r.getString(5), r.getString(6), tot2, r.getString(8)});
+                double dueAmt = r.getDouble(7);
+                int overdueDays = r.getInt(4);
+                double interestRate = r.getDouble(9);
+                double interest = (dueAmt * interestRate * overdueDays) / (365 * 100);
+                double totalWithInt = dueAmt + interest;
+                String dueStr = String.format("%." + hmany + "f", dueAmt);
+                String rateStr = String.format("%.2f", interestRate);
+                String intStr = String.format("%." + hmany + "f", interest);
+                String totalStr = String.format("%." + hmany + "f", totalWithInt);
+                s2.addRow(new Object[] { r.getString(1), r.getString(2), r.getString(3), r.getString(4), r.getString(5),
+                        r.getString(6), dueStr, rateStr, intStr, totalStr, r.getString(8) });
                 selva = true;
             }
 
             double tot = 0;
+            double totInterest = 0;
+            double totWithInt = 0;
             for (int i = 0; i < jTable1.getRowCount(); i++) {
                 tot = tot + Double.parseDouble(jTable1.getValueAt(i, 6).toString());
+                totInterest = totInterest + Double.parseDouble(jTable1.getValueAt(i, 8).toString());
+                totWithInt = totWithInt + Double.parseDouble(jTable1.getValueAt(i, 9).toString());
             }
             String tot2 = String.format("%." + hmany + "f", tot);
-            totl.setText(" Total Records: " + jTable1.getRowCount() + "  Due Amount: " + tot2);
+            String intTotal = String.format("%." + hmany + "f", totInterest);
+            String withIntTotal = String.format("%." + hmany + "f", totWithInt);
+            totl.setText(" Total Records: " + jTable1.getRowCount() + "  Due: " + tot2 + "  Interest: " + intTotal
+                    + "  Total: " + withIntTotal);
             if (selva == true) {
                 generatebutton.setEnabled(false);
             }
@@ -113,7 +139,8 @@ public final class cust_dues_overdue extends javax.swing.JInternalFrame {
                 JOptionPane.showMessageDialog(this, "Sorry, No Records Were Found!", "Oops", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            int as = JOptionPane.showConfirmDialog(this, "Want to Send SMS ?", "Are You Sure", JOptionPane.YES_NO_OPTION);
+            int as = JOptionPane.showConfirmDialog(this, "Want to Send SMS ?", "Are You Sure",
+                    JOptionPane.YES_NO_OPTION);
             if (as == JOptionPane.NO_OPTION) {
                 return;
             }
@@ -136,11 +163,13 @@ public final class cust_dues_overdue extends javax.swing.JInternalFrame {
                 String phone = jTable1.getValueAt(i, 7).toString();
 
                 if (phone.length() == 10) {
-                    String message = "Dear " + cname + ", Your Due Amount: " + amount + " for Billno# " + billno + " is Overdue, Make Payment Immediately, Ignore if Already Paid.\n\n" + cname1;
+                    String message = "Dear " + cname + ", Your Due Amount: " + amount + " for Billno# " + billno
+                            + " is Overdue, Make Payment Immediately, Ignore if Already Paid.\n\n" + cname1;
                     new smspack.SMS_Sender_Single().getData(smsuser, smspass, sender, phone, message);
                 }
-            }//row counts ends
-            JOptionPane.showMessageDialog(this, "<html><h1>Send Successfully</h1></html>", "Send", JOptionPane.PLAIN_MESSAGE);
+            } // row counts ends
+            JOptionPane.showMessageDialog(this, "<html><h1>Send Successfully</h1></html>", "Send",
+                    JOptionPane.PLAIN_MESSAGE);
         } catch (HeadlessException | ClassNotFoundException | SQLException e) {
             System.out.println(e.getMessage());
         }
@@ -155,7 +184,8 @@ public final class cust_dues_overdue extends javax.swing.JInternalFrame {
     }
 
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated
+    // Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         titlelablel = new javax.swing.JLabel();
@@ -178,16 +208,15 @@ public final class cust_dues_overdue extends javax.swing.JInternalFrame {
 
         jTable1.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
-        ));
+                new Object[][] {
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null },
+                        { null, null, null, null }
+                },
+                new String[] {
+                        "Title 1", "Title 2", "Title 3", "Title 4"
+                }));
         jTable1.setRowHeight(24);
         jTable1.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -271,16 +300,16 @@ public final class cust_dues_overdue extends javax.swing.JInternalFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MouseClicked
+    private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {// GEN-FIRST:event_jTable1MouseClicked
 
-    }//GEN-LAST:event_jTable1MouseClicked
+    }// GEN-LAST:event_jTable1MouseClicked
 
-    private void generatebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_generatebuttonActionPerformed
+    private void generatebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_generatebuttonActionPerformed
         load_report();
 
-    }//GEN-LAST:event_generatebuttonActionPerformed
+    }// GEN-LAST:event_generatebuttonActionPerformed
 
-    private void excelbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_excelbuttonActionPerformed
+    private void excelbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_excelbuttonActionPerformed
         if (s2.getRowCount() <= 0) {
             JOptionPane.showMessageDialog(this, "Sorry, No Records Were Found!", "Oops", JOptionPane.ERROR_MESSAGE);
             return;
@@ -302,28 +331,28 @@ public final class cust_dues_overdue extends javax.swing.JInternalFrame {
             System.out.println(e.getMessage());
         }
 
-    }//GEN-LAST:event_excelbuttonActionPerformed
+    }// GEN-LAST:event_excelbuttonActionPerformed
 
-    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearbuttonActionPerformed
+    private void clearbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_clearbuttonActionPerformed
         if (s2.getRowCount() > 0) {
             s2.getDataVector().removeAllElements();
             s2.fireTableDataChanged();
         }
         generatebutton.setEnabled(true);
         totl.setText("");
-    }//GEN-LAST:event_clearbuttonActionPerformed
+    }// GEN-LAST:event_clearbuttonActionPerformed
 
-    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closebuttonActionPerformed
+    private void closebuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_closebuttonActionPerformed
         this.dispose();
-    }//GEN-LAST:event_closebuttonActionPerformed
+    }// GEN-LAST:event_closebuttonActionPerformed
 
-    private void jTable1FocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jTable1FocusGained
+    private void jTable1FocusGained(java.awt.event.FocusEvent evt) {// GEN-FIRST:event_jTable1FocusGained
 
-    }//GEN-LAST:event_jTable1FocusGained
+    }// GEN-LAST:event_jTable1FocusGained
 
-    private void smsbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_smsbuttonActionPerformed
+    private void smsbuttonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_smsbuttonActionPerformed
         send_sms();
-    }//GEN-LAST:event_smsbuttonActionPerformed
+    }// GEN-LAST:event_smsbuttonActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton clearbutton;

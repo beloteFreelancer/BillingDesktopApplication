@@ -21,14 +21,13 @@ import javax.print.attribute.standard.MediaSize;
 import javax.print.attribute.standard.MediaSizeName;
 import menupack.AmountInWords;
 import menupack.SelRomJasper;
+import menupack.UserSession;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
-import net.sf.jasperreports.engine.JRExporterParameter;
 import net.sf.jasperreports.engine.export.JRPrintServiceExporter;
-import net.sf.jasperreports.engine.export.JRPrintServiceExporterParameter;
 import net.sf.jasperreports.view.JasperViewer;
 
 public class print_estimate_a4_return {
@@ -48,7 +47,11 @@ public class print_estimate_a4_return {
             parameters.put("logo", is);
             String add1 = "", add2 = "", add3 = "", add4 = "", add5 = "", sname = "", scode = "", letter = "",
                     head = "", sms1 = "", sms2 = "", sms3 = "", sms4 = "", logoPath = "";
-            String query = "select cname,add1,add2,add3,add4,state,scode,ehead,sms1,sms2,sms3,sms4,letter,hmany,logo_path from setting_bill";
+            String companyWhere = UserSession.hasSelectedCompany()
+                    ? " WHERE companyID='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select cname,add1,add2,add3,add4,state,scode,ehead,sms1,sms2,sms3,sms4,letter,hmany,logo_path from company"
+                    + companyWhere;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 logoPath = r.getString("logo_path");
@@ -90,10 +93,12 @@ public class print_estimate_a4_return {
             parameters.put("parameter57", "For " + add1.trim().toUpperCase());
             parameters.put("parameter7", "ESTIMATE RETURN");
 
+            String companyFilter = UserSession.hasSelectedCompany() ? " and company_id='" + UserSession.getSelectedCompanyID() + "'" : "";
+
             String date = "", quans = "", cid = "", tax = "", items = "";
             double sub = 0, dis = 0, addamt = 0, net = 0, taxamt = 0, bal = 0;
             query = "select date_format(dat,'%d/%m/%Y'),items,quans,sub,disamt,addamt,net,bal,cid,taxamt,tax from ereturn where billno='"
-                    + billno + "'";
+                    + billno + "'" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 date = r.getString(1);
@@ -238,7 +243,7 @@ public class print_estimate_a4_return {
             double quan, price, amount, disp, disamt, tot, taxp, taxamt1, total;
             double namount = 0, ndisamt = 0, ntot = 0, ntax = 0, ntotal = 0;
             query = "select iname1,quan,price,amount,disp,disamt,sub,taxp,taxamt,total,udes,hsn from ereturn_items where billno='"
-                    + billno + "'";
+                    + billno + "'" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 SelRomJasper selRomJasper = new SelRomJasper();
@@ -281,8 +286,10 @@ public class print_estimate_a4_return {
             }
             disable_warnigs.disableAccessWarnings();
             JasperReport jasperReport;
-            if (billformat.equals("A5")) {
+            if (billformat.equals("A5") || billformat.equals("Estimate A5")) {
                 jasperReport = JasperReportCompiler.compileReport("/JasperFiles/A4_Estimate/A5_Estimate.jrxml");
+            } else if ("Estimate Half Page".equals(billformat) || "A4-Half".equals(billformat)) {
+                jasperReport = JasperReportCompiler.compileReport("/JasperFiles/A4_Half/Estimate_Half.jrxml");
             } else {
                 jasperReport = JasperReportCompiler.compileReport("/JasperFiles/A4_Estimate/A4_Estimate.jrxml");
             }

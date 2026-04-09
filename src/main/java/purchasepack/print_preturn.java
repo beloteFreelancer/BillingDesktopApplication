@@ -17,14 +17,13 @@ import javax.print.attribute.PrintRequestAttributeSet;
 import javax.print.attribute.standard.Copies;
 import javax.print.attribute.standard.MediaSizeName;
 import menupack.SelRomJasper;
+import menupack.UserSession;
 import net.sf.jasperreports.engine.JRException;
-import net.sf.jasperreports.engine.JRExporterParameter;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.export.JRPrintServiceExporter;
-import net.sf.jasperreports.engine.export.JRPrintServiceExporterParameter;
 
 /**
  *
@@ -38,7 +37,8 @@ public class print_preturn {
     public void get_print(DataUtil util, String grn, String drive, String folder, String billformat) {
         try {
             this.util = util;
-            Map<String, Object> parameters = new HashMap<>();            parameters.put("parameter1", "");
+            Map<String, Object> parameters = new HashMap<>();
+            parameters.put("parameter1", "");
             parameters.put("parameter2", "");
             parameters.put("parameter3", "");
             parameters.put("parameter4", "");
@@ -56,8 +56,13 @@ public class print_preturn {
             parameters.put("parameter24", "");
             parameters.put("parameter25", "");
 
-            String add1 = "", add2 = "", add3 = "", add4 = "", head = "", sms1 = "", sms2 = "", sms3 = "", letter = "", logoPath = "";
-            String query = "select cname,add1,add2,add3,bhead,sms1,sms2,sms3,hmany,letter,logo_path from setting_bill";
+            String add1 = "", add2 = "", add3 = "", add4 = "", head = "", sms1 = "", sms2 = "", sms3 = "", letter = "",
+                    logoPath = "";
+            String companyWhere = UserSession.hasSelectedCompany()
+                    ? " WHERE companyID='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select cname,add1,add2,add3,bhead,sms1,sms2,sms3,hmany,letter,logo_path from company"
+                    + companyWhere;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 logoPath = r.getString("logo_path");
@@ -91,7 +96,8 @@ public class print_preturn {
             String date = "", billno = "", items = "", quans = "", pby = "", cname = "";
             double sub = 0, disamt = 0, fright = 0, other = 0, net = 0, taxamt = 0;
 
-            query = "select date_format(dat,'%d/%m/%Y'),cname,billno,items,quans,sub,dis,fright,other,net,pby,tax from preturn where grn='" + grn + "'";
+            query = "select date_format(dat,'%d/%m/%Y'),cname,billno,items,quans,sub,dis,fright,other,net,pby,tax from preturn where grn='"
+                    + grn + "'";
             r = util.doQuery(query);
             while (r.next()) {
                 date = r.getString(1);
@@ -149,7 +155,8 @@ public class print_preturn {
 
             parameters.put("parameter22", "Paymode: " + pby);
 
-            // For purchase return, received/balance might not be applicable in the same way or are 0
+            // For purchase return, received/balance might not be applicable in the same way
+            // or are 0
             parameters.put("parameter23", "Net Amount: " + net2);
             parameters.put("parameter24", "");
 
@@ -213,7 +220,7 @@ public class print_preturn {
 
             // Map bill formats if needed, though typically A4 is used for purchase returns
             if (billformat.contains("Thermal")) {
-                 reportPath = "/JasperFiles/Thermal_Unicode/Thermal_GST.jrxml";
+                reportPath = "/JasperFiles/Thermal_Unicode/Thermal_GST.jrxml";
             }
 
             JasperReport jasperReport = JasperReportCompiler.compileReport(reportPath);

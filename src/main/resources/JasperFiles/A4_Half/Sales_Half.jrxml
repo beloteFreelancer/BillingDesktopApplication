@@ -1,0 +1,598 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+    name="Sales_Half" language="java" pageWidth="595" pageHeight="421" columnWidth="555"
+    leftMargin="20" rightMargin="20" topMargin="0" bottomMargin="10"
+    whenNoDataType="NoPages" isSummaryNewPage="false">
+
+    <!-- Company & Invoice Parameters -->
+    <parameter name="CompanyName" class="java.lang.String"/>
+    <parameter name="CompanyAddress" class="java.lang.String"/>
+    <parameter name="CompanyGST" class="java.lang.String"/>
+    <parameter name="logo_path" class="java.lang.String"/>
+    <parameter name="CustomerName" class="java.lang.String"/>
+    <parameter name="CustomerPhone" class="java.lang.String"/>
+    <parameter name="CustomerAddress" class="java.lang.String"/>
+    <parameter name="CustomerEmail" class="java.lang.String"/>
+    <parameter name="CustomerGSTIN" class="java.lang.String"/>
+    <parameter name="ShipToName" class="java.lang.String"/>
+    <parameter name="ShipToPhone" class="java.lang.String"/>
+    <parameter name="ShipToAddress" class="java.lang.String"/>
+    <parameter name="InvoiceNo" class="java.lang.String"/>
+    <parameter name="InvoiceDate" class="java.lang.String"/>
+    <parameter name="DueDate" class="java.lang.String"/>
+    <parameter name="SalesMan" class="java.lang.String"/>
+    <parameter name="AmountInWords" class="java.lang.String"/>
+    <parameter name="TermsAndConditions" class="java.lang.String"/>
+    <parameter name="TotalAmountBeforeTax" class="java.lang.Double"/>
+    <parameter name="CGSTAmount" class="java.lang.Double"/>
+    <parameter name="SGSTAmount" class="java.lang.Double"/>
+    <parameter name="IGSTAmount" class="java.lang.Double"/>
+    <parameter name="TaxAmountGST" class="java.lang.Double"/>
+    <parameter name="GrandTotal" class="java.lang.Double"/>
+    <parameter name="TotalAmountBeforeTaxStr" class="java.lang.String"/>
+    <parameter name="CGSTAmountStr" class="java.lang.String"/>
+    <parameter name="SGSTAmountStr" class="java.lang.String"/>
+    <parameter name="IGSTAmountStr" class="java.lang.String"/>
+    <parameter name="TaxAmountGSTStr" class="java.lang.String"/>
+    <parameter name="GrandTotalStr" class="java.lang.String"/>
+    <parameter name="ReceivedAmountStr" class="java.lang.String"/>
+    <parameter name="PreviousBalanceStr" class="java.lang.String"/>
+    <parameter name="CurrentBalanceStr" class="java.lang.String"/>
+    <parameter name="BankName" class="java.lang.String"/>
+    <parameter name="IFSCCode" class="java.lang.String"/>
+    <parameter name="AccountNo" class="java.lang.String"/>
+    <parameter name="BankBranch" class="java.lang.String"/>
+    <parameter name="QRCodeImage" class="java.awt.image.BufferedImage"/>
+
+    <!-- Column header labels -->
+    <parameter name="Col_Sno_Header"      class="java.lang.String"><defaultValueExpression><![CDATA["#"]]></defaultValueExpression></parameter>
+    <parameter name="Col_Item_Header"     class="java.lang.String"><defaultValueExpression><![CDATA["ITEMS"]]></defaultValueExpression></parameter>
+    <parameter name="Col_Hsn_Header"      class="java.lang.String"><defaultValueExpression><![CDATA["HSN"]]></defaultValueExpression></parameter>
+    <parameter name="Col_Qty_Header"      class="java.lang.String"><defaultValueExpression><![CDATA["QTY"]]></defaultValueExpression></parameter>
+    <parameter name="Col_MRP_Header"      class="java.lang.String"><defaultValueExpression><![CDATA["MRP"]]></defaultValueExpression></parameter>
+    <parameter name="Col_Price_Header"    class="java.lang.String"><defaultValueExpression><![CDATA["PRICE"]]></defaultValueExpression></parameter>
+    <parameter name="Col_Amt_Header"      class="java.lang.String"><defaultValueExpression><![CDATA["AMT"]]></defaultValueExpression></parameter>
+    <parameter name="Col_DisPct_Header"   class="java.lang.String"><defaultValueExpression><![CDATA["DIS%"]]></defaultValueExpression></parameter>
+    <parameter name="Col_DisAmt_Header"   class="java.lang.String"><defaultValueExpression><![CDATA["DIS AMT"]]></defaultValueExpression></parameter>
+    <parameter name="Col_TaxPct_Header"   class="java.lang.String"><defaultValueExpression><![CDATA["TAX%"]]></defaultValueExpression></parameter>
+    <parameter name="Col_TaxAmt_Header"   class="java.lang.String"><defaultValueExpression><![CDATA["TAX AMT"]]></defaultValueExpression></parameter>
+    <parameter name="Col_SubTotal_Header" class="java.lang.String"><defaultValueExpression><![CDATA["SUB TOTAL"]]></defaultValueExpression></parameter>
+    <parameter name="Col_Total_Header"    class="java.lang.String"><defaultValueExpression><![CDATA["TOTAL"]]></defaultValueExpression></parameter>
+    <parameter name="Col_Mfg_Header"      class="java.lang.String"><defaultValueExpression><![CDATA["MFG"]]></defaultValueExpression></parameter>
+    <parameter name="Col_Exp_Header"      class="java.lang.String"><defaultValueExpression><![CDATA["EXP"]]></defaultValueExpression></parameter>
+    <parameter name="Col_NetRate_Header"  class="java.lang.String"><defaultValueExpression><![CDATA["NET RATE"]]></defaultValueExpression></parameter>
+    <!-- Column visibility -->
+    <parameter name="Col_Hsn_Show"    class="java.lang.Boolean"><defaultValueExpression><![CDATA[Boolean.TRUE]]></defaultValueExpression></parameter>
+    <parameter name="Col_Price_Show"  class="java.lang.Boolean"><defaultValueExpression><![CDATA[Boolean.FALSE]]></defaultValueExpression></parameter>
+    <parameter name="Col_Amt_Show"    class="java.lang.Boolean"><defaultValueExpression><![CDATA[Boolean.FALSE]]></defaultValueExpression></parameter>
+    <parameter name="Col_TaxPct_Show" class="java.lang.Boolean"><defaultValueExpression><![CDATA[Boolean.FALSE]]></defaultValueExpression></parameter>
+    <parameter name="Col_Mfg_Show"    class="java.lang.Boolean"><defaultValueExpression><![CDATA[Boolean.FALSE]]></defaultValueExpression></parameter>
+    <parameter name="Col_Exp_Show"    class="java.lang.Boolean"><defaultValueExpression><![CDATA[Boolean.FALSE]]></defaultValueExpression></parameter>
+
+    <!-- Item Fields -->
+    <field name="sno" class="java.lang.String"/>
+    <field name="product_name" class="java.lang.String"/>
+    <field name="hsn" class="java.lang.String"/>
+    <field name="qty" class="java.lang.String"/>
+    <field name="net_rate" class="java.lang.String"/>
+    <field name="mrp" class="java.lang.String"/>
+    <field name="rate" class="java.lang.String"/>
+    <field name="amount" class="java.lang.String"/>
+    <field name="disc_pct" class="java.lang.String"/>
+    <field name="disc_amt" class="java.lang.String"/>
+    <field name="tax_pct" class="java.lang.String"/>
+    <field name="tax_amt" class="java.lang.String"/>
+    <field name="sub_total" class="java.lang.String"/>
+    <field name="total" class="java.lang.String"/>
+    <field name="mfg_date" class="java.lang.String"/>
+    <field name="exp_date" class="java.lang.String"/>
+    <field name="tax" class="java.lang.String"/>
+
+    <variable name="TotalQty" class="java.lang.Double" calculation="Sum" resetType="Report">
+        <variableExpression><![CDATA[$F{qty} == null || $F{qty}.trim().isEmpty() ? 0.0 : Double.valueOf($F{qty}.trim().replace(",", ""))]]></variableExpression>
+        <initialValueExpression><![CDATA[0.0]]></initialValueExpression>
+    </variable>
+    <variable name="TotalFinal" class="java.lang.Double" calculation="Sum" resetType="Report">
+        <variableExpression><![CDATA[$F{total} == null || $F{total}.trim().isEmpty() ? 0.0 : Double.valueOf($F{total}.trim().replace(",", ""))]]></variableExpression>
+        <initialValueExpression><![CDATA[0.0]]></initialValueExpression>
+    </variable>
+
+    <!-- ================================================================ -->
+    <!-- TITLE: Compact company header for half-page                      -->
+    <!-- ================================================================ -->
+    <title>
+        <band height="68">
+            <!-- Dark navy top bar -->
+            <rectangle>
+                <reportElement x="0" y="0" width="555" height="22" backcolor="#1E2D4D" mode="Opaque"/>
+                <graphicElement><pen lineWidth="0"/></graphicElement>
+            </rectangle>
+            <staticText>
+                <reportElement x="8" y="0" width="200" height="22" forecolor="#FFFFFF"/>
+                <textElement verticalAlignment="Middle"><font size="10" isBold="true"/></textElement>
+                <text><![CDATA[TAX INVOICE]]></text>
+            </staticText>
+            <rectangle>
+                <reportElement x="400" y="4" width="153" height="14" backcolor="#FF5722" mode="Opaque"/>
+                <graphicElement><pen lineWidth="0"/></graphicElement>
+            </rectangle>
+            <staticText>
+                <reportElement x="400" y="4" width="153" height="14" forecolor="#FFFFFF"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="6" isBold="true"/></textElement>
+                <text><![CDATA[ORIGINAL FOR RECIPIENT]]></text>
+            </staticText>
+            <!-- Company Logo -->
+            <image scaleImage="RetainShape" isUsingCache="true" onErrorType="Blank">
+                <reportElement x="0" y="26" width="42" height="38"/>
+                <imageExpression><![CDATA[$P{logo_path} == null || $P{logo_path}.isEmpty() ? null : $P{logo_path}]]></imageExpression>
+            </image>
+            <!-- Company Name -->
+            <textField isBlankWhenNull="true">
+                <reportElement x="47" y="26" width="508" height="16" forecolor="#2255CC"/>
+                <textElement><font size="11" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{CompanyName}]]></textFieldExpression>
+            </textField>
+            <!-- Company Address + GSTIN -->
+            <textField isBlankWhenNull="true">
+                <reportElement x="47" y="43" width="300" height="10"/>
+                <textElement><font size="7"/></textElement>
+                <textFieldExpression><![CDATA[$P{CompanyAddress}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="47" y="54" width="300" height="10"/>
+                <textElement><font size="7" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA["GSTIN: " + ($P{CompanyGST} == null ? "" : $P{CompanyGST})]]></textFieldExpression>
+            </textField>
+        </band>
+    </title>
+
+    <!-- ================================================================ -->
+    <!-- PAGE HEADER: Compact invoice info + Bill To                      -->
+    <!-- ================================================================ -->
+    <pageHeader>
+        <band height="62">
+            <!-- Gray invoice info strip -->
+            <rectangle>
+                <reportElement x="0" y="0" width="555" height="28" backcolor="#EDF0F5" mode="Opaque"/>
+                <graphicElement><pen lineWidth="0"/></graphicElement>
+            </rectangle>
+            <line><reportElement x="185" y="3" width="0" height="22" forecolor="#CCCCCC"/></line>
+            <line><reportElement x="370" y="3" width="0" height="22" forecolor="#CCCCCC"/></line>
+            <!-- INVOICE NO -->
+            <staticText>
+                <reportElement x="8" y="2" width="170" height="9" forecolor="#888888"/>
+                <textElement><font size="6"/></textElement>
+                <text><![CDATA[INVOICE NO.]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="8" y="12" width="170" height="14"/>
+                <textElement><font size="8" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{InvoiceNo}]]></textFieldExpression>
+            </textField>
+            <!-- INVOICE DATE -->
+            <staticText>
+                <reportElement x="193" y="2" width="170" height="9" forecolor="#888888"/>
+                <textElement><font size="6"/></textElement>
+                <text><![CDATA[INVOICE DATE]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="193" y="12" width="170" height="14"/>
+                <textElement><font size="8" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{InvoiceDate}]]></textFieldExpression>
+            </textField>
+            <!-- DUE DATE -->
+            <staticText>
+                <reportElement x="378" y="2" width="170" height="9" forecolor="#888888"/>
+                <textElement><font size="6"/></textElement>
+                <text><![CDATA[DUE DATE]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="378" y="12" width="170" height="14"/>
+                <textElement><font size="8" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{DueDate} == null ? "" : $P{DueDate}]]></textFieldExpression>
+            </textField>
+            <line><reportElement x="0" y="29" width="555" height="1" forecolor="#CCCCCC"/></line>
+            <!-- BILL TO -->
+            <staticText>
+                <reportElement x="0" y="33" width="50" height="10" forecolor="#777777"/>
+                <textElement><font size="7" isBold="true"/></textElement>
+                <text><![CDATA[BILL TO]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="44" width="270" height="13"/>
+                <textElement><font size="8" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{CustomerName}]]></textFieldExpression>
+            </textField>
+            <!-- Customer Mobile -->
+            <textField isBlankWhenNull="true">
+                <reportElement x="275" y="44" width="140" height="11"/>
+                <textElement><font size="7"/></textElement>
+                <textFieldExpression><![CDATA["Ph: " + ($P{CustomerPhone} == null ? "" : $P{CustomerPhone})]]></textFieldExpression>
+            </textField>
+            <!-- Customer GSTIN -->
+            <textField isBlankWhenNull="true">
+                <reportElement x="420" y="44" width="135" height="11"/>
+                <textElement><font size="7" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA["GSTIN: " + ($P{CustomerGSTIN} == null ? "" : $P{CustomerGSTIN})]]></textFieldExpression>
+            </textField>
+        </band>
+    </pageHeader>
+
+    <!-- ================================================================ -->
+    <!-- COLUMN HEADER: Same 16-column layout as A4 (555px)               -->
+    <!-- ================================================================ -->
+    <columnHeader>
+        <band height="22">
+            <rectangle>
+                <reportElement x="0" y="0" width="555" height="22" backcolor="#1E2D4D" mode="Opaque"/>
+                <graphicElement><pen lineWidth="0"/></graphicElement>
+            </rectangle>
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="0" width="15" height="22" forecolor="#FFFFFF"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="6" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{Col_Sno_Header}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="15" y="0" width="70" height="22" forecolor="#FFFFFF"/>
+                <textElement textAlignment="Left" verticalAlignment="Middle"><font size="6" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[" " + $P{Col_Item_Header}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="85" y="0" width="35" height="22" forecolor="#FFFFFF">
+                    <printWhenExpression><![CDATA[$P{Col_Hsn_Show}]]></printWhenExpression>
+                </reportElement>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="5" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{Col_Hsn_Header}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="120" y="0" width="28" height="22" forecolor="#FFFFFF"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="6" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{Col_Qty_Header}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="148" y="0" width="33" height="22" forecolor="#FFFFFF">
+                    <printWhenExpression><![CDATA[$P{Col_Mfg_Show}]]></printWhenExpression>
+                </reportElement>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="5" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{Col_Mfg_Header}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="181" y="0" width="33" height="22" forecolor="#FFFFFF">
+                    <printWhenExpression><![CDATA[$P{Col_Exp_Show}]]></printWhenExpression>
+                </reportElement>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="5" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{Col_Exp_Header}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="214" y="0" width="35" height="22" forecolor="#FFFFFF"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font size="6" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{Col_MRP_Header}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="252" y="0" width="36" height="22" forecolor="#FFFFFF"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font size="6" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{Col_NetRate_Header}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="288" y="0" width="37" height="22" forecolor="#FFFFFF">
+                    <printWhenExpression><![CDATA[$P{Col_Price_Show}]]></printWhenExpression>
+                </reportElement>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font size="6" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{Col_Price_Header}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="325" y="0" width="39" height="22" forecolor="#FFFFFF">
+                    <printWhenExpression><![CDATA[$P{Col_Amt_Show}]]></printWhenExpression>
+                </reportElement>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font size="6" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{Col_Amt_Header}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="364" y="0" width="21" height="22" forecolor="#FFFFFF"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="5" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{Col_DisPct_Header}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="385" y="0" width="33" height="22" forecolor="#FFFFFF"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font size="5" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{Col_DisAmt_Header}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="418" y="0" width="21" height="22" forecolor="#FFFFFF">
+                    <printWhenExpression><![CDATA[$P{Col_TaxPct_Show}]]></printWhenExpression>
+                </reportElement>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="5" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{Col_TaxPct_Header}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="439" y="0" width="33" height="22" forecolor="#FFFFFF"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font size="5" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{Col_TaxAmt_Header}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="472" y="0" width="40" height="22" forecolor="#FFFFFF"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font size="5" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{Col_SubTotal_Header}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="512" y="0" width="43" height="22" forecolor="#FFFFFF"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font size="6" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{Col_Total_Header}]]></textFieldExpression>
+            </textField>
+        </band>
+    </columnHeader>
+
+    <!-- ================================================================ -->
+    <!-- DETAIL: Item rows                                                -->
+    <!-- ================================================================ -->
+    <detail>
+        <band height="16">
+            <line><reportElement x="0" y="15" width="555" height="1" forecolor="#EEEEEE"/></line>
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="0" width="15" height="16"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="6"/></textElement>
+                <textFieldExpression><![CDATA[$F{sno}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="15" y="0" width="70" height="16"/>
+                <textElement textAlignment="Left" verticalAlignment="Middle"><font size="6"/></textElement>
+                <textFieldExpression><![CDATA[$F{product_name}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="85" y="0" width="35" height="16">
+                    <printWhenExpression><![CDATA[$P{Col_Hsn_Show}]]></printWhenExpression>
+                </reportElement>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="5"/></textElement>
+                <textFieldExpression><![CDATA[$F{hsn}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="120" y="0" width="28" height="16"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="6"/></textElement>
+                <textFieldExpression><![CDATA[$F{qty}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="148" y="0" width="33" height="16">
+                    <printWhenExpression><![CDATA[$P{Col_Mfg_Show}]]></printWhenExpression>
+                </reportElement>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="4"/></textElement>
+                <textFieldExpression><![CDATA[$F{mfg_date}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="181" y="0" width="33" height="16">
+                    <printWhenExpression><![CDATA[$P{Col_Exp_Show}]]></printWhenExpression>
+                </reportElement>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="4"/></textElement>
+                <textFieldExpression><![CDATA[$F{exp_date}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="214" y="0" width="35" height="16"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font size="6"/></textElement>
+                <textFieldExpression><![CDATA[$F{mrp}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="252" y="0" width="36" height="16"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font size="6"/></textElement>
+                <textFieldExpression><![CDATA[$F{net_rate}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="288" y="0" width="37" height="16">
+                    <printWhenExpression><![CDATA[$P{Col_Price_Show}]]></printWhenExpression>
+                </reportElement>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font size="6"/></textElement>
+                <textFieldExpression><![CDATA[$F{rate}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="325" y="0" width="39" height="16">
+                    <printWhenExpression><![CDATA[$P{Col_Amt_Show}]]></printWhenExpression>
+                </reportElement>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font size="6"/></textElement>
+                <textFieldExpression><![CDATA[$F{amount}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="364" y="0" width="21" height="16"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="5"/></textElement>
+                <textFieldExpression><![CDATA[$F{disc_pct}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="385" y="0" width="33" height="16"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font size="6"/></textElement>
+                <textFieldExpression><![CDATA[$F{disc_amt}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="418" y="0" width="21" height="16">
+                    <printWhenExpression><![CDATA[$P{Col_TaxPct_Show}]]></printWhenExpression>
+                </reportElement>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="5"/></textElement>
+                <textFieldExpression><![CDATA[$F{tax_pct}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="439" y="0" width="33" height="16"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font size="6"/></textElement>
+                <textFieldExpression><![CDATA[$F{tax_amt}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="472" y="0" width="40" height="16"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font size="6"/></textElement>
+                <textFieldExpression><![CDATA[$F{sub_total}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="512" y="0" width="43" height="16"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font size="6"/></textElement>
+                <textFieldExpression><![CDATA[$F{total}]]></textFieldExpression>
+            </textField>
+        </band>
+    </detail>
+
+    <!-- ================================================================ -->
+    <!-- SUMMARY: Compact layout for half-page                            -->
+    <!-- ================================================================ -->
+    <summary>
+        <band height="200">
+            <!-- Total items row -->
+            <rectangle>
+                <reportElement x="0" y="0" width="555" height="16" backcolor="#EDF0F5" mode="Opaque"/>
+                <graphicElement><pen lineWidth="0"/></graphicElement>
+            </rectangle>
+            <line><reportElement x="0" y="0" width="555" height="1" forecolor="#CCCCCC"/></line>
+            <textField>
+                <reportElement x="15" y="0" width="105" height="16"/>
+                <textElement verticalAlignment="Middle"><font size="6" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA["Total: " + $V{REPORT_COUNT} + " item(s)"]]></textFieldExpression>
+            </textField>
+            <textField pattern="#,##0">
+                <reportElement x="120" y="0" width="28" height="16"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="6" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$V{TotalQty}]]></textFieldExpression>
+            </textField>
+            <textField pattern="#,##0.00">
+                <reportElement x="512" y="0" width="43" height="16"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font size="6" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$V{TotalFinal}]]></textFieldExpression>
+            </textField>
+            <line><reportElement x="0" y="16" width="555" height="1" forecolor="#CCCCCC"/></line>
+
+            <!-- BANK DETAILS + QR (left) -->
+            <rectangle>
+                <reportElement x="0" y="21" width="263" height="80" backcolor="#FFFFFF" mode="Opaque"/>
+                <graphicElement><pen lineWidth="0.5" lineColor="#CCCCCC"/></graphicElement>
+            </rectangle>
+            <staticText>
+                <reportElement x="6" y="25" width="250" height="11" forecolor="#1E2D4D"/>
+                <textElement><font size="7" isBold="true"/></textElement>
+                <text><![CDATA[BANK DETAILS]]></text>
+            </staticText>
+            <line><reportElement x="6" y="37" width="250" height="1" forecolor="#E0E0E0"/></line>
+            <staticText>
+                <reportElement x="6" y="40" width="40" height="10" forecolor="#888888"/>
+                <textElement><font size="6"/></textElement>
+                <text><![CDATA[Bank:]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="48" y="40" width="125" height="10"/>
+                <textElement><font size="6" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{BankName} == null || $P{BankName}.isEmpty() ? "N/A" : $P{BankName}]]></textFieldExpression>
+            </textField>
+            <staticText>
+                <reportElement x="6" y="52" width="40" height="10" forecolor="#888888"/>
+                <textElement><font size="6"/></textElement>
+                <text><![CDATA[A/C:]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="48" y="52" width="125" height="10"/>
+                <textElement><font size="6" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{AccountNo} == null || $P{AccountNo}.isEmpty() ? "N/A" : $P{AccountNo}]]></textFieldExpression>
+            </textField>
+            <staticText>
+                <reportElement x="6" y="64" width="40" height="10" forecolor="#888888"/>
+                <textElement><font size="6"/></textElement>
+                <text><![CDATA[IFSC:]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="48" y="64" width="125" height="10"/>
+                <textElement><font size="6" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{IFSCCode} == null || $P{IFSCCode}.isEmpty() ? "N/A" : $P{IFSCCode}]]></textFieldExpression>
+            </textField>
+            <!-- QR Code -->
+            <image isUsingCache="true" onErrorType="Blank">
+                <reportElement x="185" y="40" width="55" height="55">
+                    <printWhenExpression><![CDATA[$P{QRCodeImage} != null]]></printWhenExpression>
+                </reportElement>
+                <imageExpression><![CDATA[$P{QRCodeImage}]]></imageExpression>
+            </image>
+
+            <!-- TAX SUMMARY (right) -->
+            <rectangle>
+                <reportElement x="273" y="21" width="282" height="80" backcolor="#FFFFFF" mode="Opaque"/>
+                <graphicElement><pen lineWidth="0.5" lineColor="#CCCCCC"/></graphicElement>
+            </rectangle>
+            <staticText>
+                <reportElement x="281" y="25" width="267" height="11" forecolor="#1E2D4D"/>
+                <textElement><font size="7" isBold="true"/></textElement>
+                <text><![CDATA[TAX SUMMARY]]></text>
+            </staticText>
+            <line><reportElement x="281" y="37" width="267" height="1" forecolor="#E0E0E0"/></line>
+            <staticText>
+                <reportElement x="281" y="40" width="140" height="11" forecolor="#888888"/>
+                <textElement><font size="7"/></textElement>
+                <text><![CDATA[Taxable Amount]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="435" y="40" width="113" height="11"/>
+                <textElement textAlignment="Right"><font size="7"/></textElement>
+                <textFieldExpression><![CDATA["Rs. " + ($P{TotalAmountBeforeTaxStr} == null ? "0.00" : $P{TotalAmountBeforeTaxStr})]]></textFieldExpression>
+            </textField>
+            <line><reportElement x="281" y="53" width="267" height="1" forecolor="#2255CC"/></line>
+            <staticText>
+                <reportElement x="281" y="55" width="140" height="12"/>
+                <textElement><font size="8" isBold="true"/></textElement>
+                <text><![CDATA[TOTAL AMOUNT]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="435" y="55" width="113" height="12"/>
+                <textElement textAlignment="Right"><font size="8" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA["Rs. " + ($P{GrandTotalStr} == null ? "0.00" : $P{GrandTotalStr})]]></textFieldExpression>
+            </textField>
+            <line><reportElement x="281" y="69" width="267" height="1" forecolor="#E0E0E0"/></line>
+            <staticText>
+                <reportElement x="281" y="71" width="140" height="10" forecolor="#888888"/>
+                <textElement><font size="7"/></textElement>
+                <text><![CDATA[Received]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="435" y="71" width="113" height="10"/>
+                <textElement textAlignment="Right"><font size="7"/></textElement>
+                <textFieldExpression><![CDATA["Rs. " + ($P{ReceivedAmountStr} == null ? "0.00" : $P{ReceivedAmountStr})]]></textFieldExpression>
+            </textField>
+            <staticText>
+                <reportElement x="281" y="83" width="140" height="10"/>
+                <textElement><font size="7" isBold="true"/></textElement>
+                <text><![CDATA[Balance]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="435" y="83" width="113" height="10"/>
+                <textElement textAlignment="Right"><font size="7" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA["Rs. " + ($P{CurrentBalanceStr} == null ? "0.00" : $P{CurrentBalanceStr})]]></textFieldExpression>
+            </textField>
+
+            <!-- Amount in Words -->
+            <rectangle>
+                <reportElement x="0" y="107" width="555" height="20" backcolor="#FFFDE7" mode="Opaque"/>
+                <graphicElement><pen lineWidth="0.5" lineColor="#FFE082"/></graphicElement>
+            </rectangle>
+            <staticText>
+                <reportElement x="6" y="108" width="90" height="18"/>
+                <textElement verticalAlignment="Middle"><font size="7" isBold="true"/></textElement>
+                <text><![CDATA[Amount in Words:]]></text>
+            </staticText>
+            <textField evaluationTime="Report" isBlankWhenNull="true">
+                <reportElement x="100" y="108" width="448" height="18"/>
+                <textElement verticalAlignment="Middle"><font size="7"/></textElement>
+                <textFieldExpression><![CDATA[$P{AmountInWords}]]></textFieldExpression>
+            </textField>
+
+            <!-- Terms -->
+            <staticText>
+                <reportElement x="0" y="132" width="555" height="11"/>
+                <textElement><font size="7" isBold="true"/></textElement>
+                <text><![CDATA[TERMS AND CONDITIONS]]></text>
+            </staticText>
+            <textField isStretchWithOverflow="true" isBlankWhenNull="true">
+                <reportElement x="0" y="145" width="555" height="38"/>
+                <textElement><font size="6"/></textElement>
+                <textFieldExpression><![CDATA[$P{TermsAndConditions}]]></textFieldExpression>
+            </textField>
+
+            <!-- Footer bar -->
+            <rectangle>
+                <reportElement x="0" y="188" width="555" height="12" backcolor="#1E2D4D" mode="Opaque"/>
+                <graphicElement><pen lineWidth="0"/></graphicElement>
+            </rectangle>
+            <staticText>
+                <reportElement x="0" y="188" width="555" height="12" forecolor="#FFFFFF"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="6"/></textElement>
+                <text><![CDATA[Thank you for your business!]]></text>
+            </staticText>
+        </band>
+    </summary>
+</jasperReport>

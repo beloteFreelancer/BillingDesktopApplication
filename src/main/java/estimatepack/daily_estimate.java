@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.swing.JFrame;
 import menupack.SelRomJasper;
+import menupack.UserSession;
 import menupack.menu_form;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperFillManager;
@@ -54,10 +55,15 @@ public class daily_estimate {
             Map<String, Object> parameters = new HashMap<>();
 
             String sname = "";
-            String query = "select distinct cname from setting_bill";
+            String companyNameFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE companyID='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select distinct cname from company" + companyNameFilter;
             r = util.doQuery(query);
-            while (r.next()) {
-                sname = r.getString(1);
+            if (r != null) {
+                while (r.next()) {
+                    sname = r.getString(1);
+                }
             }
 
             parameters.put("parameter1", "" + sname + "".trim().toUpperCase());
@@ -67,7 +73,12 @@ public class daily_estimate {
             double tcash = 0, tcard = 0, tcredit = 0, tothers = 0, tnet = 0;
             long tbills = 0;
             ArrayList k = new ArrayList();
-            query = "select location,terminal,count(billno),sum(cash),sum(card),sum(credit),sum(others),sum(net) from estimate where dat between '" + lk + "' and '" + lk1 + "' group by location,terminal order by location,terminal";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " and company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            query = "select location,terminal,count(billno),sum(cash),sum(card),sum(credit),sum(others),sum(net) from estimate where dat between '"
+                    + lk + "' and '" + lk1 + "'" + companyFilter
+                    + " group by location,terminal order by location,terminal";
             r = util.doQuery(query);
             while (r.next()) {
                 SelRomJasper selRomJasper = new SelRomJasper();
@@ -103,7 +114,7 @@ public class daily_estimate {
 
                 k.add(selRomJasper);
             }
-            //sales ends
+            // sales ends
             String tcash2 = String.format("%." + hmany + "f", tcash);
             String tcard2 = String.format("%." + hmany + "f", tcard);
             String tcredit2 = String.format("%." + hmany + "f", tcredit);
@@ -121,8 +132,7 @@ public class daily_estimate {
 
             jasperReport = JasperReportCompiler.compileReport("/JasperFiles/Reports/Daily_Sales.jrxml");
 
-            JRBeanCollectionDataSource beanColDataSource
-                    = new JRBeanCollectionDataSource(k);
+            JRBeanCollectionDataSource beanColDataSource = new JRBeanCollectionDataSource(k);
             jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, beanColDataSource);
             jasperViewer = new JasperViewer(jasperPrint);
             jasperViewer.setVisible(true);

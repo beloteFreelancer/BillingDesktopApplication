@@ -1,5 +1,6 @@
 package estimatepack;
 
+import menupack.UserSession;
 import Utils.ColorConstants;
 import com.selrom.db.DataUtil;
 import java.awt.Font;
@@ -42,6 +43,7 @@ public final class estimate_summary extends javax.swing.JInternalFrame {
         setTitle("Estimate Summary");
         this.setSize(1017, 650);
         javax.swing.ImageIcon icon = ColorConstants.loadIcon("/images/icon.png");
+
         if (icon != null) {
             this.setFrameIcon(icon);
         }
@@ -135,12 +137,16 @@ public final class estimate_summary extends javax.swing.JInternalFrame {
             double tquan = 0, tamount = 0;
             boolean selva = false;
             String query;
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " and company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             if (all.isSelected()) {
                 query = "select billno,date_format(dat,'%d/%m/%Y'),pby,items,quans,net,cid,cname from estimate where dat between '"
-                        + lk + "' and '" + lk1 + "' order by dat,billno";
+                        + lk + "' and '" + lk1 + "'" + companyFilter + " order by dat,billno";
             } else {
                 query = "select billno,date_format(dat,'%d/%m/%Y'),pby,items,quans,net,cid,cname from estimate where dat between '"
-                        + lk + "' and '" + lk1 + "' and pby='" + h3.getSelectedItem() + "' order by dat,billno";
+                        + lk + "' and '" + lk1 + "' and pby='" + h3.getSelectedItem() + "'" + companyFilter
+                        + " order by dat,billno";
             }
             r = util.doQuery(query);
             while (r.next()) {
@@ -170,7 +176,7 @@ public final class estimate_summary extends javax.swing.JInternalFrame {
                 amount.add("");
 
                 query = "select iname,price,quan,amount,quan,amount from estimate_items where billno='" + billno1.get(i)
-                        + "'";
+                        + "'" + companyFilter;
                 r = util.doQuery(query);
                 while (r.next()) {
                     billno.add("");

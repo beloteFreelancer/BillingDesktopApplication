@@ -1,541 +1,524 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="A5_Estimate" language="groovy" pageWidth="421" pageHeight="595" columnWidth="381" leftMargin="15" rightMargin="15" topMargin="2" bottomMargin="20" uuid="67c319de-73b7-451f-8b0d-b5801d899307">
-	<property name="ireport.zoom" value="2.0"/>
-	<property name="ireport.x" value="58"/>
-	<property name="ireport.y" value="471"/>
-	<parameter name="parameter1" class="java.lang.String"/>
-	<parameter name="parameter2" class="java.lang.String"/>
-	<parameter name="parameter3" class="java.lang.String"/>
-	<parameter name="parameter4" class="java.lang.String"/>
-	<parameter name="parameter5" class="java.lang.String"/>
-	<parameter name="parameter6" class="java.lang.String"/>
-	<parameter name="parameter7" class="java.lang.String"/>
-	<parameter name="parameter8" class="java.lang.String"/>
-	<parameter name="parameter9" class="java.lang.String"/>
-	<parameter name="parameter10" class="java.lang.String"/>
-	<parameter name="parameter11" class="java.lang.String"/>
-	<parameter name="parameter12" class="java.lang.String"/>
-	<parameter name="parameter13" class="java.lang.String"/>
-	<parameter name="parameter14" class="java.lang.String"/>
-	<parameter name="parameter15" class="java.lang.String"/>
-	<parameter name="parameter16" class="java.lang.String"/>
-	<parameter name="parameter17" class="java.lang.String"/>
-	<parameter name="parameter18" class="java.lang.String"/>
-	<parameter name="parameter19" class="java.lang.String"/>
-	<parameter name="parameter20" class="java.lang.String"/>
-	<parameter name="parameter21" class="java.lang.String"/>
-	<parameter name="parameter22" class="java.lang.String"/>
-	<parameter name="parameter23" class="java.lang.String"/>
-	<parameter name="parameter24" class="java.lang.String"/>
-	<parameter name="parameter25" class="java.lang.String"/>
-	<parameter name="parameter26" class="java.lang.String"/>
-	<parameter name="parameter27" class="java.lang.String"/>
-	<parameter name="parameter28" class="java.lang.String"/>
-	<parameter name="parameter29" class="java.lang.String"/>
-	<parameter name="parameter30" class="java.lang.String"/>
-	<parameter name="parameter31" class="java.lang.String"/>
-	<parameter name="parameter32" class="java.lang.String"/>
-	<parameter name="parameter33" class="java.lang.String"/>
-	<parameter name="parameter34" class="java.lang.String"/>
-	<parameter name="parameter35" class="java.lang.String"/>
-	<parameter name="parameter36" class="java.lang.String"/>
-	<parameter name="parameter37" class="java.lang.String"/>
-	<parameter name="parameter38" class="java.lang.String"/>
-	<parameter name="parameter39" class="java.lang.String"/>
-	<parameter name="parameter40" class="java.lang.String"/>
-	<parameter name="parameter41" class="java.lang.String"/>
-	<parameter name="parameter42" class="java.lang.String"/>
-	<parameter name="parameter43" class="java.lang.String"/>
-	<parameter name="parameter44" class="java.lang.String"/>
-	<parameter name="parameter45" class="java.lang.String"/>
-	<parameter name="parameter46" class="java.lang.String"/>
-	<parameter name="parameter47" class="java.lang.String"/>
-	<parameter name="parameter48" class="java.lang.String"/>
-	<parameter name="parameter49" class="java.lang.String"/>
-	<parameter name="parameter50" class="java.lang.String"/>
-	<parameter name="parameter51" class="java.lang.String"/>
-	<parameter name="parameter52" class="java.lang.String"/>
-	<parameter name="parameter53" class="java.lang.String"/>
-	<parameter name="parameter54" class="java.lang.String"/>
-	<parameter name="parameter55" class="java.lang.String"/>
-	<parameter name="parameter56" class="java.lang.String"/>
-	<parameter name="parameter57" class="java.lang.String"/>
-	<parameter name="parameter58" class="java.lang.String"/>
-	<parameter name="parameter59" class="java.lang.String"/>
-	<parameter name="parameter60" class="java.lang.String"/>
-	<parameter name="parameter61" class="java.lang.String"/>
-	<parameter name="parameter62" class="java.lang.String"/>
-	<parameter name="parameter63" class="java.lang.String"/>
-	<parameter name="parameter64" class="java.lang.String"/>
-	<parameter name="parameter65" class="java.lang.String"/>
-	<parameter name="parameter66" class="java.lang.String"/>
-	<parameter name="parameter67" class="java.lang.String"/>
-	<parameter name="parameter68" class="java.lang.String"/>
-	<parameter name="parameter69" class="java.lang.String"/>
-	<parameter name="parameter70" class="java.lang.String"/>
-	<parameter name="parameter71" class="java.lang.String"/>
-	<parameter name="parameter72" class="java.lang.String"/>
-	<parameter name="parameter73" class="java.lang.String"/>
-	<parameter name="parameter74" class="java.lang.String"/>
-	<parameter name="parameter75" class="java.lang.String"/>
-	<parameter name="parameter76" class="java.lang.String"/>
-	<parameter name="parameter77" class="java.lang.String"/>
-	<parameter name="parameter78" class="java.lang.String"/>
-	<parameter name="parameter79" class="java.lang.String"/>
-	<parameter name="parameter80" class="java.lang.String"/>
-	<parameter name="parameter81" class="java.lang.String"/>
-	<parameter name="parameter82" class="java.lang.String"/>
-	<parameter name="parameter83" class="java.lang.String"/>
-	<parameter name="parameter84" class="java.lang.String"/>
-	<parameter name="parameter85" class="java.lang.String"/>
-	<parameter name="parameter86" class="java.lang.String"/>
-	<parameter name="parameter87" class="java.lang.String"/>
-	<parameter name="parameter88" class="java.lang.String"/>
-	<parameter name="parameter89" class="java.lang.String"/>
-	<parameter name="parameter90" class="java.lang.String"/>
-	<parameter name="parameter91" class="java.lang.String"/>
-	<parameter name="parameter92" class="java.lang.String"/>
-	<parameter name="parameter93" class="java.lang.String"/>
-	<parameter name="parameter94" class="java.lang.String"/>
-	<parameter name="parameter95" class="java.lang.String"/>
-	<parameter name="parameter96" class="java.lang.String"/>
-	<parameter name="parameter97" class="java.lang.String"/>
-	<parameter name="parameter98" class="java.lang.String"/>
-	<parameter name="parameter99" class="java.lang.String"/>
-	<parameter name="parameter100" class="java.lang.String"/>
-	<parameter name="parameter101" class="java.lang.String"/>
-	<parameter name="parameter102" class="java.lang.String"/>
-	<parameter name="parameter103" class="java.lang.String"/>
-	<parameter name="parameter104" class="java.lang.String"/>
-	<field name="field1" class="java.lang.String"/>
-	<field name="field2" class="java.lang.String"/>
-	<field name="field3" class="java.lang.String"/>
-	<field name="field4" class="java.lang.String"/>
-	<field name="field5" class="java.lang.String"/>
-	<field name="field6" class="java.lang.String"/>
-	<background>
-		<band height="555" splitType="Stretch">
-			<rectangle>
-				<reportElement x="0" y="0" width="383" height="555" uuid="d63100fb-dc9c-4e26-9ad3-3415ffc5323f"/>
-			</rectangle>
-			<line>
-				<reportElement x="25" y="92" width="1" height="336" uuid="86356ab4-f61c-4e46-8074-8c5752eac8eb"/>
-				<graphicElement>
-					<pen lineWidth="1.0"/>
-				</graphicElement>
-			</line>
-			<line>
-				<reportElement x="259" y="92" width="1" height="336" uuid="91832685-9fc2-4f79-9d61-fce27c080b61"/>
-			</line>
-			<line>
-				<reportElement x="292" y="92" width="1" height="336" uuid="debc40f0-deae-4ed4-852f-f53f9ce0beb7"/>
-			</line>
-			<line>
-				<reportElement x="333" y="92" width="1" height="336" uuid="26de4032-ae2d-46b4-9212-d4e0514feca0"/>
-			</line>
-		</band>
-	</background>
-	<title>
-		<band height="93" splitType="Stretch">
-			<textField isBlankWhenNull="true">
-				<reportElement x="3" y="3" width="143" height="12" uuid="df166cb0-c7a6-42b3-9ba5-488af236afc1"/>
-				<textElement>
-					<font fontName="DejaVu Sans" size="9" isBold="true"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{parameter1}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement x="3" y="15" width="143" height="12" uuid="02f81829-cb86-4a59-98e5-86aadfa10e56"/>
-				<textElement>
-					<font fontName="DejaVu Sans" size="9" isBold="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{parameter2}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement x="3" y="27" width="143" height="12" uuid="1f354dde-3069-4bdc-b614-346ce8fb1342"/>
-				<textElement>
-					<font fontName="DejaVu Sans" size="9" isBold="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{parameter3}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement x="3" y="39" width="143" height="12" uuid="a6b4492b-b9a5-463f-a217-d815bd871b66"/>
-				<textElement>
-					<font fontName="DejaVu Sans" size="9" isBold="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{parameter4}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement x="3" y="51" width="143" height="12" uuid="fdcdc694-ab48-44f5-afc3-c32912b7ff3c"/>
-				<textElement>
-					<font fontName="DejaVu Sans" size="9" isBold="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{parameter5}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement x="3" y="63" width="143" height="12" uuid="0b4e7cae-29ff-47c2-b05e-59cf2b77dfbe"/>
-				<textElement>
-					<font fontName="DejaVu Sans" size="9" isBold="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{parameter6}]]></textFieldExpression>
-			</textField>
-			<line>
-				<reportElement x="0" y="91" width="383" height="1" uuid="58481520-d8e8-4b7d-b322-1aa0dd4b6460"/>
-			</line>
-			<textField isBlankWhenNull="true">
-				<reportElement x="302" y="4" width="75" height="11" uuid="4c869477-f9bd-40f6-a4c5-06771b7ca0fe"/>
-				<textElement>
-					<font fontName="DejaVu Sans" size="9" isBold="true"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{parameter7}]]></textFieldExpression>
-			</textField>
-			<staticText>
-				<reportElement x="302" y="17" width="25" height="12" uuid="da0f869f-a08f-447a-9393-33c63fa2e2ac"/>
-				<textElement>
-					<font fontName="DejaVu Sans" size="9" isBold="false"/>
-				</textElement>
-				<text><![CDATA[No#]]></text>
-			</staticText>
-			<staticText>
-				<reportElement x="302" y="29" width="25" height="12" uuid="2af0379a-c9e9-41f9-a615-437c7b7eb6c7"/>
-				<textElement>
-					<font fontName="DejaVu Sans" size="9" isBold="false"/>
-				</textElement>
-				<text><![CDATA[Date]]></text>
-			</staticText>
-			<textField isBlankWhenNull="true">
-				<reportElement x="149" y="15" width="143" height="12" uuid="c533d12e-2b16-4414-95db-f825352cefc8"/>
-				<textElement>
-					<font fontName="DejaVu Sans" size="9" isBold="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{parameter18}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement x="149" y="27" width="143" height="12" uuid="ba729c7f-fb72-4067-b6e4-c90110175727"/>
-				<textElement>
-					<font fontName="DejaVu Sans" size="9" isBold="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{parameter19}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement x="149" y="39" width="143" height="12" uuid="72b382ac-33da-46e7-b8ac-b5ff4ea3bbe7"/>
-				<textElement>
-					<font fontName="DejaVu Sans" size="9" isBold="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{parameter20}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement x="149" y="51" width="143" height="12" uuid="ead9216a-503c-4faf-bb8e-f9f25f67b79a"/>
-				<textElement>
-					<font fontName="DejaVu Sans" size="9" isBold="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{parameter21}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement x="149" y="63" width="143" height="12" uuid="8ef8262b-3f48-43c9-a2f7-8641c8201162"/>
-				<textElement>
-					<font fontName="DejaVu Sans" size="9" isBold="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{parameter22}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement x="149" y="75" width="143" height="12" uuid="5460225c-80b0-4f5c-87fb-5a3f68900a8e"/>
-				<textElement>
-					<font fontName="DejaVu Sans" size="9" isBold="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{parameter23}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement x="327" y="17" width="50" height="12" uuid="cb9cffaf-d59b-460d-9ccd-accc029e7aa6"/>
-				<textElement>
-					<font fontName="DejaVu Sans" size="9" isBold="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{parameter9}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement x="327" y="29" width="50" height="12" uuid="6ccd1f3c-15fe-446b-9c59-69ca09eb212e"/>
-				<textElement>
-					<font fontName="DejaVu Sans" size="9" isBold="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{parameter10}]]></textFieldExpression>
-			</textField>
-			<staticText>
-				<reportElement x="149" y="3" width="37" height="12" uuid="65f4e067-a149-42e8-b743-40995105a1be"/>
-				<textElement>
-					<font fontName="DejaVu Sans" size="9" isBold="false" isUnderline="true"/>
-				</textElement>
-				<text><![CDATA[To.]]></text>
-			</staticText>
-			<line>
-				<reportElement x="146" y="1" width="1" height="91" uuid="192e6663-b3d8-48b1-a83d-48b6eb4eb277"/>
-			</line>
-			<line>
-				<reportElement x="298" y="0" width="1" height="91" uuid="3b61bc7c-43eb-458f-a71f-ad7ebd61847b"/>
-			</line>
-		</band>
-	</title>
-	<pageHeader>
-		<band height="16" splitType="Stretch">
-			<line>
-				<reportElement x="0" y="14" width="383" height="1" uuid="753d4173-79af-4fbf-9a4c-aadb4f9acbe9"/>
-			</line>
-			<staticText>
-				<reportElement x="3" y="1" width="21" height="12" uuid="5a53dd8a-29a1-4415-b786-02789bfa6a72"/>
-				<textElement>
-					<font fontName="DejaVu Sans" size="8" isBold="true"/>
-				</textElement>
-				<text><![CDATA[Sl. No]]></text>
-			</staticText>
-			<staticText>
-				<reportElement x="27" y="1" width="231" height="12" uuid="aeacae86-5160-486b-a2a9-c22f73fb925b"/>
-				<textElement textAlignment="Center">
-					<font fontName="DejaVu Sans" size="8" isBold="true"/>
-				</textElement>
-				<text><![CDATA[Particulars]]></text>
-			</staticText>
-			<staticText>
-				<reportElement x="260" y="1" width="32" height="12" uuid="0004635e-7f3d-429e-82af-2ea7918faf65"/>
-				<textElement textAlignment="Center">
-					<font fontName="DejaVu Sans" size="8" isBold="true"/>
-				</textElement>
-				<text><![CDATA[Qty]]></text>
-			</staticText>
-			<staticText>
-				<reportElement x="294" y="1" width="36" height="12" uuid="a9b5bcd4-32e0-4214-be81-866df9d385e0"/>
-				<textElement textAlignment="Center">
-					<font fontName="DejaVu Sans" size="8" isBold="true"/>
-				</textElement>
-				<text><![CDATA[Rate]]></text>
-			</staticText>
-			<staticText>
-				<reportElement x="333" y="1" width="44" height="12" uuid="1582e94d-afeb-4abf-92ab-2cfedb872c4b"/>
-				<textElement textAlignment="Center">
-					<font fontName="DejaVu Sans" size="8" isBold="true"/>
-				</textElement>
-				<text><![CDATA[Amount]]></text>
-			</staticText>
-		</band>
-	</pageHeader>
-	<detail>
-		<band height="11" splitType="Stretch">
-			<textField isBlankWhenNull="true">
-				<reportElement x="3" y="1" width="21" height="10" uuid="fb74021d-4fec-4edb-960d-6f63137e80e1"/>
-				<textElement>
-					<font fontName="DejaVu Sans" size="8" isBold="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{field1}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement x="29" y="1" width="229" height="10" uuid="d2a9b64d-8317-438b-83a5-971cf4edc85f"/>
-				<textElement>
-					<font fontName="DejaVu Sans" size="8" isBold="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{field2}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement x="294" y="1" width="36" height="10" uuid="65d0833e-0157-4f0a-8c54-ce22458597aa"/>
-				<textElement textAlignment="Right">
-					<font fontName="DejaVu Sans" size="8" isBold="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{field5}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement x="333" y="1" width="44" height="10" uuid="8319ded4-8b88-4827-bd82-1ef7f92ac75f"/>
-				<textElement textAlignment="Right">
-					<font fontName="DejaVu Sans" size="8" isBold="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{field6}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement x="260" y="1" width="32" height="10" uuid="30308bbf-cd64-421e-ab16-7270758a4eed"/>
-				<textElement textAlignment="Center">
-					<font fontName="DejaVu Sans" size="8" isBold="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{field3}]]></textFieldExpression>
-			</textField>
-		</band>
-	</detail>
-	<columnFooter>
-		<band height="128" splitType="Stretch">
-			<line>
-				<reportElement x="0" y="1" width="383" height="1" uuid="3ceedc44-69b4-46f4-afdd-51cc754fefab"/>
-			</line>
-			<staticText>
-				<reportElement x="236" y="18" width="79" height="11" uuid="85573b43-0bc7-4c65-868d-95fa00c29eb1"/>
-				<textElement textAlignment="Right">
-					<font fontName="DejaVu Sans" size="9" isBold="false"/>
-				</textElement>
-				<text><![CDATA[Gross Amount :]]></text>
-			</staticText>
-			<textField isBlankWhenNull="true">
-				<reportElement x="320" y="18" width="57" height="11" uuid="3ed178af-2221-478d-90a7-e0fb6f512acb"/>
-				<textElement textAlignment="Right">
-					<font fontName="DejaVu Sans" size="9" isBold="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{parameter38}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement x="320" y="30" width="57" height="11" uuid="a158cd20-5f03-42bd-899c-f57bdec41543"/>
-				<textElement textAlignment="Right">
-					<font fontName="DejaVu Sans" size="9" isBold="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{parameter40}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement x="320" y="42" width="57" height="11" uuid="2ab6ebb2-2ca2-4ec6-9a2a-e089cbaecf13"/>
-				<textElement textAlignment="Right">
-					<font fontName="DejaVu Sans" size="9" isBold="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{parameter42}]]></textFieldExpression>
-			</textField>
-			<staticText>
-				<reportElement x="236" y="69" width="79" height="14" uuid="56b4ccd1-b2ae-4cb3-8807-bcb0cbdbf18a"/>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<font fontName="DejaVu Sans" size="9" isBold="true"/>
-				</textElement>
-				<text><![CDATA[NET AMOUNT :]]></text>
-			</staticText>
-			<textField isBlankWhenNull="true">
-				<reportElement x="320" y="69" width="57" height="14" uuid="f64bcaba-be13-4b1b-a6ab-95c46a11e5de"/>
-				<textElement textAlignment="Right">
-					<font fontName="DejaVu Sans" size="9" isBold="true"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{parameter47}]]></textFieldExpression>
-			</textField>
-			<line>
-				<reportElement x="212" y="16" width="1" height="112" uuid="9e84fe62-3020-4063-b339-2894090b29af"/>
-			</line>
-			<staticText>
-				<reportElement x="211" y="112" width="166" height="14" uuid="8e2b4208-eb67-4310-940c-92aacff97d3c"/>
-				<textElement textAlignment="Right">
-					<font fontName="DejaVu Sans" size="8" isBold="false"/>
-				</textElement>
-				<text><![CDATA[Authorized Signatory.]]></text>
-			</staticText>
-			<staticText>
-				<reportElement x="1" y="18" width="210" height="10" uuid="0262ead4-5be0-4e48-a343-28931f51baa1"/>
-				<textElement textAlignment="Center">
-					<font fontName="DejaVu Sans" size="8" isBold="true"/>
-				</textElement>
-				<text><![CDATA[Total Estimate Amount in Words:]]></text>
-			</staticText>
-			<textField isBlankWhenNull="true">
-				<reportElement x="1" y="28" width="210" height="10" uuid="3dda88d5-c52c-44e6-af82-9d864db35d0b"/>
-				<textElement textAlignment="Center">
-					<font fontName="DejaVu Sans" size="8" isBold="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{parameter50}]]></textFieldExpression>
-			</textField>
-			<line>
-				<reportElement x="0" y="39" width="212" height="1" uuid="b36c3338-e931-4355-9edf-6c096ed56866"/>
-			</line>
-			<line>
-				<reportElement x="212" y="84" width="171" height="1" uuid="738b8eb3-6e9d-4388-be75-bb4cd5dfaf8c"/>
-			</line>
-			<line>
-				<reportElement x="212" y="67" width="171" height="1" uuid="f1a969c0-bd9b-4372-bb7f-7866020810dd"/>
-			</line>
-			<textField isBlankWhenNull="true">
-				<reportElement x="260" y="3" width="32" height="12" uuid="d8fdf9d4-9e56-47d9-9e81-f89f363900ea"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="DejaVu Sans" size="9" isBold="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{parameter32}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement x="333" y="3" width="44" height="12" uuid="8a3cbad5-4cdd-4646-b4a1-e0d354dffe13"/>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<font fontName="DejaVu Sans" size="9" isBold="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{parameter33}]]></textFieldExpression>
-			</textField>
-			<line>
-				<reportElement x="0" y="16" width="383" height="1" uuid="e76f47cf-9e60-4b70-9781-092f6f32eb73"/>
-			</line>
-			<staticText>
-				<reportElement x="3" y="3" width="255" height="12" uuid="5e96eba4-3417-478a-a682-4d73f829a7ee"/>
-				<textElement verticalAlignment="Middle">
-					<font fontName="DejaVu Sans" size="9" isBold="true"/>
-				</textElement>
-				<text><![CDATA[TOTAL]]></text>
-			</staticText>
-			<textField isBlankWhenNull="true">
-				<reportElement x="236" y="30" width="79" height="11" uuid="75b3118b-d3d5-497a-a545-e449a0f95280"/>
-				<textElement textAlignment="Right">
-					<font fontName="DejaVu Sans" size="9" isBold="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{parameter39}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement x="236" y="42" width="79" height="11" uuid="a3bb9854-6257-4232-9e9f-dd9746da48af"/>
-				<textElement textAlignment="Right">
-					<font fontName="DejaVu Sans" size="9" isBold="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{parameter41}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement x="211" y="86" width="166" height="14" uuid="94693a89-d7cb-4146-bd89-1334472f322d"/>
-				<textElement textAlignment="Right">
-					<font fontName="DejaVu Sans" size="8" isBold="true"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{parameter57}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement x="3" y="65" width="208" height="11" uuid="ec2aa4d5-813d-4ca9-95e4-ec8f0e88c105"/>
-				<textElement>
-					<font fontName="DejaVu Sans" size="8" isBold="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{parameter52}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement x="3" y="54" width="208" height="11" uuid="056678af-7b40-4a28-95a9-154aadfe145f"/>
-				<textElement>
-					<font fontName="DejaVu Sans" size="8" isBold="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{parameter51}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement x="236" y="54" width="79" height="11" uuid="a3156ec9-139c-4230-a412-00582239e193"/>
-				<textElement textAlignment="Right">
-					<font fontName="DejaVu Sans" size="9" isBold="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{parameter43}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement x="320" y="54" width="57" height="11" uuid="8b74b391-471f-4c68-a87d-2c70ce19e6af"/>
-				<textElement textAlignment="Right">
-					<font fontName="DejaVu Sans" size="9" isBold="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{parameter44}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement x="3" y="76" width="208" height="11" uuid="e9996ad3-02ae-402b-941a-eb0129ae1be7"/>
-				<textElement>
-					<font fontName="DejaVu Sans" size="8" isBold="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{parameter53}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement x="3" y="87" width="208" height="11" uuid="2ec39bdd-75e6-49ef-a14f-852ddba50c58"/>
-				<textElement>
-					<font fontName="DejaVu Sans" size="8" isBold="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{parameter54}]]></textFieldExpression>
-			</textField>
-			<staticText>
-				<reportElement x="3" y="41" width="75" height="11" uuid="4e77a6c5-5522-464e-817f-e779f9467c47"/>
-				<textElement>
-					<font fontName="DejaVu Sans" size="8" isBold="true" isUnderline="true"/>
-				</textElement>
-				<text><![CDATA[Terms / Remarks :]]></text>
-			</staticText>
-			<textField isBlankWhenNull="true">
-				<reportElement x="2" y="101" width="209" height="12" uuid="6034e360-d7f4-4afb-9997-1e3b34d34066"/>
-				<textElement>
-					<font fontName="DejaVu Sans" size="8" isBold="true"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{parameter55}]]></textFieldExpression>
-			</textField>
-		</band>
-	</columnFooter>
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+    name="A5_Estimate" language="java" pageWidth="421" pageHeight="595" columnWidth="381"
+    leftMargin="20" rightMargin="20" topMargin="0" bottomMargin="15"
+    whenNoDataType="NoPages" isSummaryNewPage="false">
+
+    <!-- Company & Estimate Parameters -->
+    <parameter name="CompanyName" class="java.lang.String"/>
+    <parameter name="CompanyAddress" class="java.lang.String"/>
+    <parameter name="CompanyGST" class="java.lang.String"/>
+    <parameter name="logo_path" class="java.lang.String"/>
+    <parameter name="CustomerName" class="java.lang.String"/>
+    <parameter name="CustomerPhone" class="java.lang.String"/>
+    <parameter name="CustomerAddress" class="java.lang.String"/>
+    <parameter name="CustomerGSTIN" class="java.lang.String"/>
+    <parameter name="InvoiceNo" class="java.lang.String"/>
+    <parameter name="InvoiceDate" class="java.lang.String"/>
+    <parameter name="SalesMan" class="java.lang.String"/>
+    <parameter name="AmountInWords" class="java.lang.String"/>
+    <parameter name="TermsAndConditions" class="java.lang.String"/>
+    <parameter name="TotalAmountBeforeTax" class="java.lang.Double"/>
+    <parameter name="CGSTAmount" class="java.lang.Double"/>
+    <parameter name="SGSTAmount" class="java.lang.Double"/>
+    <parameter name="IGSTAmount" class="java.lang.Double"/>
+    <parameter name="TaxAmountGST" class="java.lang.Double"/>
+    <parameter name="GrandTotal" class="java.lang.Double"/>
+    <parameter name="TotalAmountBeforeTaxStr" class="java.lang.String"/>
+    <parameter name="CGSTAmountStr" class="java.lang.String"/>
+    <parameter name="SGSTAmountStr" class="java.lang.String"/>
+    <parameter name="IGSTAmountStr" class="java.lang.String"/>
+    <parameter name="TaxAmountGSTStr" class="java.lang.String"/>
+    <parameter name="GrandTotalStr" class="java.lang.String"/>
+
+    <!-- Column header labels -->
+    <parameter name="Col_Sno_Header"      class="java.lang.String"><defaultValueExpression><![CDATA["#"]]></defaultValueExpression></parameter>
+    <parameter name="Col_Item_Header"     class="java.lang.String"><defaultValueExpression><![CDATA["ITEMS"]]></defaultValueExpression></parameter>
+    <parameter name="Col_Hsn_Header"      class="java.lang.String"><defaultValueExpression><![CDATA["HSN"]]></defaultValueExpression></parameter>
+    <parameter name="Col_Qty_Header"      class="java.lang.String"><defaultValueExpression><![CDATA["QTY"]]></defaultValueExpression></parameter>
+    <parameter name="Col_MRP_Header"      class="java.lang.String"><defaultValueExpression><![CDATA["MRP"]]></defaultValueExpression></parameter>
+    <parameter name="Col_Price_Header"    class="java.lang.String"><defaultValueExpression><![CDATA["PRICE"]]></defaultValueExpression></parameter>
+    <parameter name="Col_Amt_Header"      class="java.lang.String"><defaultValueExpression><![CDATA["AMT"]]></defaultValueExpression></parameter>
+    <parameter name="Col_DisPct_Header"   class="java.lang.String"><defaultValueExpression><![CDATA["DIS%"]]></defaultValueExpression></parameter>
+    <parameter name="Col_DisAmt_Header"   class="java.lang.String"><defaultValueExpression><![CDATA["DIS"]]></defaultValueExpression></parameter>
+    <parameter name="Col_TaxPct_Header"   class="java.lang.String"><defaultValueExpression><![CDATA["TAX%"]]></defaultValueExpression></parameter>
+    <parameter name="Col_TaxAmt_Header"   class="java.lang.String"><defaultValueExpression><![CDATA["TAX"]]></defaultValueExpression></parameter>
+    <parameter name="Col_SubTotal_Header" class="java.lang.String"><defaultValueExpression><![CDATA["SUB TOTAL"]]></defaultValueExpression></parameter>
+    <parameter name="Col_Total_Header"    class="java.lang.String"><defaultValueExpression><![CDATA["TOTAL"]]></defaultValueExpression></parameter>
+    <parameter name="Col_Mfg_Header"      class="java.lang.String"><defaultValueExpression><![CDATA["MFG"]]></defaultValueExpression></parameter>
+    <parameter name="Col_Exp_Header"      class="java.lang.String"><defaultValueExpression><![CDATA["EXP"]]></defaultValueExpression></parameter>
+    <parameter name="Col_NetRate_Header"  class="java.lang.String"><defaultValueExpression><![CDATA["RATE"]]></defaultValueExpression></parameter>
+    <!-- Column visibility -->
+    <parameter name="Col_Hsn_Show"    class="java.lang.Boolean"><defaultValueExpression><![CDATA[Boolean.TRUE]]></defaultValueExpression></parameter>
+    <parameter name="Col_Price_Show"  class="java.lang.Boolean"><defaultValueExpression><![CDATA[Boolean.FALSE]]></defaultValueExpression></parameter>
+    <parameter name="Col_Amt_Show"    class="java.lang.Boolean"><defaultValueExpression><![CDATA[Boolean.FALSE]]></defaultValueExpression></parameter>
+    <parameter name="Col_TaxPct_Show" class="java.lang.Boolean"><defaultValueExpression><![CDATA[Boolean.FALSE]]></defaultValueExpression></parameter>
+    <parameter name="Col_Mfg_Show"    class="java.lang.Boolean"><defaultValueExpression><![CDATA[Boolean.FALSE]]></defaultValueExpression></parameter>
+    <parameter name="Col_Exp_Show"    class="java.lang.Boolean"><defaultValueExpression><![CDATA[Boolean.FALSE]]></defaultValueExpression></parameter>
+
+    <!-- Item Fields -->
+    <field name="sno" class="java.lang.String"/>
+    <field name="product_name" class="java.lang.String"/>
+    <field name="hsn" class="java.lang.String"/>
+    <field name="qty" class="java.lang.String"/>
+    <field name="net_rate" class="java.lang.String"/>
+    <field name="mrp" class="java.lang.String"/>
+    <field name="rate" class="java.lang.String"/>
+    <field name="amount" class="java.lang.String"/>
+    <field name="disc_pct" class="java.lang.String"/>
+    <field name="disc_amt" class="java.lang.String"/>
+    <field name="tax_pct" class="java.lang.String"/>
+    <field name="tax_amt" class="java.lang.String"/>
+    <field name="sub_total" class="java.lang.String"/>
+    <field name="total" class="java.lang.String"/>
+    <field name="mfg_date" class="java.lang.String"/>
+    <field name="exp_date" class="java.lang.String"/>
+    <field name="tax" class="java.lang.String"/>
+
+    <variable name="TotalQty" class="java.lang.Double" calculation="Sum" resetType="Report">
+        <variableExpression><![CDATA[$F{qty} == null || $F{qty}.trim().isEmpty() ? 0.0 : Double.valueOf($F{qty}.trim().replace(",", ""))]]></variableExpression>
+        <initialValueExpression><![CDATA[0.0]]></initialValueExpression>
+    </variable>
+    <variable name="TotalAmount" class="java.lang.Double" calculation="Sum" resetType="Report">
+        <variableExpression><![CDATA[$F{total} == null || $F{total}.trim().isEmpty() ? 0.0 : Double.valueOf($F{total}.trim().replace(",", ""))]]></variableExpression>
+        <initialValueExpression><![CDATA[0.0]]></initialValueExpression>
+    </variable>
+
+    <!-- TITLE -->
+    <title>
+        <band height="105">
+            <rectangle>
+                <reportElement x="0" y="0" width="381" height="22" backcolor="#1E2D4D" mode="Opaque"/>
+                <graphicElement><pen lineWidth="0"/></graphicElement>
+            </rectangle>
+            <staticText>
+                <reportElement x="7" y="0" width="170" height="22" forecolor="#FFFFFF"/>
+                <textElement verticalAlignment="Middle"><font size="11" isBold="true"/></textElement>
+                <text><![CDATA[ESTIMATE]]></text>
+            </staticText>
+            <rectangle>
+                <reportElement x="265" y="5" width="115" height="13" backcolor="#FF5722" mode="Opaque"/>
+                <graphicElement><pen lineWidth="0"/></graphicElement>
+            </rectangle>
+            <staticText>
+                <reportElement x="265" y="5" width="115" height="13" forecolor="#FFFFFF"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="6" isBold="true"/></textElement>
+                <text><![CDATA[ESTIMATE COPY]]></text>
+            </staticText>
+            <image scaleImage="RetainShape" isUsingCache="true" onErrorType="Blank">
+                <reportElement x="0" y="26" width="52" height="54"/>
+                <imageExpression><![CDATA[$P{logo_path} == null || $P{logo_path}.isEmpty() ? null : $P{logo_path}]]></imageExpression>
+            </image>
+            <textField isBlankWhenNull="true">
+                <reportElement x="57" y="28" width="324" height="20" forecolor="#2255CC"/>
+                <textElement><font size="13" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{CompanyName}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="57" y="50" width="324" height="12"/>
+                <textElement><font size="7"/></textElement>
+                <textFieldExpression><![CDATA[$P{CompanyAddress}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="57" y="63" width="324" height="12"/>
+                <textElement><font size="7" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA["GSTIN: " + ($P{CompanyGST} == null ? "" : $P{CompanyGST})]]></textFieldExpression>
+            </textField>
+            <line><reportElement x="0" y="82" width="381" height="1" forecolor="#DDDDDD"/></line>
+        </band>
+    </title>
+
+    <!-- PAGE HEADER -->
+    <pageHeader>
+        <band height="85">
+            <rectangle>
+                <reportElement x="0" y="0" width="381" height="33" backcolor="#EDF0F5" mode="Opaque"/>
+                <graphicElement><pen lineWidth="0"/></graphicElement>
+            </rectangle>
+            <line><reportElement x="127" y="3" width="0" height="27" forecolor="#CCCCCC"/></line>
+            <line><reportElement x="254" y="3" width="0" height="27" forecolor="#CCCCCC"/></line>
+            <staticText>
+                <reportElement x="7" y="3" width="115" height="9" forecolor="#888888"/>
+                <textElement><font size="6"/></textElement>
+                <text><![CDATA[ESTIMATE NO.]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="7" y="13" width="115" height="16"/>
+                <textElement><font size="8" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{InvoiceNo}]]></textFieldExpression>
+            </textField>
+            <staticText>
+                <reportElement x="134" y="3" width="115" height="9" forecolor="#888888"/>
+                <textElement><font size="6"/></textElement>
+                <text><![CDATA[DATE]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="134" y="13" width="115" height="16"/>
+                <textElement><font size="8" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{InvoiceDate}]]></textFieldExpression>
+            </textField>
+            <staticText>
+                <reportElement x="261" y="3" width="115" height="9" forecolor="#888888"/>
+                <textElement><font size="6"/></textElement>
+                <text><![CDATA[SALES MAN]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="261" y="13" width="115" height="16"/>
+                <textElement><font size="8" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{SalesMan} == null ? "" : $P{SalesMan}]]></textFieldExpression>
+            </textField>
+            <line><reportElement x="0" y="34" width="381" height="1" forecolor="#CCCCCC"/></line>
+            <staticText>
+                <reportElement x="0" y="39" width="50" height="10" forecolor="#777777"/>
+                <textElement><font size="7" isBold="true"/></textElement>
+                <text><![CDATA[BILL TO]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="51" width="210" height="13"/>
+                <textElement><font size="8" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{CustomerName}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="66" width="210" height="11"/>
+                <textElement><font size="7"/></textElement>
+                <textFieldExpression><![CDATA["Mobile: " + ($P{CustomerPhone} == null ? "" : $P{CustomerPhone})]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="220" y="51" width="161" height="11"/>
+                <textElement><font size="7" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA["GSTIN: " + ($P{CustomerGSTIN} == null ? "" : $P{CustomerGSTIN})]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="220" y="64" width="161" height="11"/>
+                <textElement><font size="7"/></textElement>
+                <textFieldExpression><![CDATA[$P{CustomerAddress} == null ? "" : $P{CustomerAddress}]]></textFieldExpression>
+            </textField>
+        </band>
+    </pageHeader>
+
+    <!-- COLUMN HEADER: 12 columns at 381px (same as Sales_A5) -->
+    <!-- #(10) Items(95) HSN(24) Qty(20) MFG(28) EXP(28) MRP(26) Rate(30) Dis%(16) DisAmt(22) Tax(24) Total(58) = 381 -->
+    <columnHeader>
+        <band height="22">
+            <rectangle>
+                <reportElement x="0" y="0" width="381" height="22" backcolor="#1E2D4D" mode="Opaque"/>
+                <graphicElement><pen lineWidth="0"/></graphicElement>
+            </rectangle>
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="0" width="10" height="22" forecolor="#FFFFFF"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="5" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{Col_Sno_Header}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="10" y="0" width="95" height="22" forecolor="#FFFFFF"/>
+                <textElement textAlignment="Left" verticalAlignment="Middle"><font size="6" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[" " + $P{Col_Item_Header}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="105" y="0" width="24" height="22" forecolor="#FFFFFF">
+                    <printWhenExpression><![CDATA[$P{Col_Hsn_Show}]]></printWhenExpression>
+                </reportElement>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="5" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{Col_Hsn_Header}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="129" y="0" width="20" height="22" forecolor="#FFFFFF"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="6" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{Col_Qty_Header}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="149" y="0" width="28" height="22" forecolor="#FFFFFF">
+                    <printWhenExpression><![CDATA[$P{Col_Mfg_Show}]]></printWhenExpression>
+                </reportElement>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="5" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{Col_Mfg_Header}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="177" y="0" width="28" height="22" forecolor="#FFFFFF">
+                    <printWhenExpression><![CDATA[$P{Col_Exp_Show}]]></printWhenExpression>
+                </reportElement>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="5" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{Col_Exp_Header}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="205" y="0" width="26" height="22" forecolor="#FFFFFF"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font size="6" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{Col_MRP_Header}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="231" y="0" width="30" height="22" forecolor="#FFFFFF"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font size="6" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{Col_NetRate_Header}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="261" y="0" width="16" height="22" forecolor="#FFFFFF"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="5" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{Col_DisPct_Header}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="277" y="0" width="22" height="22" forecolor="#FFFFFF"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font size="5" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{Col_DisAmt_Header}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="299" y="0" width="24" height="22" forecolor="#FFFFFF"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font size="5" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{Col_TaxAmt_Header}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="323" y="0" width="58" height="22" forecolor="#FFFFFF"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font size="6" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{Col_Total_Header}]]></textFieldExpression>
+            </textField>
+        </band>
+    </columnHeader>
+
+    <!-- DETAIL -->
+    <detail>
+        <band height="16">
+            <line><reportElement x="0" y="15" width="381" height="1" forecolor="#EEEEEE"/></line>
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="0" width="10" height="16"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="5"/></textElement>
+                <textFieldExpression><![CDATA[$F{sno}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="10" y="0" width="95" height="16"/>
+                <textElement textAlignment="Left" verticalAlignment="Middle"><font size="6"/></textElement>
+                <textFieldExpression><![CDATA[$F{product_name}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="105" y="0" width="24" height="16">
+                    <printWhenExpression><![CDATA[$P{Col_Hsn_Show}]]></printWhenExpression>
+                </reportElement>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="5"/></textElement>
+                <textFieldExpression><![CDATA[$F{hsn}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="129" y="0" width="20" height="16"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="6"/></textElement>
+                <textFieldExpression><![CDATA[$F{qty}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="149" y="0" width="28" height="16">
+                    <printWhenExpression><![CDATA[$P{Col_Mfg_Show}]]></printWhenExpression>
+                </reportElement>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="4"/></textElement>
+                <textFieldExpression><![CDATA[$F{mfg_date}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="177" y="0" width="28" height="16">
+                    <printWhenExpression><![CDATA[$P{Col_Exp_Show}]]></printWhenExpression>
+                </reportElement>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="4"/></textElement>
+                <textFieldExpression><![CDATA[$F{exp_date}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="205" y="0" width="26" height="16"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font size="6"/></textElement>
+                <textFieldExpression><![CDATA[$F{mrp}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="231" y="0" width="30" height="16"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font size="6"/></textElement>
+                <textFieldExpression><![CDATA[$F{net_rate}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="261" y="0" width="16" height="16"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="5"/></textElement>
+                <textFieldExpression><![CDATA[$F{disc_pct}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="277" y="0" width="22" height="16"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font size="5"/></textElement>
+                <textFieldExpression><![CDATA[$F{disc_amt}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="299" y="0" width="24" height="16"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font size="5"/></textElement>
+                <textFieldExpression><![CDATA[$F{tax_amt}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="323" y="0" width="58" height="16"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font size="6"/></textElement>
+                <textFieldExpression><![CDATA[$F{total}]]></textFieldExpression>
+            </textField>
+        </band>
+    </detail>
+
+    <!-- SUMMARY -->
+    <summary>
+        <band height="248">
+            <!-- Total items row -->
+            <rectangle>
+                <reportElement x="0" y="0" width="381" height="16" backcolor="#EDF0F5" mode="Opaque"/>
+                <graphicElement><pen lineWidth="0"/></graphicElement>
+            </rectangle>
+            <line><reportElement x="0" y="0" width="381" height="1" forecolor="#CCCCCC"/></line>
+            <textField>
+                <reportElement x="10" y="0" width="140" height="16"/>
+                <textElement verticalAlignment="Middle"><font size="6" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA["Total: " + $V{REPORT_COUNT} + " item(s)"]]></textFieldExpression>
+            </textField>
+            <textField pattern="#,##0">
+                <reportElement x="129" y="0" width="20" height="16"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="6" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$V{TotalQty}]]></textFieldExpression>
+            </textField>
+            <textField pattern="#,##0.00">
+                <reportElement x="323" y="0" width="58" height="16"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font size="6" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$V{TotalAmount}]]></textFieldExpression>
+            </textField>
+            <line><reportElement x="0" y="16" width="381" height="1" forecolor="#CCCCCC"/></line>
+
+            <!-- TAX DETAILS box (left) -->
+            <rectangle>
+                <reportElement x="0" y="21" width="181" height="110" backcolor="#FFFFFF" mode="Opaque"/>
+                <graphicElement><pen lineWidth="0.5" lineColor="#CCCCCC"/></graphicElement>
+            </rectangle>
+            <staticText>
+                <reportElement x="6" y="27" width="169" height="11" forecolor="#1E2D4D"/>
+                <textElement><font size="7" isBold="true"/></textElement>
+                <text><![CDATA[TAX DETAILS]]></text>
+            </staticText>
+            <line><reportElement x="6" y="39" width="169" height="1" forecolor="#E0E0E0"/></line>
+            <staticText>
+                <reportElement x="6" y="42" width="80" height="11" forecolor="#888888"/>
+                <textElement><font size="7"/></textElement>
+                <text><![CDATA[Taxable Amount]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="89" y="42" width="86" height="11"/>
+                <textElement textAlignment="Right"><font size="7"/></textElement>
+                <textFieldExpression><![CDATA["Rs." + ($P{TotalAmountBeforeTaxStr} == null ? "0.00" : $P{TotalAmountBeforeTaxStr})]]></textFieldExpression>
+            </textField>
+            <staticText>
+                <reportElement x="6" y="55" width="80" height="11" forecolor="#888888"/>
+                <textElement><font size="7"/></textElement>
+                <text><![CDATA[CGST]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="89" y="55" width="86" height="11"/>
+                <textElement textAlignment="Right"><font size="7"/></textElement>
+                <textFieldExpression><![CDATA["Rs." + ($P{CGSTAmountStr} == null ? "0.00" : $P{CGSTAmountStr})]]></textFieldExpression>
+            </textField>
+            <staticText>
+                <reportElement x="6" y="68" width="80" height="11" forecolor="#888888"/>
+                <textElement><font size="7"/></textElement>
+                <text><![CDATA[SGST]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="89" y="68" width="86" height="11"/>
+                <textElement textAlignment="Right"><font size="7"/></textElement>
+                <textFieldExpression><![CDATA["Rs." + ($P{SGSTAmountStr} == null ? "0.00" : $P{SGSTAmountStr})]]></textFieldExpression>
+            </textField>
+            <line><reportElement x="6" y="81" width="169" height="1" forecolor="#2255CC"/></line>
+            <staticText>
+                <reportElement x="6" y="84" width="80" height="12"/>
+                <textElement><font size="7" isBold="true"/></textElement>
+                <text><![CDATA[GRAND TOTAL]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="89" y="84" width="86" height="12"/>
+                <textElement textAlignment="Right"><font size="7" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA["Rs." + ($P{GrandTotalStr} == null ? "0.00" : $P{GrandTotalStr})]]></textFieldExpression>
+            </textField>
+
+            <!-- AMOUNT SUMMARY box (right) -->
+            <rectangle>
+                <reportElement x="191" y="21" width="190" height="110" backcolor="#FFFFFF" mode="Opaque"/>
+                <graphicElement><pen lineWidth="0.5" lineColor="#CCCCCC"/></graphicElement>
+            </rectangle>
+            <staticText>
+                <reportElement x="199" y="27" width="174" height="11" forecolor="#1E2D4D"/>
+                <textElement><font size="7" isBold="true"/></textElement>
+                <text><![CDATA[AMOUNT SUMMARY]]></text>
+            </staticText>
+            <line><reportElement x="199" y="39" width="174" height="1" forecolor="#E0E0E0"/></line>
+            <staticText>
+                <reportElement x="199" y="42" width="80" height="11" forecolor="#888888"/>
+                <textElement><font size="7"/></textElement>
+                <text><![CDATA[Taxable Amount]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="282" y="42" width="93" height="11"/>
+                <textElement textAlignment="Right"><font size="7"/></textElement>
+                <textFieldExpression><![CDATA["Rs." + ($P{TotalAmountBeforeTaxStr} == null ? "0.00" : $P{TotalAmountBeforeTaxStr})]]></textFieldExpression>
+            </textField>
+            <staticText>
+                <reportElement x="199" y="55" width="80" height="11" forecolor="#888888"/>
+                <textElement><font size="7"/></textElement>
+                <text><![CDATA[Tax (GST)]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="282" y="55" width="93" height="11"/>
+                <textElement textAlignment="Right"><font size="7"/></textElement>
+                <textFieldExpression><![CDATA["Rs." + ($P{TaxAmountGSTStr} == null ? "0.00" : $P{TaxAmountGSTStr})]]></textFieldExpression>
+            </textField>
+            <line><reportElement x="199" y="68" width="174" height="1" forecolor="#2255CC"/></line>
+            <staticText>
+                <reportElement x="199" y="71" width="80" height="12"/>
+                <textElement><font size="7" isBold="true"/></textElement>
+                <text><![CDATA[GRAND TOTAL]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="282" y="71" width="93" height="12"/>
+                <textElement textAlignment="Right"><font size="7" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA["Rs." + ($P{GrandTotalStr} == null ? "0.00" : $P{GrandTotalStr})]]></textFieldExpression>
+            </textField>
+            <!-- Signature -->
+            <line><reportElement x="199" y="95" width="174" height="1" forecolor="#CCCCCC"/></line>
+            <staticText>
+                <reportElement x="199" y="98" width="174" height="11" forecolor="#888888"/>
+                <textElement textAlignment="Center"><font size="7"/></textElement>
+                <text><![CDATA[Authorised Signatory]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="199" y="111" width="174" height="11"/>
+                <textElement textAlignment="Center"><font size="7" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA["For " + ($P{CompanyName} == null ? "" : $P{CompanyName})]]></textFieldExpression>
+            </textField>
+
+            <!-- Amount in Words -->
+            <rectangle>
+                <reportElement x="0" y="138" width="381" height="22" backcolor="#FFFDE7" mode="Opaque"/>
+                <graphicElement><pen lineWidth="0.5" lineColor="#FFE082"/></graphicElement>
+            </rectangle>
+            <staticText>
+                <reportElement x="6" y="140" width="90" height="18"/>
+                <textElement verticalAlignment="Middle"><font size="7" isBold="true"/></textElement>
+                <text><![CDATA[Amount in Words:]]></text>
+            </staticText>
+            <textField evaluationTime="Report" isBlankWhenNull="true">
+                <reportElement x="99" y="140" width="276" height="18"/>
+                <textElement verticalAlignment="Middle"><font size="7"/></textElement>
+                <textFieldExpression><![CDATA[$P{AmountInWords}]]></textFieldExpression>
+            </textField>
+
+            <!-- Terms -->
+            <staticText>
+                <reportElement x="0" y="165" width="381" height="11"/>
+                <textElement><font size="7" isBold="true"/></textElement>
+                <text><![CDATA[TERMS AND CONDITIONS]]></text>
+            </staticText>
+            <textField isStretchWithOverflow="true" isBlankWhenNull="true">
+                <reportElement x="0" y="178" width="381" height="50"/>
+                <textElement><font size="6"/></textElement>
+                <textFieldExpression><![CDATA[$P{TermsAndConditions}]]></textFieldExpression>
+            </textField>
+
+            <!-- Footer bar -->
+            <rectangle>
+                <reportElement x="0" y="238" width="381" height="10" backcolor="#1E2D4D" mode="Opaque"/>
+                <graphicElement><pen lineWidth="0"/></graphicElement>
+            </rectangle>
+            <staticText>
+                <reportElement x="0" y="238" width="381" height="10" forecolor="#FFFFFF"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="6"/></textElement>
+                <text><![CDATA[Thank you for your business!]]></text>
+            </staticText>
+        </band>
+    </summary>
 </jasperReport>

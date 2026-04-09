@@ -28,6 +28,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import menupack.menu_form;
+import menupack.UserSession;
 
 /**
  *
@@ -56,7 +57,11 @@ public final class sreturn extends javax.swing.JInternalFrame {
 
     final void get_defaults() {
         try {
-            String query = "select scode,ttype,stock_bill,less_prate,rdis,wdis,entry_mode,state,bformat,bformat1,hmany,round from setting_bill";
+            String companyWhere = UserSession.hasSelectedCompany()
+                    ? " WHERE companyID='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select scode,ttype,stock_bill,less_prate,rdis,wdis,entry_mode,state,bformat,bformat1,hmany,round from company"
+                    + companyWhere;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 scode = r.getString(1);
@@ -255,7 +260,11 @@ public final class sreturn extends javax.swing.JInternalFrame {
             boolean selva = false;
             double rrate = 0, wrate = 0, price = 0;
             String iname = null, ino = null;
-            String query = "select iname,rprice,wprice,ino from item where barcode='" + h17.getText() + "'";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select iname,rprice,wprice,ino from item where barcode='" + h17.getText() + "'"
+                    + companyFilter;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 iname = r.getString(1);
@@ -299,8 +308,11 @@ public final class sreturn extends javax.swing.JInternalFrame {
             double disp = 0, prate = 0, mrp = 0;
             int taxp = 0;
             boolean selva = false;
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             String query = "select hsn,udes,disp,taxp,iname1,prate,mrp from item where ino='" + ino + "' and barcode='"
-                    + barcode + "' and iname='" + iname + "' ";
+                    + barcode + "' and iname='" + iname + "'" + companyFilter;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 hsn = r.getString(1);
@@ -319,8 +331,11 @@ public final class sreturn extends javax.swing.JInternalFrame {
             }
             double stock = 0;
             String entry = "purchase";
+            String stockCompanyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             query = "select quan,entry from stock where barcode='" + barcode + "' and ino='" + ino + "' and iname='"
-                    + iname + "' ";
+                    + iname + "'" + stockCompanyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 stock = r.getDouble(1);
@@ -752,7 +767,13 @@ public final class sreturn extends javax.swing.JInternalFrame {
             int newcid = 0;
             // customer card checking
             if (customer_selection == false && mobile.length() == 10) {
-                query = "select cid from cust where cardno='" + cardno + "'";
+                String saveCompanyFilter = UserSession.hasSelectedCompany()
+                        ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                        : "";
+                String saveCompanyFilter2 = UserSession.hasSelectedCompany()
+                        ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                        : "";
+                query = "select cid from cust where cardno='" + cardno + "'" + saveCompanyFilter;
                 r = util.doQuery(query);
                 while (r.next()) {
                     cust_card = true;
@@ -763,7 +784,7 @@ public final class sreturn extends javax.swing.JInternalFrame {
                     h22.requestFocus();
                     return;
                 }
-                query = "select max(cid) from cust";
+                query = "select max(cid) from cust" + saveCompanyFilter2;
                 r = util.doQuery(query);
                 while (r.next()) {
                     newcid = r.getInt(1);
@@ -847,7 +868,7 @@ public final class sreturn extends javax.swing.JInternalFrame {
             int count = 0;
 
             try {
-                String sreturnQuery = "INSERT INTO sreturn (billno, dat, tim, location, cashier, terminal, items, quans, sub, disp, disamt, gross, taxamt, addamt, round, net, pby, paid, bal, cash, card, credit, others, upi, price_type, tax_type, tax, cid, cardno, cname, mobile, user, last) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                String sreturnQuery = "INSERT INTO sreturn (billno, dat, tim, location, cashier, terminal, items, quans, sub, disp, disamt, gross, taxamt, addamt, round, net, pby, paid, bal, cash, card, credit, others, upi, price_type, tax_type, tax, cid, cardno, cname, mobile, user, last, company_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
                 PreparedStatement psSreturn = conn.prepareStatement(sreturnQuery);
                 psSreturn.setString(1, billno);
                 psSreturn.setString(2, date);
@@ -882,12 +903,13 @@ public final class sreturn extends javax.swing.JInternalFrame {
                 psSreturn.setString(31, mobile);
                 psSreturn.setString(32, username);
                 psSreturn.setString(33, last);
+                psSreturn.setString(34, UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : null);
                 psSreturn.executeUpdate();
 
                 String sreturnItemsQuery = "INSERT INTO sreturn_items (billno, dat, cid, serial, ino, iname, quan, mrp, price, amount, disp, disamt, sub, taxp, taxamt, total, udes, barcode, hsn, tax, entry, cost_rate, profit, iname1, price_type, tax_type, item_type) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
                 PreparedStatement psItems = conn.prepareStatement(sreturnItemsQuery);
 
-                String stockUpdateQuery = "UPDATE stock SET quan = quan + ? WHERE barcode=? AND ino=? AND iname=? AND entry=?";
+                String stockUpdateQuery = "UPDATE stock SET quan = quan + ? WHERE barcode=? AND ino=? AND iname=? AND entry=? AND company_id=?";
                 PreparedStatement psStock = conn.prepareStatement(stockUpdateQuery);
 
                 for (int i = 0; i < jTable1.getRowCount(); i++) {
@@ -947,6 +969,7 @@ public final class sreturn extends javax.swing.JInternalFrame {
                     psStock.setString(3, ino);
                     psStock.setString(4, iname);
                     psStock.setString(5, entry);
+                    psStock.setString(6, UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "");
                     psStock.executeUpdate();
                 }
 
@@ -1148,7 +1171,11 @@ public final class sreturn extends javax.swing.JInternalFrame {
         try {
             String scode1 = "";
             customer_selection = false;
-            String query = "select cid,cardno,mobile,cname,scode from cust where mobile='" + h23.getText() + "'";
+            String custCompanyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select cid,cardno,mobile,cname,scode from cust where mobile='" + h23.getText() + "'"
+                    + custCompanyFilter;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 h21.setText(r.getString(1));
@@ -1172,7 +1199,11 @@ public final class sreturn extends javax.swing.JInternalFrame {
         try {
             String scode1 = "";
             customer_selection = false;
-            String query = "select cid,cardno,mobile,cname,scode from cust where cardno='" + h22.getText() + "'";
+            String custCompanyFilter2 = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select cid,cardno,mobile,cname,scode from cust where cardno='" + h22.getText() + "'"
+                    + custCompanyFilter2;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 h21.setText(r.getString(1));
@@ -2916,8 +2947,11 @@ public final class sreturn extends javax.swing.JInternalFrame {
                     iname_list.setLocation(l.x, l.y + jLabel28.getHeight());
                     iname_list.setSize(1141, 528);
                     iname_list.setVisible(true);
+                    String companyFilter = UserSession.hasSelectedCompany()
+                            ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                            : "";
                     String query = "select barcode,ino,iname,prate,mrp,rprice,wprice from item where iname like '"
-                            + h17.getText() + "%' order by ino limit 500";
+                            + h17.getText() + "%'" + companyFilter + " order by ino limit 500";
                     ResultSet r = util.doQuery(query);
                     while (r.next()) {
                         s4.addRow(new Object[] { r.getString(1), r.getString(2), r.getString(3), r.getString(4),
@@ -3048,13 +3082,17 @@ public final class sreturn extends javax.swing.JInternalFrame {
                     cname_list.setLocation(l.x, l.y + jLabel28.getHeight());
                     cname_list.setSize(1063, 528);
                     cname_list.setVisible(true);
+                    String custCompanyFilter = UserSession.hasSelectedCompany()
+                            ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                            : "";
                     String query;
                     if (pricel.getText().equals("Retail")) {
                         query = "select cid,ctype,cname,cardno,mobile,city,scode from cust where cname like '"
-                                + h24.getText() + "%' order by cname limit 300";
+                                + h24.getText() + "%'" + custCompanyFilter + " order by cname limit 300";
                     } else {
                         query = "select cid,ctype,cname,cardno,mobile,city,scode from cust where cname like '"
-                                + h24.getText() + "%' and ctype='Credit Customer' order by cname limit 300";
+                                + h24.getText() + "%' and ctype='Credit Customer'" + custCompanyFilter
+                                + " order by cname limit 300";
                     }
 
                     ResultSet r = util.doQuery(query);

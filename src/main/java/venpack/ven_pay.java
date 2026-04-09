@@ -8,6 +8,7 @@ import java.awt.Font;
 import java.awt.HeadlessException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import menupack.UserSession;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -41,6 +42,7 @@ public final class ven_pay extends javax.swing.JInternalFrame {
         deletebutton.setText("<html><b>Delete</b><br>(Alt+D)</h6><html>");
         prebutton.setText("<html><b>Last Entry</b><br>(Alt+R)</h6><html>");
         nextbutton.setText("<html><b>Next Entry</b><br>(Alt+N)</h6><html>");
+        printbutton.setText("<html><b>Re-Print</b><br>(Alt+P)</h6><html>");
 
         titlelablel.setText("<html><u>Supplier Payment Entry</u></html>");
 
@@ -88,7 +90,10 @@ public final class ven_pay extends javax.swing.JInternalFrame {
     void get_billno() {
         try {
             int sno = 1;
-            String query = "select max(sno) from ven_pay";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select max(sno) from ven_pay" + companyFilter;
             r = util.doQuery(query);
             boolean selva = false;
             while (r.next()) {
@@ -147,8 +152,12 @@ public final class ven_pay extends javax.swing.JInternalFrame {
             String remarks = h9.getText();
 
             boolean selva = false;
-            String query = "select distinct sno from ven_pay where sno='" + sno + "'";
+            String companyAnd = UserSession.hasSelectedCompany()
+                    ? " and company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select distinct sno from ven_pay where sno='" + sno + "'" + companyAnd;
             r = util.doQuery(query);
+            if (r == null) return;
             while (r.next()) {
                 selva = true;
             }
@@ -170,14 +179,21 @@ public final class ven_pay extends javax.swing.JInternalFrame {
 
                 query_batch.add("insert into ven_pay values ('" + sno + "','" + date + "','" + time + "','" + cname
                         + "','" + billno + "','" + amount + "','" + net + "','" + pby + "','" + remarks + "','"
-                        + username + "','" + last + "' )");
+                        + username + "','" + last + "','"
+                        + (UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "") + "' )");
                 query_batch.add("update ven_bal set paid=paid+" + amount + " where billno='" + billno + "' and cname='"
-                        + cname + "' ");
+                        + cname + "'"
+                        + (UserSession.hasSelectedCompany()
+                                ? " and company_id='" + UserSession.getSelectedCompanyID() + "'"
+                                : ""));
             }
             int count = util.doManipulation_Batch(query_batch);
             if (count > 0) {
-                JOptionPane.showMessageDialog(this, "<html><h1>Saved Successfully</h1></html>", "Saved",
-                        JOptionPane.PLAIN_MESSAGE);
+                int as = JOptionPane.showConfirmDialog(this, "<html><h1>You Want to Print Receipt ?</h1></html>",
+                        "Saved Successfully", JOptionPane.YES_NO_OPTION);
+                if (as == JOptionPane.YES_OPTION) {
+                    print();
+                }
                 clear();
             }
         } catch (HeadlessException | ClassNotFoundException | NumberFormatException | SQLException | ParseException e) {
@@ -203,6 +219,7 @@ public final class ven_pay extends javax.swing.JInternalFrame {
             h10.setEnabled(true);
             h11.setEnabled(true);
             deletebutton.setVisible(false);
+            printbutton.setVisible(false);
             savebutton.setVisible(true);
             viewbutton.setVisible(true);
             jButton1.setEnabled(true);
@@ -256,6 +273,7 @@ public final class ven_pay extends javax.swing.JInternalFrame {
                 savebutton.setVisible(false);
                 viewbutton.setVisible(false);
                 deletebutton.setVisible(true);
+                printbutton.setVisible(true);
                 h4.setEnabled(false);
                 h10.setEnabled(false);
                 h11.setEnabled(false);
@@ -281,8 +299,12 @@ public final class ven_pay extends javax.swing.JInternalFrame {
                 return;
             }
             boolean selva = false;
-            String query = "select distinct sno from ven_pay where sno='" + sno + "'";
+            String companyAnd = UserSession.hasSelectedCompany()
+                    ? " and company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select distinct sno from ven_pay where sno='" + sno + "'" + companyAnd;
             r = util.doQuery(query);
+            if (r == null) return;
             while (r.next()) {
                 selva = true;
             }
@@ -292,12 +314,15 @@ public final class ven_pay extends javax.swing.JInternalFrame {
             }
             ArrayList query_batch = new ArrayList();
             String cname = h4.getSelectedItem().toString();
-            query_batch.add("delete from ven_pay where sno='" + sno + "'");
+            query_batch.add("delete from ven_pay where sno='" + sno + "'" + companyAnd);
             for (int i = 0; i < jTable1.getRowCount(); i++) {
                 String billno = jTable1.getValueAt(i, 0).toString();
                 String amount = jTable1.getValueAt(i, 1).toString();
                 query_batch.add("update ven_bal set paid=paid-" + amount + " where billno='" + billno + "' and cname='"
-                        + cname + "' ");
+                        + cname + "'"
+                        + (UserSession.hasSelectedCompany()
+                                ? " and company_id='" + UserSession.getSelectedCompanyID() + "'"
+                                : ""));
             }
             int count = util.doManipulation_Batch(query_batch);
             if (count > 0) {
@@ -326,7 +351,10 @@ public final class ven_pay extends javax.swing.JInternalFrame {
             }
 
             double bal = 0;
-            query = "select sum(tot-paid) from ven_bal where cname='" + cname + "'";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            query = "select sum(tot-paid) from ven_bal where cname='" + cname + "'" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 bal = r.getDouble(1);
@@ -336,14 +364,14 @@ public final class ven_pay extends javax.swing.JInternalFrame {
             hh.append("\n Net Balance : " + bal2);
 
             boolean selva = false;
-            query = "select distinct cname from ven_bal where cname='" + cname + "'";
+            query = "select distinct cname from ven_bal where cname='" + cname + "'" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 selva = true;
             }
             if (selva == true) {
                 h10.removeAllItems();
-                query = "select billno from ven_bal where cname='" + cname + "' and tot-paid>0";
+                query = "select billno from ven_bal where cname='" + cname + "' and tot-paid>0" + companyFilter;
                 r = util.doQuery(query);
                 while (r.next()) {
                     h10.addItem(r.getString(1));
@@ -358,7 +386,7 @@ public final class ven_pay extends javax.swing.JInternalFrame {
 
             double total = 0;
             query = "select date_format(dat,'%d/%m/%Y'),billno,tot-paid from ven_bal where cname='" + cname
-                    + "' and tot-paid >0 ";
+                    + "' and tot-paid >0" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 String date = r.getString(1);
@@ -420,7 +448,11 @@ public final class ven_pay extends javax.swing.JInternalFrame {
             }
 
             boolean selva = false;
-            String query = "select distinct cname from ven_bal where cname='" + h4.getSelectedItem() + "'";
+            String companyFilterAnd = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select distinct cname from ven_bal where cname='" + h4.getSelectedItem() + "'"
+                    + companyFilterAnd;
             r = util.doQuery(query);
             while (r.next()) {
                 selva = true;
@@ -467,10 +499,60 @@ public final class ven_pay extends javax.swing.JInternalFrame {
         h6.setText(amount2);
     }
 
+    void add_all_items() {
+        try {
+            if (h4.getSelectedItem() == null || h4.getSelectedItem().toString().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Select Supplier First ?", "Supplier", JOptionPane.ERROR_MESSAGE);
+                h4.requestFocus();
+                return;
+            }
+            if (h10.getItemCount() <= 0) {
+                JOptionPane.showMessageDialog(this, "No Pending Bills Found!", "No Bills",
+                        JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+            String cname = h4.getSelectedItem().toString();
+            String companyFilterAnd = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select billno, tot-paid from ven_bal where cname='" + cname + "' and tot-paid > 0"
+                    + companyFilterAnd;
+            ResultSet rs = util.doQuery(query);
+            while (rs.next()) {
+                String billno = rs.getString(1);
+                double due = rs.getDouble(2);
+                String due2 = String.format("%." + hmany + "f", due);
+                s2.addRow(new Object[] { billno, due2 });
+            }
+            h10.removeAllItems();
+            h11.setText("");
+            ball.setText("");
+            calculate();
+        } catch (HeadlessException | ClassNotFoundException | NumberFormatException | SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    void print() {
+        try {
+            String billnos = "";
+            for (int i = 0; i < jTable1.getRowCount(); i++) {
+                billnos = billnos + ", " + jTable1.getValueAt(i, 0).toString();
+            }
+            billnos = billnos.substring(1, billnos.length());
+            new ven_pay_receipt_print().Report(h1.getText(), billnos, util);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
     void get_bal() {
         try {
+            String companyFilterAnd = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             String query = "select tot-paid from ven_bal where cname='" + h4.getSelectedItem() + "' and billno='"
-                    + h10.getSelectedItem() + "'";
+                    + h10.getSelectedItem() + "'" + companyFilterAnd;
             r = util.doQuery(query);
             while (r.next()) {
                 ball.setText(r.getString(1));
@@ -483,12 +565,17 @@ public final class ven_pay extends javax.swing.JInternalFrame {
     void get_sug() {
         try {
             int count = 0;
-            String query = "select distinct cname from ven_bal  group by cname having sum(tot-paid)>0";
+            String companyFilterWhere = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select distinct cname from ven_bal" + companyFilterWhere
+                    + " group by cname having sum(tot-paid)>0";
             ResultSet set = util.doQuery(query);
             while (set.next()) {
                 count = count + 1;
             }
-            query = "select distinct cname from ven_bal group by cname having sum(tot-paid)>0";
+            query = "select distinct cname from ven_bal" + companyFilterWhere
+                    + " group by cname having sum(tot-paid)>0";
             set = util.doQuery(query);
             Object f[] = new Object[count];
             int index = 0;
@@ -510,6 +597,7 @@ public final class ven_pay extends javax.swing.JInternalFrame {
 
         h4.requestFocus();
         deletebutton.setVisible(false);
+        printbutton.setVisible(false);
         get_defaults();
         load_bills_table();
         ball.setVisible(false);
@@ -788,6 +876,30 @@ public final class ven_pay extends javax.swing.JInternalFrame {
         getContentPane().add(jButton2);
         jButton2.setBounds(400, 200, 50, 30);
 
+        clearAllDuesButton = new javax.swing.JButton();
+        clearAllDuesButton.setFont(new java.awt.Font("Arial", 1, 11));
+        clearAllDuesButton.setText("Clear All Dues");
+        clearAllDuesButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                add_all_items();
+            }
+        });
+        getContentPane().add(clearAllDuesButton);
+        clearAllDuesButton.setBounds(100, 140, 130, 28);
+
+        printbutton = new javax.swing.JButton();
+        printbutton.setFont(new java.awt.Font("Arial", 0, 14));
+        printbutton.setIcon(ColorConstants.loadIcon("/icons/print45.png"));
+        printbutton.setMnemonic('p');
+        printbutton.setText("Re-Print");
+        printbutton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                print();
+            }
+        });
+        getContentPane().add(printbutton);
+        printbutton.setBounds(60, 480, 130, 50);
+
         ball.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         ball.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -857,10 +969,17 @@ public final class ven_pay extends javax.swing.JInternalFrame {
         try {
             String query;
             String billno = h1.getText();
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String companyAnd = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             if (billno.equalsIgnoreCase("--")) {
-                query = "select max(sno) from ven_pay";
+                query = "select max(sno) from ven_pay" + companyFilter;
             } else {
-                query = "select sno from ven_pay where sno < '" + billno + "' order by sno desc limit 1";
+                query = "select sno from ven_pay where sno < '" + billno + "'" + companyAnd
+                        + " order by sno desc limit 1";
             }
             r = util.doQuery(query);
             boolean selva = false;
@@ -890,7 +1009,10 @@ public final class ven_pay extends javax.swing.JInternalFrame {
                 JOptionPane.showMessageDialog(this, "No Records Were Found!", "No Records", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            query = "select sno from ven_pay where sno > '" + billno + "' order by sno limit 1";
+            String companyAnd = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            query = "select sno from ven_pay where sno > '" + billno + "'" + companyAnd + " order by sno limit 1";
             r = util.doQuery(query);
             boolean selva = false;
             String search_billno = "";
@@ -956,12 +1078,14 @@ public final class ven_pay extends javax.swing.JInternalFrame {
     }// GEN-LAST:event_h11FocusGained
 
     private void h4ItemStateChanged(java.awt.event.ItemEvent evt) {// GEN-FIRST:event_h4ItemStateChanged
-
-        get_patient_details(h4.getSelectedItem().toString());
+        if (h4.getSelectedItem() != null) {
+            get_patient_details(h4.getSelectedItem().toString());
+        }
     }// GEN-LAST:event_h4ItemStateChanged
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField ball;
+    private javax.swing.JButton clearAllDuesButton;
     private javax.swing.JButton clearbutton;
     private javax.swing.JButton closebutton;
     private javax.swing.JButton deletebutton;
@@ -991,6 +1115,7 @@ public final class ven_pay extends javax.swing.JInternalFrame {
     private javax.swing.JTable jTable1;
     private javax.swing.JButton nextbutton;
     private javax.swing.JButton prebutton;
+    private javax.swing.JButton printbutton;
     private javax.swing.JButton savebutton;
     private javax.swing.JLabel titlelablel;
     private javax.swing.JButton viewbutton;

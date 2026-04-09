@@ -1,5 +1,6 @@
 package venpack;
 
+import menupack.UserSession;
 import Utils.ColorConstants;
 import ca.odell.glazedlists.GlazedLists;
 import ca.odell.glazedlists.swing.AutoCompleteSupport;
@@ -78,11 +79,15 @@ public final class ven_dues_report extends javax.swing.JInternalFrame {
 
             boolean selva = false;
             String query;
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             if (all.isSelected()) {
-                query = "select billno,date_format(dat,'%d/%m/%Y'),date_format(ddate,'%d/%m/%Y'),cname,tot,paid from ven_bal where tot-paid>0 order by dat,billno";
+                query = "select billno,date_format(dat,'%d/%m/%Y'),date_format(ddate,'%d/%m/%Y'),cname,tot,paid from ven_bal where tot-paid>0"
+                        + companyFilter + " order by dat,billno";
             } else {
                 query = "select billno,date_format(dat,'%d/%m/%Y'),date_format(ddate,'%d/%m/%Y'),cname,tot,paid from ven_bal where cname='"
-                        + h3.getSelectedItem() + "' and tot-paid>0 order by dat,billno";
+                        + h3.getSelectedItem() + "' and tot-paid>0" + companyFilter + " order by dat,billno";
             }
             r = util.doQuery(query);
             while (r.next()) {
@@ -121,12 +126,15 @@ public final class ven_dues_report extends javax.swing.JInternalFrame {
     void get_cid() {
         try {
             int count = 0;
-            String query = "select distinct cname from ven_bal where tot-paid>0";
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select distinct cname from ven_bal where tot-paid>0" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 count = count + 1;
             }
-            query = "select distinct cname from ven_bal where tot-paid>0";
+            query = "select distinct cname from ven_bal where tot-paid>0" + companyFilter;
             r = util.doQuery(query);
             Object f[] = new Object[count];
             int index = 0;

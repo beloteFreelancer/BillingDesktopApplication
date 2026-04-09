@@ -6,6 +6,7 @@ custpack\cust_dues_report$8.class
 estimatepack\ereturn$3.class
 stockpack\stock_bulk_rate_update$9.class
 custpack\cust_bill_report$1.class
+estimatepack\estimate$64.class
 hrpack\pay_advance$9.class
 accountspack\profit_loss_summary.class
 estimatepack\estimate_summary_userwise$5.class
@@ -26,6 +27,7 @@ salespack\sales_report_cust$3.class
 custpack\cust_list_state$6.class
 stockpack\stock_entry$4.class
 hrpack\staff_entry$6.class
+Utils\ThemeManager$11.class
 venpack\ven_dues_report$1.class
 pospack\sreturn$45.class
 tax_reports\tax_sales$4.class
@@ -100,6 +102,7 @@ MISPack\profit_daywise.class
 menupack\menu_form$222.class
 itempack\items_import_excel$5.class
 custpack\cust_pay$20.class
+menupack\menu_form$252.class
 custpack\cust_list$5.class
 hrpack\staff_list$5.class
 accountspack\bank_master$3.class
@@ -126,6 +129,7 @@ venpack\ven_pay_report$5.class
 accountspack\voucher_report_group$5.class
 stockpack\stock_summary_entry_wise$4.class
 purchasepack\preturn_summary_iname$1.class
+ActivationPack\activation_form$5.class
 venpack\ven_pay$9.class
 ActivationPack\license_blocked.class
 itempack\items_list$10.class
@@ -137,6 +141,7 @@ purchase_order_pack\purchase_order_report$4.class
 purchase_order_pack\purchase_order$14.class
 estimatepack\estimate_report_cust$6.class
 MISPack\top_customers_for_item$10.class
+menupack\menu_form$257.class
 salespack\sales_summary_cust$10.class
 stockpack\stock_entry$48.class
 MISPack\profit_daywise$2.class
@@ -173,7 +178,6 @@ menupack\menu_form$51.class
 salespack\daily_sales$1.class
 estimatepack\estimate$22.class
 purchasepack\purchase_report$2.class
-itempack\item_master$24.class
 barcodepack\jasper\JRXMLGenerator.class
 purchasepack\purchase_summary_manu$6.class
 menupack\menu_form$98.class
@@ -184,11 +188,13 @@ itempack\item_master$4.class
 custpack\cust_dues_report_print.class
 estimatepack\estimate_summary_cust$4.class
 packingpack\packing_report$4.class
+MISPack\estimate_profit_billwise$2.class
 MISPack\top_customers_points_wise$7.class
 barcodepack\BarcodeDialog$DraggableField.class
 venpack\ven_bill$5.class
 custpack\cust_list_area.class
 estimatepack\ereturn$39.class
+menupack\CompanyManagement$4.class
 stockpack\stock_report_max_stock$6.class
 purchasepack\purchase_entry$14.class
 custpack\cust_bills_bulk_upload$1.class
@@ -254,6 +260,7 @@ venpack\ven_pay$4.class
 menupack\menu_form$147.class
 menupack\menu_form$100.class
 salespack\sales_summary_userwise$5.class
+MISPack\estimate_profit_billwise$5.class
 purchase_order_pack\purchase_order$26.class
 purchase_order_pack\purchase_order$19.class
 salespack\sales_summary_manu$4.class
@@ -265,6 +272,7 @@ menupack\menu_form$60.class
 itempack\item_master$21.class
 purchasepack\preturn_entry$26.class
 purchasepack\purchase_entry$5.class
+couldpack\DatabaseRestore.class
 hrpack\pay_advance$10.class
 hrpack\pay_loan$1.class
 menupack\menu_form$206.class
@@ -285,6 +293,7 @@ pospack\sreturn$17.class
 purchasepack\preturn_report$5.class
 smspack\Encoding.class
 accountspack\RP_select$1.class
+MISPack\estimate_profit_daywise$2.class
 purchasepack\purchase_report_iname$3.class
 stockpack\stock_entry$18.class
 stockpack\stock_report_nill_stock.class
@@ -313,6 +322,7 @@ purchasepack\purchase_entry$32.class
 menupack\menu_form$191.class
 purchasepack\purchase_summary_supplier$6.class
 menupack\menu_form$129.class
+ActivationPack\trial_activation_form$2.class
 purchase_order_pack\purchase_order_list.class
 salespack\sales_report_bill_itemwise$7.class
 estimatepack\estimate_report_price_type$5.class
@@ -323,10 +333,12 @@ venpack\ven_pay$15.class
 custpack\cust_list.class
 pospack\sreturn$31.class
 menupack\menu_form$215.class
+menupack\menu_form$255.class
 hrpack\pay_advance$12.class
 stockpack\stock_entry$13.class
 hrpack\pay_loan$20.class
 tax_reports\tax_purchase$2.class
+purchasepack\purchase_entry$53.class
 accountspack\voucher_report_group_ledger$4.class
 estimatepack\daily_estimate_report_select$1.class
 stockpack\stock_summary_entry_wise$1.class
@@ -336,6 +348,7 @@ tax_reports\tax_purchase$7.class
 salespack\daily_sales.class
 userpack\UserPanel$4.class
 menupack\menu_form$156.class
+loyaltypack\points_redemption$1.class
 pospack\sales$47.class
 hrpack\pay_loan$4.class
 purchasepack\preturn_entry$12.class
@@ -368,6 +381,7 @@ estimatepack\estimate$1.class
 purchasepack\purchase_summary_iname$9.class
 purchasepack\purchase_summary_manu$3.class
 hrpack\pay_advance$17.class
+MISPack\estimate_profit_daywise.class
 custpack\cust_bill$10.class
 userpack\UserPanel$2.class
 stockpack\stock_summary_entry_wise$6.class
@@ -401,6 +415,7 @@ purchasepack\purchase_report_iname$1.class
 barcodepack\BarcodeDialog$DraggableField$1.class
 stockpack\stock_alter_report$1.class
 salespack\sales_report_location$2.class
+purchasepack\preturn_entry$44.class
 accountspack\Cashbook_Summary_select$2.class
 menupack\menu_form$108.class
 barcodepack\barcode_print$9.class
@@ -411,7 +426,9 @@ stockpack\stock_entry$39.class
 estimatepack\ereturn$41.class
 smspack\manual_sms$1.class
 purchasepack\purchase_report_cname$1.class
+venpack\ven_pay$17.class
 estimatepack\estimate_summary_manu$2.class
+MISPack\estimate_profit_daywise$5.class
 tax_reports\tax_hsn_sales_return$7.class
 salespack\sales_summary_item$1.class
 purchase_order_pack\vendor_link$10.class
@@ -426,6 +443,7 @@ itempack\stock_import$2.class
 tax_reports\tax_purchase$5.class
 userpack\user_permissions$3.class
 purchasepack\preturn_entry$14.class
+estimatepack\estimate$61.class
 purchasepack\purchase_summary_manu$1.class
 pospack\print_thermal_customized.class
 estimatepack\ereturn$6.class
@@ -454,6 +472,7 @@ estimatepack\estimate_report_bill_itemwise$10.class
 menupack\menu_form$17.class
 MISPack\profit_itemwise$2.class
 purchasepack\purchase_entry$30.class
+estimatepack\estimate$62.class
 estimatepack\estimate_summary_manu$4.class
 tax_reports\tax_sales$6.class
 barcodepack\barcode_print$14.class
@@ -464,6 +483,8 @@ estimatepack\estimate$46.class
 stockpack\stock_entry$36.class
 salespack\sales_summary_item$6.class
 purchasepack\preturn_report$7.class
+ActivationPack\key_generation$sample2.class
+ActivationPack\activation_form$2.class
 menupack\menu_form$231.class
 MISPack\top_customers_for_item$8.class
 estimatepack\estimate.class
@@ -482,6 +503,7 @@ MISPack\top_customers_for_item$2.class
 estimatepack\ereturn$27.class
 custpack\cust_list$7.class
 pospack\sreturn$15.class
+Utils\ThemeManager$8$1.class
 stockpack\stock_report_min_stock$1.class
 custpack\cust_master$3.class
 stockpack\stock_entry$2.class
@@ -492,6 +514,7 @@ purchasepack\purchase_summary_category$7.class
 tax_reports\tax_sales_return$5.class
 estimatepack\estimate_report_bill_itemwise$12.class
 itempack\item_search$3.class
+pospack\sales$66.class
 purchasepack\preturn_entry$5.class
 stockpack\stock_entry$31.class
 menupack\menu_form$83.class
@@ -509,12 +532,14 @@ stockpack\stock_entry$34.class
 salespack\sreturn_summary_item$4.class
 menupack\menu_form$236.class
 accountspack\voucher_report_group_ledger$6.class
-BBS_Software.class
 menupack\menu_form$30.class
 purchase_order_pack\vendor_link$11.class
+loyaltypack\points_redemption$6.class
 salespack\sales_report_terminal$3.class
 estimatepack\daily_estimate_report$1.class
+MISPack\estimate_profit_itemwise$3.class
 salespack\sales_summary_item$5.class
+loyaltypack\points_redemption$3.class
 model\LicenseInfo.class
 MISPack\top_customers_for_item$7.class
 pospack\sreturn$10.class
@@ -528,6 +553,7 @@ venpack\vendor_list$3.class
 menupack\menu_form$177.class
 estimatepack\ereturn$8.class
 menupack\menu_form$84.class
+ActivationPack\trial_activation_form$5.class
 packingpack\packing_entry$23.class
 salespack\sales_summary_item$3.class
 itempack\stock_import$7.class
@@ -535,6 +561,7 @@ purchasepack\purchase_report_iname$6.class
 salespack\sales_report_bill_itemwise.class
 purchasepack\purchase_summary_iname$4.class
 accountspack\Bankbook_Summary_select.class
+pospack\sales$68.class
 stockpack\stock_report_nill_stock$3.class
 custpack\cust_bill$15.class
 salespack\sreturn_summary_item$2.class
@@ -547,6 +574,7 @@ purchase_order_pack\purchase_order_report.class
 menupack\menu_form$124.class
 packingpack\packing_entry$22.class
 purchasepack\purchase_summary_category$9.class
+MISPack\estimate_profit_itemwise$5.class
 menupack\menu_form$234.class
 menupack\menu_form$32.class
 salespack\sales_summary_cust$2.class
@@ -579,6 +607,7 @@ purchase_order_pack\vendor_link$5.class
 attendancepack\attendance_report$6.class
 barcodepack\barcode_print$10.class
 itempack\item_search$2.class
+menupack\login$7.class
 venpack\ven_dues_overdue$3.class
 com\selrom\utils\ScalableJRViewer$ScaledPrintable.class
 custpack\cust_import_excel$7.class
@@ -609,6 +638,7 @@ stockpack\stock_entry$46.class
 menupack\menu_form$110.class
 custpack\cust_master$1.class
 pospack\sreturn$1.class
+ActivationPack\activation_home$1.class
 purchasepack\preturn_entry$11.class
 purchase_order_pack\purchase_order$16.class
 menupack\AdminDashboard.class
@@ -634,6 +664,7 @@ accountspack\bank_master$1.class
 stockpack\stock_alter_report.class
 estimatepack\estimate_report_cust.class
 venpack\ven_pay$6.class
+ActivationPack\key_generation$1.class
 custpack\cust_pay$15.class
 estimatepack\print_estimate_thermal.class
 stockpack\stock_alter.class
@@ -646,8 +677,10 @@ stockpack\stock_alter$3.class
 custpack\cust_list_state$8.class
 venpack\ven_pay_report$2.class
 custpack\cust_dues_report_area$2.class
+menupack\InvoiceColumnManager.class
 packingpack\packing_report$7.class
 pospack\sales$30.class
+MISPack\estimate_profit_itemwise$1.class
 hrpack\pay_loan$8.class
 menupack\menu_form$16.class
 menupack\menu_form$115.class
@@ -664,12 +697,14 @@ tax_reports\tax_purchase.class
 salespack\sales_report_terminal$6.class
 salespack\sales_summary_item.class
 loyaltypack\cust_points_details$7.class
+ActivationPack\activation_form$3.class
 MISPack\profit_category.class
 salespack\sales_report_cashier$7.class
 stockpack\stock_entry$17.class
 stockpack\stock_report_max_stock$8.class
 accountspack\voucher_entry$8.class
 accountspack\voucher_report$2.class
+menupack\setting_bill$9.class
 accountspack\voucher_report_group_ledger$3.class
 purchasepack\purchase_entry$50.class
 tax_reports\tax_hsn_sales_return$5.class
@@ -709,6 +744,7 @@ packingpack\packing_report$3.class
 custpack\cust_bill_report$4.class
 loyaltypack\cust_points_withdraw_list$6.class
 menupack\menu_form$217.class
+purchasepack\purchase_entry$55.class
 estimatepack\estimate$41.class
 venpack\ven_pay$2.class
 custpack\cust_dues_overdue$4.class
@@ -740,6 +776,7 @@ hrpack\staff_entry$9.class
 pospack\sreturn$sample2.class
 stockpack\stock_report_max_stock$7.class
 tax_reports\tax_hsn_purchase_return$3.class
+menupack\setting_bill$10.class
 attendancepack\attendance_entry$7.class
 accountspack\voucher_entry$7.class
 accountspack\master_accounts$5.class
@@ -755,6 +792,7 @@ ActivationPack\license_blocked$2.class
 com\selrom\utils\ScalableJRViewer$ExposedJRPrinterAWT.class
 menupack\menu_form$203.class
 purchasepack\purchase_report_cname.class
+purchasepack\purchase_entry$54.class
 custpack\cust_list_area$6.class
 pospack\sales$36.class
 custpack\cust_list_state$4.class
@@ -766,6 +804,7 @@ MISPack\top_customers_points_wise$8.class
 salespack\sales_report$4.class
 hrpack\staff_entry$8.class
 loyaltypack\cust_points_withdraw_list$1.class
+ActivationPack\activation_home$2.class
 MISPack\profit_billwise.class
 custpack\cust_dues_report_area$1.class
 barcodepack\jasper\BarcodeDesigner$DraggableField$1.class
@@ -802,6 +841,7 @@ stockpack\stock_report_max_stock$2.class
 accountspack\voucher_entry$2.class
 packingpack\packing_report$2.class
 smspack\manual_sms$9.class
+MISPack\estimate_profit_itemwise.class
 purchasepack\preturn_entry$28.class
 estimatepack\estimate_report.class
 estimatepack\ereturn_summary_item$2.class
@@ -827,6 +867,7 @@ estimatepack\daily_estimate_report_select.class
 couldpack\day_book_close$4.class
 hrpack\staff_list.class
 loyaltypack\cust_points_details$3.class
+ActivationPack\activation_form.class
 venpack\ven_bill_report$2.class
 MISPack\profit_itemwise_barcode$8.class
 pospack\sales$44.class
@@ -861,6 +902,7 @@ stockpack\stock_alter$15.class
 stockpack\stock_entry$45.class
 venpack\vendor_import_excel.class
 estimatepack\estimate$31.class
+ActivationPack\key_generation$5.class
 stockpack\expiry_report$6.class
 custpack\cust_import_excel$1.class
 purchasepack\preturn_summary_iname$2.class
@@ -1044,6 +1086,7 @@ hrpack\pay_advance_report$3.class
 stockpack\stock_report_barcode$2.class
 menupack\setting_bill$5.class
 salespack\sales_report_cashier$3.class
+ActivationPack\key_generation$2.class
 estimatepack\estimate$39.class
 estimatepack\estimate_report_terminal$5.class
 estimatepack\estimate_summary_category.class
@@ -1056,6 +1099,7 @@ attendancepack\attendance_entry$1.class
 menupack\menu_form$40.class
 accountspack\Transaction.class
 packingpack\packing_entry$14.class
+ActivationPack\key_generation$3.class
 purchase_order_pack\vendor_link$3.class
 custpack\cust_import_excel$5.class
 pospack\sreturn$8.class
@@ -1071,6 +1115,7 @@ estimatepack\ereturn$30.class
 pospack\sreturn$2.class
 menupack\menu_form$182.class
 MISPack\sales_deleted_list.class
+ActivationPack\key_generation$4.class
 purchasepack\preturn_summary_iname$9.class
 purchase_order_pack\vendor_link$6.class
 custpack\cust_dues_report_area$8.class
@@ -1078,6 +1123,7 @@ menupack\menu_form$79.class
 purchase_order_pack\vendor_link$9.class
 custpack\cust_balance_report$7.class
 stockpack\stock_summary$2.class
+menupack\login$8.class
 stockpack\stock_summary$5.class
 menupack\menu_form$240.class
 attendancepack\attendance_summary$5.class
@@ -1126,6 +1172,7 @@ custpack\cust_bill$2.class
 purchasepack\purchase_entry$29.class
 attendancepack\attendance_summary$4.class
 pospack\sreturn$5.class
+menupack\login$9.class
 purchase_order_pack\purchase_order_list$1.class
 custpack\cust_import_excel$2.class
 estimatepack\estimate_report$7.class
@@ -1134,6 +1181,7 @@ salespack\sreturn_summary_item$3.class
 hrpack\pay_bill_generation$11.class
 estimatepack\daily_estimate_report_select$2.class
 accountspack\Group_Summary.class
+loyaltypack\points_redemption$7.class
 accountspack\voucher_report_group_ledger$5.class
 userpack\UserPanel$3.class
 loyaltypack\cust_points_details$5.class
@@ -1160,6 +1208,7 @@ menupack\menu_form$109.class
 packingpack\packing_entry$12.class
 salespack\sales_report.class
 menupack\menu_form$22.class
+MISPack\estimate_profit_billwise$6.class
 menupack\menu_form$219.class
 menupack\menu_form$104.class
 packingpack\packing_entry$7.class
@@ -1171,6 +1220,7 @@ menupack\menu_form$48.class
 barcodepack\barcode_print$5.class
 venpack\vendor_import_excel$7.class
 estimatepack\estimate$56.class
+loyaltypack\points_redemption$2.class
 purchasepack\purchase_summary_supplier$7.class
 Utils\CompanySettingUtil.class
 venpack\ven_bill$11.class
@@ -1192,8 +1242,11 @@ purchasepack\preturn_entry$18.class
 custpack\cust_bill$5.class
 accountspack\voucher_trasfer$1.class
 accountspack\voucher_report$4.class
+MISPack\estimate_profit_billwise$1.class
+Utils\ThemeManager.class
 estimatepack\estimate_summary_cust$5.class
 menupack\menu_form$214.class
+menupack\CompanyManagement$3.class
 hrpack\staff_entry$13.class
 hrpack\pay_loan$5.class
 purchasepack\preturn_entry$43.class
@@ -1207,7 +1260,6 @@ menupack\menu_form$69.class
 tax_reports\tax_hsn_sales_return$3.class
 menupack\menu_form$73.class
 pospack\sreturn$16.class
-itempack\item_master$25.class
 MISPack\profit_daywise$6.class
 purchasepack\preturn_summary_iname.class
 menupack\menu_form$43.class
@@ -1216,9 +1268,11 @@ menupack\menu_form$230.class
 accountspack\Cashbook_Summary_select$1.class
 custpack\cust_pay$1.class
 stockpack\stock_entry$14.class
+ActivationPack\trial_activation_form$1.class
 purchase_order_pack\purchase_order_report$3.class
 userpack\user_permissions$2.class
 accountspack\RP_select$2.class
+MISPack\estimate_profit_daywise$1.class
 salespack\daily_sales_select$2.class
 packingpack\packing_report$5.class
 stockpack\expiry_report$2.class
@@ -1243,6 +1297,7 @@ custpack\cust_pay$17.class
 smspack\manual_sms$2.class
 purchasepack\preturn_entry$39.class
 tax_reports\tax_purchase_return$4.class
+menupack\menu_form$251.class
 custpack\cust_import_excel$9.class
 itempack\items_import_excel$6.class
 stockpack\stock_entry$44.class
@@ -1263,6 +1318,7 @@ estimatepack\print_class_estimate_return.class
 estimatepack\estimate$14.class
 estimatepack\estimate$5.class
 hrpack\pay_bill_generation$7.class
+ActivationPack\activation_home$3.class
 smspack\sms_setting$2.class
 venpack\ven_bill_report$3.class
 accountspack\balance_sheet_summary.class
@@ -1307,6 +1363,7 @@ hrpack\staff_entry$2.class
 MISPack\profit_itemwise$6.class
 custpack\cust_bills_bulk_upload$2.class
 purchasepack\purchase_report$3.class
+MISPack\estimate_profit_billwise.class
 stockpack\stock_bulk_rate_update$5.class
 tax_reports\tax_hsn_sales$1.class
 custpack\cust_bills_bulk_upload.class
@@ -1360,6 +1417,7 @@ estimatepack\estimate_report_cust$5.class
 itempack\items_import_excel$1.class
 menupack\menu_form$10.class
 salespack\sales_summary_category.class
+menupack\menu_form$256.class
 pospack\sales$46.class
 hrpack\pay_bill_generation.class
 purchase_order_pack\purchase_order$18.class
@@ -1386,6 +1444,7 @@ estimatepack\estimate$19.class
 pospack\sreturn$41.class
 hrpack\staff_entry.class
 purchasepack\purchase_summary_manu.class
+venpack\ven_pay_receipt_print.class
 emailpack\email_setting$1.class
 accountspack\voucher_entry$11.class
 estimatepack\estimate_summary_item$7.class
@@ -1407,6 +1466,7 @@ estimatepack\estimate$44.class
 MISPack\top_selling_items$6.class
 purchasepack\purchase_report_iname.class
 stockpack\stock_report_min_stock$8.class
+menupack\CompanyManagement.class
 custpack\cust_list_area$9.class
 MISPack\profit_itemwise$4.class
 accountspack\voucher_report_group$1.class
@@ -1416,6 +1476,7 @@ purchase_order_pack\purchase_order$31.class
 stockpack\stock_bulk_rate_update$3.class
 MISPack\profit_itemwise_barcode.class
 purchasepack\purchase_entry$18.class
+ActivationPack\activation_form$4.class
 pospack\sales$34.class
 venpack\ven_pay$5.class
 venpack\ven_bill_report.class
@@ -1447,6 +1508,7 @@ stockpack\stock_report_min_stock$3.class
 pospack\sreturn$44.class
 salespack\sales_summary_daywise$4.class
 packingpack\packing_entry$26.class
+Utils\ThemeManager$10.class
 estimatepack\ereturn_summary_item$6.class
 purchasepack\purchase_entry$13.class
 tax_reports\tax_sales$5.class
@@ -1472,10 +1534,12 @@ custpack\cust_pay_report$2.class
 tax_reports\tax_summary$4.class
 purchasepack\purchase_entry$9.class
 menupack\menu_form$13.class
+stockpack\stock_entry$51.class
 estimatepack\estimate_summary_userwise$6.class
 hrpack\pay_advance$14.class
 hrpack\pay_loan_report$4.class
 menupack\menu_form$200.class
+menupack\menu_form$253.class
 MISPack\top_customers_for_item$1.class
 custpack\cust_balance_report.class
 stockpack\stock_summary_entry_wise$3.class
@@ -1484,6 +1548,8 @@ menupack\menu_form$36.class
 stockpack\stock_entry$5.class
 packingpack\packing_entry.class
 menupack\menu_form$50.class
+MISPack\estimate_profit_daywise$4.class
+estimatepack\estimate$63.class
 custpack\cust_master$9.class
 menupack\menu_form$158.class
 purchase_order_pack\vendor_link$14.class
@@ -1501,6 +1567,7 @@ estimatepack\estimate$12.class
 purchase_order_pack\purchase_order$20.class
 stockpack\stock_entry$37.class
 hrpack\pay_loan_report$6.class
+venpack\ven_pay$18.class
 estimatepack\estimate_summary_userwise$4.class
 hrpack\pay_loan$7.class
 accountspack\Bankbook_Summary.class
@@ -1511,6 +1578,7 @@ estimatepack\estimate$42.class
 venpack\ven_pay$8.class
 salespack\sales_summary_daywise$1.class
 accountspack\Cashbook_Summary_select$3.class
+ActivationPack\activation_form$6.class
 hrpack\pay_loan_report.class
 estimatepack\estimate$3.class
 hrpack\pay_loan.class
@@ -1531,6 +1599,7 @@ accountspack\RP_select$4.class
 custpack\cust_list$4.class
 tax_reports\tax_purchase$4.class
 menupack\menu_form$15.class
+estimatepack\estimate$65.class
 attendancepack\attendance_report$5.class
 pospack\sales$32.class
 tax_reports\tax_summary$1.class
@@ -1539,6 +1608,8 @@ userpack\user_permissions$4.class
 barcodepack\jasper\BarcodeTemplateManager$1.class
 purchasepack\preturn_entry$15.class
 salespack\sreturn_report$3.class
+ActivationPack\trial_activation_form.class
+ActivationPack\activation_form$1.class
 menupack\menu_form$237.class
 ReportTest.class
 salespack\sales_report_terminal$2.class
@@ -1552,6 +1623,7 @@ accountspack\voucher_report_group$4.class
 custpack\cust_pay$19.class
 hrpack\staff_list$6.class
 userpack\UserPanel$6.class
+loyaltypack\points_redemption$4.class
 tax_reports\tax_hsn_purchase_return$8.class
 custpack\cust_bill$11.class
 pospack\setting_terminal.class
@@ -1581,6 +1653,7 @@ purchasepack\purchase_summary_iname$1.class
 salespack\sales_report_price_type$4.class
 menupack\menu_form$127.class
 pospack\setting_terminal$1.class
+pospack\sales$65.class
 salespack\sreturn_report$1.class
 menupack\menu_form$232.class
 MISPack\top_customers_for_item$9.class
@@ -1607,9 +1680,12 @@ menupack\menu_form$80.class
 stockpack\stock_report_nill_stock$1.class
 estimatepack\ereturn$21.class
 estimatepack\estimate_summary_userwise$1.class
+MISPack\estimate_profit_itemwise$2.class
 itempack\items_list$sample2.class
 venpack\vendor_list$6.class
+MISPack\estimate_profit_daywise$6.class
 estimatepack\estimate_summary_item.class
+pospack\sales$64.class
 salespack\sreturn_summary_item$5.class
 itempack\stock_import$3.class
 menupack\menu_form$179.class
@@ -1620,6 +1696,7 @@ purchasepack\preturn_entry$10.class
 stockpack\stock_report_nill_stock$4.class
 packingpack\packing_entry$21.class
 purchasepack\purchase_summary_iname$3.class
+ActivationPack\trial_activation_form$4.class
 MISPack\top_customers_for_item$4.class
 pospack\sreturn$13.class
 purchasepack\purchase_summary_iname$6.class
@@ -1638,6 +1715,8 @@ venpack\ven_pay$13.class
 purchasepack\purchase_entry$36.class
 estimatepack\ereturn$26.class
 estimatepack\ereturn$7.class
+MISPack\estimate_profit_itemwise$6.class
+pospack\sales$69.class
 salespack\sales_summary_manu.class
 tax_reports\tax_hsn_sales_return$8.class
 stockpack\stock_entry$sample2.class
@@ -1645,6 +1724,7 @@ barcodepack\jasper\JasperBarcodePrinter.class
 purchasepack\preturn_report$3.class
 purchasepack\preturn_report$6.class
 userpack\UserPanel$5.class
+estimatepack\estimate$60.class
 custpack\cust_pay_report$7.class
 purchasepack\purchase_summary_category.class
 salespack\sales_summary_item$2.class
@@ -1653,6 +1733,7 @@ custpack\cust_bill$16.class
 purchasepack\purchase_summary_supplier$4.class
 accountspack\day_book_print.class
 menupack\setting_bill.class
+loyaltypack\points_redemption$5.class
 venpack\ven_pay$11.class
 estimatepack\estimate_report_price_type$1.class
 pospack\sreturn$11.class
@@ -1662,6 +1743,7 @@ purchasepack\preturn_report$4.class
 purchasepack\purchase_summary_category$8.class
 accountspack\voucher_report_group_ledger$7.class
 menupack\menu_form$235.class
+MISPack\estimate_profit_itemwise$4.class
 itempack\item_search$1.class
 salespack\sreturn_summary_item$1.class
 estimatepack\estimate$49.class
@@ -1673,14 +1755,17 @@ menupack\menu_form$176.class
 tax_reports\tax_sales_return$4.class
 pospack\sales$16.class
 salespack\sales_summary_item$4.class
+Utils\ThemeManager$12.class
 Utils\ColorConstants.class
 purchasepack\purchase_entry$34.class
+pospack\sales$67.class
 estimatepack\ereturn$24.class
 salespack\sales_report_terminal$1.class
 estimatepack\estimate_report_price_type$2.class
 stockpack\stock_entry$32.class
 menupack\menu_form$1.class
 pospack\print_thermal_summary_return.class
+ActivationPack\key_generation.class
 accountspack\voucher_report_group_ledger$8.class
 pospack\print_a4_2_Copies.class
 estimatepack\estimate$24.class
@@ -1737,6 +1822,7 @@ purchase_order_pack\purchase_order$29.class
 estimatepack\estimate$29.class
 menupack\menu_form$190.class
 estimatepack\ereturn$16.class
+ActivationPack\trial_activation_form$3.class
 loyaltypack\cust_points_withdraw$2.class
 menupack\menu_form$128.class
 venpack\ven_dues_report.class
@@ -1748,6 +1834,7 @@ purchasepack\purchase_summary_manu$10.class
 MISPack\top_selling_items$5.class
 purchasepack\preturn_entry$40.class
 itempack\items_import_excel$3.class
+menupack\menu_form$254.class
 hrpack\pay_loan_report_active$5.class
 venpack\ven_dues_report$3.class
 menupack\menu_form$195.class
@@ -1793,11 +1880,13 @@ hrpack\pay_advance$7.class
 userpack\PermissionManager.class
 stockpack\stock_bulk_rate_update$7.class
 venpack\vendor_import_excel$5.class
+couldpack\DatabaseRestore$1.class
 purchasepack\purchase_entry$17.class
 barcodepack\jasper\BarcodeDesigner$1.class
 estimatepack\estimate_report_cust$8.class
 estimatepack\estimate_summary_manu$1.class
 tax_reports\tax_summary$2.class
+MISPack\estimate_profit_daywise$3.class
 stockpack\stock_entry$20.class
 menupack\menu_form$107.class
 tax_reports\tax_sales$2.class
@@ -1805,6 +1894,7 @@ stockpack\stock_entry$50.class
 custpack\cust_bill_report.class
 estimatepack\estimate_summary_daywise.class
 MISPack\profit_category$1.class
+menupack\CompanyManagement$1.class
 accountspack\voucher_print.class
 estimatepack\ereturn$1.class
 menupack\login.class
@@ -1835,11 +1925,13 @@ salespack\sales_report_bill_itemwise$9.class
 MISPack\sales_alter_list$1.class
 barcodepack\jasper\BarcodeTemplateManager$2.class
 custpack\cust_dues_report_print_select$2.class
+MISPack\estimate_profit_billwise$3.class
 MISPack\sales_alter_list$6.class
 tax_reports\tax_summary$3.class
 custpack\cust_pay$8.class
 hrpack\pay_bill_generation$1.class
 hrpack\pay_bill_report$3.class
+menupack\InvoiceColumnManager$1.class
 venpack\ven_dues_report$4.class
 hrpack\pay_loan$16.class
 itempack\item_master$23.class
@@ -1847,6 +1939,7 @@ custpack\cust_pay_report$1.class
 estimatepack\estimate_summary_cust$3.class
 barcodepack\barcode_print$8.class
 menupack\menu_form$97.class
+menupack\CompanyManagement$5.class
 menupack\menu_form$106.class
 MISPack\top_users$4.class
 custpack\cust_pay_report.class
@@ -1879,6 +1972,7 @@ pospack\sales$52.class
 MISPack\sales_deleted_list$2.class
 hrpack\pay_bill_generation$6.class
 pospack\sreturn$27.class
+purchase_order_pack\purchase_order$33.class
 purchase_order_pack\purchase_order$28.class
 estimatepack\estimate$28.class
 stockpack\stock_entry_report$7.class
@@ -1890,6 +1984,7 @@ itempack\item_master$22.class
 purchasepack\purchase_report_iname$10.class
 packingpack\packing_entry$9.class
 salespack\daily_sales_report_select.class
+MISPack\estimate_profit_billwise$4.class
 purchasepack\preturn_entry$33.class
 venpack\ven_bill$1.class
 menupack\menu_form$102.class
@@ -1906,6 +2001,8 @@ estimatepack\ereturn$46.class
 estimatepack\estimate$23.class
 purchase_order_pack\purchase_order$23.class
 estimatepack\daily_estimate_select$4.class
+menupack\menu_form$259.class
+purchase_order_pack\purchase_order$32.class
 hrpack\pay_loan$10.class
 itempack\item_master$8.class
 stockpack\stock_report_min_stock.class
@@ -1920,6 +2017,7 @@ purchasepack\purchase_report$6.class
 venpack\ven_bill$3.class
 accountspack\voucher_report_group_ledger.class
 estimatepack\estimate_report_cust$4.class
+menupack\menu_form$258.class
 menupack\menu_form$61.class
 barcodepack\barcode_print$2.class
 custpack\cust_dues_report_print_select$3.class
@@ -1958,6 +2056,7 @@ tax_reports\tax_purchase_return.class
 estimatepack\estimate$57.class
 venpack\vendor_import_excel$6.class
 salespack\daily_sales_select$3.class
+custpack\cust_pay$29.class
 itempack\item_master$6.class
 custpack\cust_bill$21.class
 estimatepack\estimate_summary_cust$1.class
@@ -1972,11 +2071,11 @@ salespack\sales_report_cust$9.class
 pospack\sreturn$25.class
 custpack\cust_pay$5.class
 estimatepack\ereturn$17.class
+menupack\CompanyManagement$2.class
 hrpack\pay_bill_generation$4.class
 hrpack\pay_loan_report_active$6.class
 venpack\vendor_master$1.class
 packingpack\packing_entry$32.class
-itempack\item_master$26.class
 menupack\menu_form$169.class
 MISPack\top_users$1.class
 salespack\sales_summary_daywise.class
@@ -2025,6 +2124,7 @@ tax_reports\tax_purchase_return$2.class
 itempack\items_import_excel$4.class
 itempack\items_import_excel$7.class
 purchasepack\purchase_report$1.class
+Utils\ThemeManager$9.class
 estimatepack\estimate_summary_category$3.class
 tax_reports\tax_hsn_purchase$2.class
 purchasepack\preturn_entry$36.class
@@ -2075,6 +2175,7 @@ venpack\vendor_import_excel$9.class
 estimatepack\ereturn_report$4.class
 Utils\PasswordUtils.class
 itempack\items_list$3.class
+Utils\ThemeManager$2.class
 stockpack\stock_report_entry_wise$5.class
 barcodepack\jasper\JRXMLParser$TemplateData.class
 estimatepack\estimate_summary_daywise$5.class
@@ -2108,6 +2209,7 @@ menupack\menu_form$167.class
 itempack\items_list$8.class
 pospack\sales$25.class
 itempack\items_list$12.class
+Utils\ThemeManager$7.class
 salespack\sales_report_cust$5.class
 salespack\daily_sales_select$1.class
 estimatepack\estimate_summary$6.class
@@ -2124,7 +2226,9 @@ purchasepack\purchase_entry$43.class
 packingpack\packing_entry$30.class
 itempack\items_list$2.class
 estimatepack\estimate_summary$5.class
+Utils\ThemeManager$8.class
 barcodepack\jasper\BarcodeTemplateManager.class
+Utils\ThemeManager$1.class
 hrpack\pay_loan_report_active$4.class
 menupack\menu_form$133.class
 purchase_order_pack\purchase_order$1.class
@@ -2152,12 +2256,15 @@ menupack\menu_form$26.class
 pospack\sales$20.class
 pospack\sales$23.class
 menupack\menu_form$228.class
+loyaltypack\points_redemption.class
 estimatepack\ereturn_report$3.class
 venpack\vendor_import_excel$8.class
+Utils\ThemeManager$3.class
 menupack\menu_form$29.class
 menupack\menu_form$90.class
 estimatepack\estimate_summary_daywise$4.class
 purchasepack\purchase_entry$41.class
+Utils\ThemeManager$6.class
 menupack\TerminalManagerPanel$2.class
 stockpack\stock_entry$29.class
 itempack\items_list$7.class
@@ -2180,6 +2287,7 @@ estimatepack\estimate_summary$3.class
 salespack\sales_report_cust$2.class
 estimatepack\daily_estimate.class
 estimatepack\ereturn$18.class
+Utils\ThemeManager$4.class
 menupack\menu_form$130.class
 hrpack\pay_advance$1.class
 itempack\items_list$5.class
@@ -2197,6 +2305,7 @@ estimatepack\ereturn$19.class
 estimatepack\estimate_summary$2.class
 itempack\items_list$6.class
 purchase_order_pack\purchase_order$4.class
+Utils\ThemeManager$5.class
 hrpack\pay_advance$2.class
 menupack\menu_form$229.class
 salespack\sales_report_cust$1.class

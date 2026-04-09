@@ -18,6 +18,7 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import menupack.menu_form;
 import menupack.sample2;
+import menupack.UserSession;
 
 /**
  *
@@ -94,13 +95,16 @@ public class barcode_print extends javax.swing.JInternalFrame {
 
     final void get_barcode_no() {
         try {
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             int count = 0;
-            String query = "select distinct barcode from item";
+            String query = "select distinct barcode from item" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 count = count + 1;
             }
-            query = "select distinct barcode from item";
+            query = "select distinct barcode from item" + companyFilter;
             r = util.doQuery(query);
             Object f[] = new Object[count];
             int index = 0;
@@ -116,13 +120,16 @@ public class barcode_print extends javax.swing.JInternalFrame {
 
     final void get_item_code() {
         try {
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             int count = 0;
-            String query = "select distinct ino from item";
+            String query = "select distinct ino from item" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 count = count + 1;
             }
-            query = "select distinct ino from item";
+            query = "select distinct ino from item" + companyFilter;
             r = util.doQuery(query);
             Object f[] = new Object[count];
             int index = 0;
@@ -138,13 +145,16 @@ public class barcode_print extends javax.swing.JInternalFrame {
 
     final void get_item_name() {
         try {
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " WHERE company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             int count = 0;
-            String query = "select distinct iname from item";
+            String query = "select distinct iname from item" + companyFilter;
             r = util.doQuery(query);
             while (r.next()) {
                 count = count + 1;
             }
-            query = "select distinct iname from item";
+            query = "select distinct iname from item" + companyFilter;
             r = util.doQuery(query);
             Object f[] = new Object[count];
             int index = 0;
@@ -587,8 +597,11 @@ public class barcode_print extends javax.swing.JInternalFrame {
                 return;
             }
 
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             String query = "select barcode,ino,iname,mrp,rprice,wprice,iname1 from item where barcode='"
-                    + h2.getSelectedItem() + "' order by barcode limit 1";
+                    + h2.getSelectedItem() + "'" + companyFilter + " order by barcode limit 1";
             load_default_data(query, quan);
         } catch (HeadlessException e) {
             System.out.println(e.getMessage());
@@ -610,8 +623,11 @@ public class barcode_print extends javax.swing.JInternalFrame {
                 JOptionPane.showMessageDialog(this, "Invalid Quantity!", "Invalid", JOptionPane.ERROR_MESSAGE);
                 return;
             }
+            String companyFilter = UserSession.hasSelectedCompany()
+                    ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
             String query = "select barcode,ino,iname,mrp,rprice,wprice,iname1 from item where ino='"
-                    + h3.getSelectedItem() + "' order by barcode";
+                    + h3.getSelectedItem() + "'" + companyFilter + " order by barcode";
             load_default_data(query, quan);
         } catch (HeadlessException e) {
             System.out.println(e.getMessage());
@@ -622,9 +638,12 @@ public class barcode_print extends javax.swing.JInternalFrame {
         try {
             try {
                 String selectedName = h4.getSelectedItem() != null ? h4.getSelectedItem().toString() : "";
+                String companyFilter = UserSession.hasSelectedCompany()
+                        ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                        : "";
                 String query = "SELECT ino, iname, barcode,"
                         + (CompanySettingUtil.getInstance().isDisplayBatch() ? "batch" : "size")
-                        + " FROM item WHERE iname = '" + selectedName + "'";
+                        + " FROM item WHERE iname = '" + selectedName + "'" + companyFilter;
                 ResultSet set = util.doQuery(query);
 
                 List<Object[]> rows = new ArrayList<>();
@@ -703,8 +722,11 @@ public class barcode_print extends javax.swing.JInternalFrame {
             JOptionPane.showMessageDialog(this, "Invalid Quantity!", "Invalid", JOptionPane.ERROR_MESSAGE);
             return;
         }
+        String companyFilter = UserSession.hasSelectedCompany()
+                ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
+                : "";
         String query = "select barcode,ino,iname,mrp,rprice,wprice,iname1 from item where ino='" + ino
-                + "' order by iname limit 1";
+                + "'" + companyFilter + " order by iname limit 1";
         load_default_data(query, quan);
     }
 

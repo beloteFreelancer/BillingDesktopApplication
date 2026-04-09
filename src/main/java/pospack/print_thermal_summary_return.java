@@ -19,20 +19,19 @@ import javax.print.attribute.standard.MediaPrintableArea;
 import javax.print.attribute.standard.MediaSize;
 import javax.print.attribute.standard.MediaSizeName;
 import menupack.SelRomJasper;
+import menupack.UserSession;
 import net.sf.jasperreports.engine.JRException;
-import net.sf.jasperreports.engine.JRExporterParameter;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.export.JRPrintServiceExporter;
-import net.sf.jasperreports.engine.export.JRPrintServiceExporterParameter;
 import net.sf.jasperreports.engine.util.JRLoader;
 
 /**
  *
  * @author K.SELVAKUMAR, copyrights K.SELVAKUMAR, +91 99427 32229,
- * mysoft.java@gmail.com
+ *         mysoft.java@gmail.com
  */
 public class print_thermal_summary_return {
 
@@ -42,7 +41,8 @@ public class print_thermal_summary_return {
     public void Report(DataUtil util, String billno, String drive, String folder, String billformat) {
         try {
             this.util = util;
-            Map<String, Object> parameters = new <String, Object>HashMap();            parameters.put("parameter1", "");
+            Map<String, Object> parameters = new <String, Object>HashMap();
+            parameters.put("parameter1", "");
             parameters.put("parameter2", "");
             parameters.put("parameter3", "");
             parameters.put("parameter4", "");
@@ -60,8 +60,13 @@ public class print_thermal_summary_return {
             parameters.put("parameter24", "");
             parameters.put("parameter25", "");
 
-            String add1 = "", add2 = "", add3 = "", add4 = "", add5 = "", head = "", sms1 = "", sms2 = "", sms3 = "", letter = "", sms4 = "", logoPath = "";
-            String query = "select cname,add1,add2,add3,bhead,sms1,sms2,sms3,hmany,letter,add4,sms4,logo_path from setting_bill";
+            String add1 = "", add2 = "", add3 = "", add4 = "", add5 = "", head = "", sms1 = "", sms2 = "", sms3 = "",
+                    letter = "", sms4 = "", logoPath = "";
+            String companyWhere = UserSession.hasSelectedCompany()
+                    ? " WHERE companyID='" + UserSession.getSelectedCompanyID() + "'"
+                    : "";
+            String query = "select cname,add1,add2,add3,bhead,sms1,sms2,sms3,hmany,letter,add4,sms4,logo_path from company"
+                    + companyWhere;
             ResultSet r = util.doQuery(query);
             while (r.next()) {
                 logoPath = r.getString("logo_path");
@@ -96,9 +101,12 @@ public class print_thermal_summary_return {
             }
             parameters.put("parameter5", "Return Bill /Memo");
 
-            String date = "", location = "", terminal = "", cashier = "", items = "", quans = "", pby = "", cname = "", mobile = "", time = "", cid = "";
-            double sub = 0, disamt = 0, addamt = 0, net = 0, paid = 0, bal = 0, taxamt = 0, today_points = 0, total_points = 0;
-            query = "select date_format(dat,'%d/%m/%Y'),tim,location,terminal,cashier,items,quans,sub,disamt,addamt,net,pby,paid,bal,cname,mobile,cid,taxamt from sreturn where billno='" + billno + "'";
+            String date = "", location = "", terminal = "", cashier = "", items = "", quans = "", pby = "", cname = "",
+                    mobile = "", time = "", cid = "";
+            double sub = 0, disamt = 0, addamt = 0, net = 0, paid = 0, bal = 0, taxamt = 0, today_points = 0,
+                    total_points = 0;
+            query = "select date_format(dat,'%d/%m/%Y'),tim,location,terminal,cashier,items,quans,sub,disamt,addamt,net,pby,paid,bal,cname,mobile,cid,taxamt from sreturn where billno='"
+                    + billno + "'";
             r = util.doQuery(query);
             while (r.next()) {
                 date = r.getString(1);
@@ -275,7 +283,7 @@ public class print_thermal_summary_return {
                 k.add(selRomJasper);
                 serial = serial + 1;
                 j++;
-            }//while loop ends//adding items ends
+            } // while loop ends//adding items ends
 
             double savings = mrptot - net;
             if (savings > 0) {
@@ -310,7 +318,8 @@ public class print_thermal_summary_return {
             parameters.put("parameter53", "");
             parameters.put("parameter54", "");
 
-            double value0 = 0, gst5 = 0, value5 = 0, gst12 = 0, value12 = 0, gst18 = 0, value18 = 0, gst28 = 0, value28 = 0;
+            double value0 = 0, gst5 = 0, value5 = 0, gst12 = 0, value12 = 0, gst18 = 0, value18 = 0, gst28 = 0,
+                    value28 = 0;
             query = "select sum(sub) from sreturn_items where billno='" + billno + "' and taxp='0' ";
             r = util.doQuery(query);
             while (r.next()) {
@@ -402,7 +411,8 @@ public class print_thermal_summary_return {
             parameters.put("parameter54", "" + tcgst2);
 
             disable_warnigs.disableAccessWarnings();
-            JasperReport jasperReport = JasperReportCompiler.compileReport("/JasperFiles/Thermal_Unicode/Thermal_GST_Summary.jrxml");
+            JasperReport jasperReport = JasperReportCompiler
+                    .compileReport("/JasperFiles/Thermal_Unicode/Thermal_GST_Summary.jrxml");
             JRBeanCollectionDataSource beanColDataSource = new JRBeanCollectionDataSource(k);
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, beanColDataSource);
 
