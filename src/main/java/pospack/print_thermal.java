@@ -6,6 +6,7 @@ import com.selrom.utils.JasperReportCompiler;
 import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
 import java.awt.image.BufferedImage;
+import Utils.OtherChargesDialog;
 import Utils.UpiQrGenerator;
 import java.io.FileNotFoundException;
 import java.sql.ResultSet;
@@ -173,8 +174,16 @@ public class print_thermal {
             }
 
             if (addamt > 0) {
+                String companyId = UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "";
+                java.util.List<String[]> otherCharges = OtherChargesDialog.loadCharges(util, "sales_other_charges",
+                        billno, companyId);
+                if (!otherCharges.isEmpty()) {
+                    String chargesStr = OtherChargesDialog.buildChargesDisplayString(otherCharges, hmany);
+                    parameters.put("parameter17", chargesStr);
+                } else {
+                    parameters.put("parameter17", "Others : ");
+                }
                 String addamt2 = String.format("%." + hmany + "f", addamt);
-                parameters.put("parameter17", "Others : ");
                 parameters.put("parameter18", "" + addamt2);
             }
 

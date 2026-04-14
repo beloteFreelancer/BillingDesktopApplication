@@ -69,6 +69,10 @@ public final class stock_entry extends javax.swing.JInternalFrame {
     AutoCompleteSupport support;
     int hmany = 4;
 
+    private javax.swing.JDialog multi_pay_mode;
+    private javax.swing.JTextField mpCash, mpCard, mpOthers, mpCredit, mpTotal;
+    double multiPayCredit = 0;
+
     public class sample2 extends DefaultTableModel {
 
         @Override
@@ -699,8 +703,9 @@ public final class stock_entry extends javax.swing.JInternalFrame {
                             + dis1
                             + "','" + cid + "')");
 
-            if (pby.equalsIgnoreCase("Credit")) {
+            if (pby.equalsIgnoreCase("Credit") || (pby.equalsIgnoreCase("Multi Pay") && multiPayCredit > 0)) {
                 int paid1 = 0;
+                double creditTotal = pby.equalsIgnoreCase("Credit") ? net : multiPayCredit;
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
                 Calendar c = Calendar.getInstance();
                 c.setTime(sdf.parse(date));
@@ -709,7 +714,7 @@ public final class stock_entry extends javax.swing.JInternalFrame {
 
                 query_batch.add("insert into ven_bal (billno, dat, ddate, cname, tot, paid, last, company_id) values ('"
                         + billno + "','" + date + "','" + ddate + "','" + cname
-                        + "','" + net + "','" + paid1 + "','" + last + "','" + cid + "')");
+                        + "','" + creditTotal + "','" + paid1 + "','" + last + "','" + cid + "')");
             } // credit bill ends
 
             int count = util.doManipulation_Batch(query_batch);
@@ -756,6 +761,7 @@ public final class stock_entry extends javax.swing.JInternalFrame {
             netl.setText("");
             diffl.setText("");
             h30.setText("");
+            multiPayCredit = 0;
             if (s2.getRowCount() > 0) {
                 s2.getDataVector().removeAllElements();
                 s2.fireTableDataChanged();
@@ -1125,7 +1131,7 @@ public final class stock_entry extends javax.swing.JInternalFrame {
                             : ""));
             query_batch.add("delete from stock_entry_items where grn='" + grn + "'");
 
-            if (h28.getSelectedItem().equals("Credit")) {
+            if (h28.getSelectedItem().equals("Credit") || h28.getSelectedItem().equals("Multi Pay")) {
                 query_batch.add(
                         "delete from ven_bal where billno='" + h4.getText() + "' and cname='" + h3.getText() + "'"
                                 + (UserSession.hasSelectedCompany()
@@ -1201,7 +1207,7 @@ public final class stock_entry extends javax.swing.JInternalFrame {
                     + (UserSession.hasSelectedCompany() ? " and company_id='" + UserSession.getSelectedCompanyID() + "'"
                             : ""));
             query_batch.add("delete from stock_entry_items where grn='" + grn + "'");
-            if (h28.getSelectedItem().equals("Credit")) {
+            if (h28.getSelectedItem().equals("Credit") || h28.getSelectedItem().equals("Multi Pay")) {
                 query_batch.add(
                         "delete from ven_bal where billno='" + h4.getText() + "' and cname='" + h3.getText() + "'"
                                 + (UserSession.hasSelectedCompany()
@@ -1357,6 +1363,7 @@ public final class stock_entry extends javax.swing.JInternalFrame {
         get_sug();
         h22.setVisible(false);
         h15.setVisible(false);
+        initMultiPayDialog();
     }
 
     @SuppressWarnings("unchecked")
@@ -2127,6 +2134,13 @@ public final class stock_entry extends javax.swing.JInternalFrame {
                 h28KeyPressed(evt);
             }
         });
+        h28.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                if (h28.getSelectedItem() != null && h28.getSelectedItem().equals("Multi Pay")) {
+                    showMultiPayDialog();
+                }
+            }
+        });
         getContentPane().add(h28);
         h28.setBounds(1100, 470, 130, 30);
 
@@ -2591,7 +2605,11 @@ public final class stock_entry extends javax.swing.JInternalFrame {
 
     private void h28KeyPressed(java.awt.event.KeyEvent evt) {// GEN-FIRST:event_h28KeyPressed
         if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
-            save();
+            if (h28.getSelectedItem().equals("Multi Pay")) {
+                showMultiPayDialog();
+            } else {
+                save();
+            }
         }
     }// GEN-LAST:event_h28KeyPressed
 
@@ -2934,6 +2952,222 @@ public final class stock_entry extends javax.swing.JInternalFrame {
         dialog.setVisible(true);
 
         return selectedIno[0];
+    }
+
+    private void initMultiPayDialog() {
+        multi_pay_mode = new javax.swing.JDialog();
+        multi_pay_mode.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        multi_pay_mode.setUndecorated(true);
+        multi_pay_mode.setModal(true);
+
+        javax.swing.JPanel mpPanel = new javax.swing.JPanel();
+        mpPanel.setBackground(java.awt.Color.WHITE);
+        mpPanel.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(41, 128, 185), 2));
+
+        javax.swing.JLabel titleLabel = new javax.swing.JLabel();
+        titleLabel.setFont(new java.awt.Font("Arial", 1, 16));
+        titleLabel.setText("  \u2605 MULTI PAY MODE");
+        titleLabel.setForeground(java.awt.Color.WHITE);
+        titleLabel.setOpaque(true);
+        titleLabel.setBackground(new java.awt.Color(41, 128, 185));
+
+        javax.swing.JLabel cashLabel = new javax.swing.JLabel("Cash");
+        cashLabel.setFont(new java.awt.Font("Arial", 0, 15));
+        javax.swing.JLabel cardLabel = new javax.swing.JLabel("Card");
+        cardLabel.setFont(new java.awt.Font("Arial", 0, 15));
+        javax.swing.JLabel othersLabel = new javax.swing.JLabel("Others");
+        othersLabel.setFont(new java.awt.Font("Arial", 0, 15));
+        javax.swing.JLabel creditLbl = new javax.swing.JLabel("<html><font color='#c0392b'>Credit</font></html>");
+        creditLbl.setFont(new java.awt.Font("Arial", 1, 13));
+        javax.swing.JLabel totalLabel = new javax.swing.JLabel("Total");
+        totalLabel.setFont(new java.awt.Font("Arial", 1, 15));
+
+        mpCash = new javax.swing.JTextField();
+        mpCash.setFont(new java.awt.Font("Arial", 1, 17));
+        mpCash.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        mpCash.addActionListener(e -> mpCard.requestFocus());
+
+        mpCard = new javax.swing.JTextField();
+        mpCard.setFont(new java.awt.Font("Arial", 1, 17));
+        mpCard.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        mpCard.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                get_multi_paid_details();
+            }
+        });
+        mpCard.addActionListener(e -> mpOthers.requestFocus());
+
+        mpOthers = new javax.swing.JTextField();
+        mpOthers.setFont(new java.awt.Font("Arial", 1, 17));
+        mpOthers.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        mpOthers.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                get_multi_paid_details();
+            }
+        });
+        mpOthers.addActionListener(e -> get_multi_paid_details());
+
+        mpCredit = new javax.swing.JTextField();
+        mpCredit.setFont(new java.awt.Font("Arial", 1, 17));
+        mpCredit.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        mpCredit.setBackground(new java.awt.Color(250, 219, 216));
+        mpCredit.setEditable(false);
+
+        mpTotal = new javax.swing.JTextField();
+        mpTotal.setFont(new java.awt.Font("Arial", 1, 17));
+        mpTotal.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        mpTotal.setEditable(false);
+        mpTotal.setBackground(new java.awt.Color(236, 240, 241));
+
+        javax.swing.JButton mpOkBtn = new javax.swing.JButton("OK - Save Entry");
+        mpOkBtn.setFont(new java.awt.Font("Arial", 1, 15));
+        mpOkBtn.setBackground(new java.awt.Color(39, 174, 96));
+        mpOkBtn.setForeground(java.awt.Color.WHITE);
+        mpOkBtn.addActionListener(e -> {
+            get_multi_paid_details();
+            multi_pay_mode.dispose();
+            save();
+        });
+
+        javax.swing.JButton mpCloseBtn = new javax.swing.JButton("Close");
+        mpCloseBtn.setFont(new java.awt.Font("Arial", 1, 15));
+        mpCloseBtn.setBackground(new java.awt.Color(192, 57, 43));
+        mpCloseBtn.setForeground(java.awt.Color.WHITE);
+        mpCloseBtn.addActionListener(e -> multi_pay_mode.dispose());
+
+        javax.swing.JSeparator sep = new javax.swing.JSeparator();
+
+        javax.swing.GroupLayout mpLayout = new javax.swing.GroupLayout(mpPanel);
+        mpPanel.setLayout(mpLayout);
+        mpLayout.setHorizontalGroup(
+                mpLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(titleLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 336, Short.MAX_VALUE)
+                        .addGroup(mpLayout.createSequentialGroup()
+                                .addGap(10, 10, 10)
+                                .addGroup(mpLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(cashLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(cardLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(othersLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(creditLbl, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(totalLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(5, 5, 5)
+                                .addGroup(mpLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(mpCash, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(mpCard, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(mpOthers, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(mpCredit, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(mpTotal, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(sep, javax.swing.GroupLayout.PREFERRED_SIZE, 336,
+                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGroup(mpLayout.createSequentialGroup()
+                                .addGap(10, 10, 10)
+                                .addComponent(mpOkBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 230,
+                                        javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(6, 6, 6)
+                                .addComponent(mpCloseBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 80,
+                                        javax.swing.GroupLayout.PREFERRED_SIZE)));
+        mpLayout.setVerticalGroup(
+                mpLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(mpLayout.createSequentialGroup()
+                                .addComponent(titleLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 38,
+                                        javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(8, 8, 8)
+                                .addGroup(mpLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(cashLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(mpCash, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(4, 4, 4)
+                                .addGroup(mpLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(cardLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(mpCard, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(4, 4, 4)
+                                .addGroup(mpLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(othersLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(mpOthers, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(8, 8, 8)
+                                .addComponent(sep, javax.swing.GroupLayout.PREFERRED_SIZE, 4,
+                                        javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(8, 8, 8)
+                                .addGroup(mpLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(creditLbl, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(mpCredit, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(4, 4, 4)
+                                .addGroup(mpLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(totalLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(mpTotal, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(10, 10, 10)
+                                .addGroup(mpLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(mpOkBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 48,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(mpCloseBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 48,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(8, 8, 8)));
+
+        javax.swing.GroupLayout dlgLayout = new javax.swing.GroupLayout(multi_pay_mode.getContentPane());
+        multi_pay_mode.getContentPane().setLayout(dlgLayout);
+        dlgLayout.setHorizontalGroup(
+                dlgLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(mpPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 336,
+                                javax.swing.GroupLayout.PREFERRED_SIZE));
+        dlgLayout.setVerticalGroup(
+                dlgLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(mpPanel, javax.swing.GroupLayout.DEFAULT_SIZE,
+                                javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE));
+        multi_pay_mode.pack();
+    }
+
+    private void showMultiPayDialog() {
+        mpCash.setText("");
+        mpCard.setText("");
+        mpOthers.setText("");
+        mpCredit.setText("");
+        mpTotal.setText(h27.getText());
+        multiPayCredit = 0;
+        multi_pay_mode.setLocationRelativeTo(this);
+        multi_pay_mode.setVisible(true);
+        mpCash.requestFocus();
+    }
+
+    private void get_multi_paid_details() {
+        try {
+            double cash = mpCash.getText().isEmpty() ? 0 : Double.parseDouble(mpCash.getText());
+            double card = mpCard.getText().isEmpty() ? 0 : Double.parseDouble(mpCard.getText());
+            double others = mpOthers.getText().isEmpty() ? 0 : Double.parseDouble(mpOthers.getText());
+            double net = Double.parseDouble(h27.getText());
+            double paid = cash + card + others;
+            double credit = net - paid;
+            if (credit < 0)
+                credit = 0;
+
+            String fmt = "%." + hmany + "f";
+            mpCash.setText(String.format(fmt, cash));
+            mpCard.setText(String.format(fmt, card));
+            mpOthers.setText(String.format(fmt, others));
+            mpCredit.setText(String.format(fmt, credit));
+            mpTotal.setText(String.format(fmt, net));
+            multiPayCredit = credit;
+        } catch (NumberFormatException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

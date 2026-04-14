@@ -40,6 +40,8 @@
     <parameter name="IGSTAmountStr" class="java.lang.String"/>
     <parameter name="TaxAmountGSTStr" class="java.lang.String"/>
     <parameter name="GrandTotalStr" class="java.lang.String"/>
+    <parameter name="OtherChargesStr" class="java.lang.String"/>
+    <parameter name="OtherChargesTotalStr" class="java.lang.String"/>
     <parameter name="ReceivedAmountStr" class="java.lang.String"/>
     <parameter name="PreviousBalanceStr" class="java.lang.String"/>
     <parameter name="CurrentBalanceStr" class="java.lang.String"/>
@@ -667,52 +669,78 @@
                 <textFieldExpression><![CDATA["Rs. " + ($P{TotalAmountBeforeTaxStr} == null ? "0.00" : $P{TotalAmountBeforeTaxStr})]]></textFieldExpression>
             </textField>
             <line>
-                <reportElement x="281" y="68" width="267" height="1" forecolor="#2255CC"/>
+                <reportElement x="281" y="68" width="267" height="1" forecolor="#E0E0E0"/>
+            </line>
+            <!-- Other Charges (itemized) -->
+            <textField isBlankWhenNull="true">
+                <reportElement x="281" y="70" width="267" height="14" forecolor="#888888">
+                    <printWhenExpression><![CDATA[$P{OtherChargesStr} != null && !$P{OtherChargesStr}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                <textElement><font size="7"/></textElement>
+                <textFieldExpression><![CDATA[$P{OtherChargesStr}]]></textFieldExpression>
+            </textField>
+            <!-- Other Charges Total -->
+            <staticText>
+                <reportElement x="281" y="85" width="150" height="14" forecolor="#888888">
+                    <printWhenExpression><![CDATA[$P{OtherChargesTotalStr} != null && !$P{OtherChargesTotalStr}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                <textElement><font size="8"/></textElement>
+                <text><![CDATA[Other Charges]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="435" y="85" width="113" height="14">
+                    <printWhenExpression><![CDATA[$P{OtherChargesTotalStr} != null && !$P{OtherChargesTotalStr}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                <textElement textAlignment="Right"><font size="8"/></textElement>
+                <textFieldExpression><![CDATA["Rs. " + $P{OtherChargesTotalStr}]]></textFieldExpression>
+            </textField>
+            <line>
+                <reportElement x="281" y="100" width="267" height="1" forecolor="#2255CC"/>
             </line>
             <!-- TOTAL AMOUNT (bold) -->
             <staticText>
-                <reportElement x="281" y="71" width="150" height="16"/>
+                <reportElement x="281" y="103" width="150" height="16"/>
                 <textElement><font size="9" isBold="true"/></textElement>
                 <text><![CDATA[TOTAL AMOUNT]]></text>
             </staticText>
             <textField isBlankWhenNull="true">
-                <reportElement x="435" y="71" width="113" height="16"/>
+                <reportElement x="435" y="103" width="113" height="16"/>
                 <textElement textAlignment="Right"><font size="9" isBold="true"/></textElement>
                 <textFieldExpression><![CDATA["Rs. " + ($P{GrandTotalStr} == null ? "0.00" : $P{GrandTotalStr})]]></textFieldExpression>
             </textField>
             <line>
-                <reportElement x="281" y="88" width="267" height="1" forecolor="#E0E0E0"/>
+                <reportElement x="281" y="120" width="267" height="1" forecolor="#E0E0E0"/>
             </line>
             <!-- Received Amount -->
             <staticText>
-                <reportElement x="281" y="92" width="150" height="14" forecolor="#888888"/>
+                <reportElement x="281" y="124" width="150" height="14" forecolor="#888888"/>
                 <textElement><font size="8"/></textElement>
                 <text><![CDATA[Received Amount]]></text>
             </staticText>
             <textField isBlankWhenNull="true">
-                <reportElement x="435" y="92" width="113" height="14"/>
+                <reportElement x="435" y="124" width="113" height="14"/>
                 <textElement textAlignment="Right"><font size="8"/></textElement>
                 <textFieldExpression><![CDATA["Rs. " + ($P{ReceivedAmountStr} == null ? "0.00" : $P{ReceivedAmountStr})]]></textFieldExpression>
             </textField>
             <!-- Previous Balance -->
             <staticText>
-                <reportElement x="281" y="108" width="150" height="14" forecolor="#888888"/>
+                <reportElement x="281" y="140" width="150" height="14" forecolor="#888888"/>
                 <textElement><font size="8"/></textElement>
                 <text><![CDATA[Previous Balance]]></text>
             </staticText>
             <textField isBlankWhenNull="true">
-                <reportElement x="435" y="108" width="113" height="14"/>
+                <reportElement x="435" y="140" width="113" height="14"/>
                 <textElement textAlignment="Right"><font size="8"/></textElement>
                 <textFieldExpression><![CDATA["Rs. " + ($P{PreviousBalanceStr} == null ? "0.00" : $P{PreviousBalanceStr})]]></textFieldExpression>
             </textField>
             <!-- Current Balance -->
             <staticText>
-                <reportElement x="281" y="125" width="150" height="14"/>
+                <reportElement x="281" y="157" width="150" height="14"/>
                 <textElement><font size="8" isBold="true"/></textElement>
                 <text><![CDATA[Current Balance]]></text>
             </staticText>
             <textField isBlankWhenNull="true">
-                <reportElement x="435" y="125" width="113" height="14"/>
+                <reportElement x="435" y="157" width="113" height="14"/>
                 <textElement textAlignment="Right"><font size="8" isBold="true"/></textElement>
                 <textFieldExpression><![CDATA["Rs. " + ($P{CurrentBalanceStr} == null ? "0.00" : $P{CurrentBalanceStr})]]></textFieldExpression>
             </textField>

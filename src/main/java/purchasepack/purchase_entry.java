@@ -75,7 +75,7 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
 
     // ─── Multi Pay Dialog ──────────────────────────────────────────────
     private javax.swing.JDialog multi_pay_mode;
-    private javax.swing.JTextField mpCash, mpCard, mpOthers, mpCredit, mpTotal;
+    private javax.swing.JTextField mpCash, mpCard, mpUpi, mpOthers, mpCredit, mpTotal;
     double multiPayCredit = 0;
 
     public class sample2 extends DefaultTableModel {
@@ -2502,6 +2502,13 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
                 h28KeyPressed(evt);
             }
         });
+        h28.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                if (h28.getSelectedItem() != null && h28.getSelectedItem().equals("Multi Pay")) {
+                    showMultiPayDialog();
+                }
+            }
+        });
         getContentPane().add(h28);
         h28.setBounds(1100, 470, 130, 30);
 
@@ -3551,6 +3558,8 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
         cashLabel.setFont(new java.awt.Font("Arial", 0, 15));
         javax.swing.JLabel cardLabel = new javax.swing.JLabel("Card");
         cardLabel.setFont(new java.awt.Font("Arial", 0, 15));
+        javax.swing.JLabel upiLabel = new javax.swing.JLabel("UPI");
+        upiLabel.setFont(new java.awt.Font("Arial", 0, 15));
         javax.swing.JLabel othersLabel = new javax.swing.JLabel("Others");
         othersLabel.setFont(new java.awt.Font("Arial", 0, 15));
         javax.swing.JLabel creditLbl = new javax.swing.JLabel("<html><font color='#c0392b'>Credit</font></html>");
@@ -3571,7 +3580,17 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
                 get_multi_paid_details();
             }
         });
-        mpCard.addActionListener(e -> mpOthers.requestFocus());
+        mpCard.addActionListener(e -> mpUpi.requestFocus());
+
+        mpUpi = new javax.swing.JTextField();
+        mpUpi.setFont(new java.awt.Font("Arial", 1, 17));
+        mpUpi.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        mpUpi.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                get_multi_paid_details();
+            }
+        });
+        mpUpi.addActionListener(e -> mpOthers.requestFocus());
 
         mpOthers = new javax.swing.JTextField();
         mpOthers.setFont(new java.awt.Font("Arial", 1, 17));
@@ -3625,6 +3644,8 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addComponent(cardLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(upiLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addComponent(othersLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addComponent(creditLbl, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
@@ -3636,6 +3657,8 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
                                         .addComponent(mpCash, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addComponent(mpCard, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(mpUpi, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addComponent(mpOthers, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -3668,6 +3691,12 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
                                         .addComponent(cardLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addComponent(mpCard, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(4, 4, 4)
+                                .addGroup(mpLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(upiLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(mpUpi, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE))
                                 .addGap(4, 4, 4)
                                 .addGroup(mpLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -3714,6 +3743,7 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
     private void showMultiPayDialog() {
         mpCash.setText("");
         mpCard.setText("");
+        mpUpi.setText("");
         mpOthers.setText("");
         mpCredit.setText("");
         mpTotal.setText(h27.getText());
@@ -3727,9 +3757,10 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
         try {
             double cash = mpCash.getText().isEmpty() ? 0 : Double.parseDouble(mpCash.getText());
             double card = mpCard.getText().isEmpty() ? 0 : Double.parseDouble(mpCard.getText());
+            double upi = mpUpi.getText().isEmpty() ? 0 : Double.parseDouble(mpUpi.getText());
             double others = mpOthers.getText().isEmpty() ? 0 : Double.parseDouble(mpOthers.getText());
             double net = Double.parseDouble(h27.getText());
-            double paid = cash + card + others;
+            double paid = cash + card + upi + others;
             double credit = net - paid;
             if (credit < 0)
                 credit = 0;
@@ -3737,6 +3768,7 @@ public final class purchase_entry extends javax.swing.JInternalFrame {
             String fmt = "%." + hmany + "f";
             mpCash.setText(String.format(fmt, cash));
             mpCard.setText(String.format(fmt, card));
+            mpUpi.setText(String.format(fmt, upi));
             mpOthers.setText(String.format(fmt, others));
             mpCredit.setText(String.format(fmt, credit));
             mpTotal.setText(String.format(fmt, net));

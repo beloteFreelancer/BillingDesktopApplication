@@ -34,6 +34,8 @@
     <parameter name="IGSTAmountStr" class="java.lang.String"/>
     <parameter name="TaxAmountGSTStr" class="java.lang.String"/>
     <parameter name="GrandTotalStr" class="java.lang.String"/>
+    <parameter name="OtherChargesStr" class="java.lang.String"/>
+    <parameter name="OtherChargesTotalStr" class="java.lang.String"/>
 
 
     <!-- Column header labels (copied from Sales_A4.jrxml) -->
@@ -633,18 +635,33 @@
                 <textElement textAlignment="Right"><font size="8"/></textElement>
                 <textFieldExpression><![CDATA["Rs. " + ($P{TaxAmountGSTStr} == null ? "0.00" : $P{TaxAmountGSTStr})]]></textFieldExpression>
             </textField>
+            <!-- Other Charges -->
+            <staticText>
+                <reportElement x="281" y="83" width="150" height="14" forecolor="#888888">
+                    <printWhenExpression><![CDATA[$P{OtherChargesTotalStr} != null && !$P{OtherChargesTotalStr}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                <textElement><font size="8"/></textElement>
+                <text><![CDATA[Other Charges]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="435" y="83" width="113" height="14">
+                    <printWhenExpression><![CDATA[$P{OtherChargesTotalStr} != null && !$P{OtherChargesTotalStr}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                <textElement textAlignment="Right"><font size="8"/></textElement>
+                <textFieldExpression><![CDATA["Rs. " + $P{OtherChargesTotalStr}]]></textFieldExpression>
+            </textField>
             <!-- Blue separator -->
             <line>
-                <reportElement x="281" y="84" width="267" height="1" forecolor="#2255CC"/>
+                <reportElement x="281" y="98" width="267" height="1" forecolor="#2255CC"/>
             </line>
             <!-- GRAND TOTAL bold -->
             <staticText>
-                <reportElement x="281" y="87" width="150" height="16"/>
+                <reportElement x="281" y="101" width="150" height="16"/>
                 <textElement><font size="9" isBold="true"/></textElement>
                 <text><![CDATA[GRAND TOTAL]]></text>
             </staticText>
             <textField isBlankWhenNull="true">
-                <reportElement x="435" y="87" width="113" height="16"/>
+                <reportElement x="435" y="101" width="113" height="16"/>
                 <textElement textAlignment="Right"><font size="9" isBold="true"/></textElement>
                 <textFieldExpression><![CDATA["Rs. " + ($P{GrandTotalStr} == null ? "0.00" : $P{GrandTotalStr})]]></textFieldExpression>
             </textField>

@@ -459,8 +459,12 @@ public final class item_master extends javax.swing.JInternalFrame {
             }
             String shopTypeForSave = getShopType();
             boolean useBatchCol = !"Clothing".equals(shopTypeForSave);
+            boolean isHardwareShop = "Hardware".equals(shopTypeForSave);
             String insertItemSQL;
-            if (useBatchCol) {
+            if (isHardwareShop) {
+                insertItemSQL = "INSERT INTO item (ino, barcode, iname, iname1, prate, taxp, mrp, rprice, wprice, cat, manu, hsn, udes, minstock, maxstock, rack, disp, ostock, subunit, subconv, batch, size, exp_date, mfg_date, tax_inclusion, company_id) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,?,?)";
+            } else if (useBatchCol) {
                 insertItemSQL = "INSERT INTO item (ino, barcode, iname, iname1, prate, taxp, mrp, rprice, wprice, cat, manu, hsn, udes, minstock, maxstock, rack, disp, ostock, subunit, subconv, batch, exp_date, mfg_date, tax_inclusion, company_id) "
                         + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,?)";
             } else {
@@ -494,7 +498,16 @@ public final class item_master extends javax.swing.JInternalFrame {
                     pstmt.setDouble(20, subconvValue);
                 }
                 pstmt.setString(21, batch);
-                if (!useBatchCol) {
+                if (isHardwareShop) {
+                    // Hardware: batch at 21, size at 22, exp_date at 23, mfg_date at 24,
+                    // tax_inclusion at 25, company_id at 26
+                    String sizeVal = sizeCombo.getSelectedItem() != null ? sizeCombo.getSelectedItem().toString() : "";
+                    pstmt.setString(22, sizeVal);
+                    pstmt.setString(23, exp);
+                    pstmt.setString(24, mfg);
+                    pstmt.setString(25, taxInclusionCombo.getSelectedItem().toString());
+                    pstmt.setString(26, UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "");
+                } else if (!useBatchCol) {
                     // Clothing: color at 22, exp_date at 23, mfg_date at 24, tax_inclusion at 25,
                     // company_id at 26
                     pstmt.setString(22, colorField.getText().trim());
@@ -603,10 +616,14 @@ public final class item_master extends javax.swing.JInternalFrame {
         try {
             String query;
             boolean useBatchColV = !"Clothing".equals(getShopType());
+            boolean isHardwareShopV = "Hardware".equals(getShopType());
             String companyFilter = UserSession.hasSelectedCompany()
                     ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
                     : "";
-            if (useBatchColV) {
+            if (isHardwareShopV) {
+                query = "select ino,barcode,iname,iname1,prate,taxp,mrp,rprice,wprice,cat,manu,hsn,udes,minstock,maxstock,rack,disp,ostock,subunit,subconv,batch,size,exp_date,mfg_date,tax_inclusion from item where ino='"
+                        + ino + "'" + companyFilter;
+            } else if (useBatchColV) {
                 query = "select ino,barcode,iname,iname1,prate,taxp,mrp,rprice,wprice,cat,manu,hsn,udes,minstock,maxstock,rack,disp,ostock,subunit,subconv,batch,exp_date,mfg_date,tax_inclusion from item where ino='"
                         + ino + "'" + companyFilter;
             } else {
@@ -640,7 +657,15 @@ public final class item_master extends javax.swing.JInternalFrame {
                 subUnitValuePerUnit.setText(set1.getString(20));
                 String batchOrSize = set1.getString(21);
                 batchField.setText(batchOrSize != null ? batchOrSize : "");
-                if ("Clothing".equals(getShopType())) {
+                if (isHardwareShopV) {
+                    String sizeVal = set1.getString(22);
+                    if (sizeVal != null)
+                        sizeCombo.setSelectedItem(sizeVal);
+                    expDateField.setText(set1.getString(23));
+                    mfgDateField.setText(set1.getString(24));
+                    String taxIncVal = set1.getString(25);
+                    taxInclusionCombo.setSelectedItem(taxIncVal != null ? taxIncVal : "Inclusive of Tax");
+                } else if ("Clothing".equals(getShopType())) {
                     if (batchOrSize != null)
                         sizeCombo.setSelectedItem(batchOrSize);
                     String colorVal = set1.getString(22);
@@ -866,8 +891,13 @@ public final class item_master extends javax.swing.JInternalFrame {
             itemQuery.append("ostock=").append(stock).append(", ");
             String shopTypeForUpd = getShopType();
             boolean useBatchColU = !"Clothing".equals(shopTypeForUpd);
+            boolean isHardwareShopU = "Hardware".equals(shopTypeForUpd);
             boolean showMfgExpU = "Pharmacy".equals(shopTypeForUpd) || "Grocery".equals(shopTypeForUpd);
-            if (useBatchColU) {
+            if (isHardwareShopU) {
+                itemQuery.append("batch='").append(batch).append("', ");
+                String sizeVal = sizeCombo.getSelectedItem() != null ? sizeCombo.getSelectedItem().toString() : "";
+                itemQuery.append("size='").append(sizeVal).append("', ");
+            } else if (useBatchColU) {
                 itemQuery.append("batch='").append(batch).append("', ");
             } else {
                 itemQuery.append("size='").append(batch).append("', ");
@@ -958,7 +988,18 @@ public final class item_master extends javax.swing.JInternalFrame {
         // ── Batch / Size label + field toggle ───────────────────────
         batchLabel.setText(isClothing ? "Size" : "Batch");
         batchField.setVisible(!isClothing);
-        sizeCombo.setVisible(isClothing);
+        if (isClothing) {
+            sizeCombo.setVisible(true);
+            sizeCombo.setBounds(420, 230, 150, 30);
+            sizeLabel.setVisible(false);
+        } else if (isHardware) {
+            sizeCombo.setVisible(true);
+            sizeCombo.setBounds(362, 260, 190, 30);
+            sizeLabel.setVisible(true);
+        } else {
+            sizeCombo.setVisible(false);
+            sizeLabel.setVisible(false);
+        }
 
         // ── Color — only Clothing ────────────────────────────────────
         colorLabel.setVisible(isClothing);
@@ -1482,6 +1523,12 @@ public final class item_master extends javax.swing.JInternalFrame {
         sizeCombo.setVisible(false);
         getContentPane().add(sizeCombo);
         sizeCombo.setBounds(420, 230, 150, 30);
+
+        sizeLabel = new javax.swing.JLabel("Size");
+        sizeLabel.setFont(new java.awt.Font("Arial", 0, 14));
+        sizeLabel.setVisible(false);
+        getContentPane().add(sizeLabel);
+        sizeLabel.setBounds(305, 260, 55, 30);
 
         colorLabel = new javax.swing.JLabel("Color");
         colorLabel.setFont(new java.awt.Font("Arial", 0, 14));
@@ -2079,6 +2126,7 @@ public final class item_master extends javax.swing.JInternalFrame {
     // End of variables declaration//GEN-END:variables
 
     private javax.swing.JComboBox<String> sizeCombo;
+    private javax.swing.JLabel sizeLabel;
     private javax.swing.JLabel colorLabel;
     private javax.swing.JTextField colorField;
     private javax.swing.JComboBox<String> taxInclusionCombo;

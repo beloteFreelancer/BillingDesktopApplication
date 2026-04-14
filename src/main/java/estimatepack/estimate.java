@@ -1,6 +1,7 @@
 package estimatepack;
 
 import Utils.CompanySettingUtil;
+import Utils.OtherChargesDialog;
 import Utils.UPIPaymentDialog;
 import com.selrom.db.DataUtil;
 import itempack.item_master;
@@ -67,6 +68,8 @@ public final class estimate extends javax.swing.JInternalFrame {
             dsales = "Retail", cust_details = "";
     double max_rdis = 0, max_wdis = 0;
     double nItemTotal = 0;
+    private java.util.List<String[]> otherChargesList = new java.util.ArrayList<>();
+    private javax.swing.JButton chargesButton;
     int hmany = 2, hmany1 = 3;
     String sms_alert = "", sender = "", smsuser = "", smspass = "", smsfoot1 = "", smsfoot2 = "", alter_sms = "",
             management_no1 = "", management_no2 = "";
@@ -390,6 +393,7 @@ public final class estimate extends javax.swing.JInternalFrame {
             }
             boolean hasMfgExp = shopType.equals("Pharmacy") || shopType.equals("Grocery");
             boolean hasHsn = !shopType.equals("Clothing");
+            boolean hasUnit = shopType.equals("Pharmacy") || shopType.equals("Grocery") || shopType.equals("Hardware");
 
             String colCompanyFilter = UserSession.hasSelectedCompany()
                     ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
@@ -415,6 +419,7 @@ public final class estimate extends javax.swing.JInternalFrame {
                     { "tax_pct", "13", "0" },
                     { "total", "16", "1" },
                     { "hsn", "3", hasHsn ? "1" : "0" },
+                    { "unit", "17", hasUnit ? "1" : "0" },
             };
             for (String[] mc : managed) {
                 String key = mc[0];
@@ -863,19 +868,25 @@ public final class estimate extends javax.swing.JInternalFrame {
         if (h27.getText().equals("")) {
             h27.setText("0.00");
         }
+        if (upiField.getText().equals("")) {
+            upiField.setText("0.00");
+        }
         double cash = Double.parseDouble(h25.getText());
         double card = Double.parseDouble(h26.getText());
         double others = Double.parseDouble(h27.getText());
-        double total = cash + card + others;
+        double upiAmt = Double.parseDouble(upiField.getText());
+        double total = cash + card + others + upiAmt;
 
         String cash2 = String.format("%." + hmany + "f", cash);
         String card2 = String.format("%." + hmany + "f", card);
         String others2 = String.format("%." + hmany + "f", others);
+        String upi2 = String.format("%." + hmany + "f", upiAmt);
         String total2 = String.format("%." + hmany + "f", total);
 
         h25.setText(cash2);
         h26.setText(card2);
         h27.setText(others2);
+        upiField.setText(upi2);
         h28.setText(total2);
         paidl.setText(total2);
 
@@ -963,7 +974,7 @@ public final class estimate extends javax.swing.JInternalFrame {
             multi_pay_mode.requestFocus();
             Point l = jLabel1.getLocationOnScreen();
             multi_pay_mode.setLocation(l.x, l.y + jLabel1.getHeight());
-            multi_pay_mode.setSize(340, 388);
+            multi_pay_mode.setSize(340, 428);
             jLabelLoyaltyPts.setText(
                     "<html><font color='#27ae60'><b>Loyalty Pts</b></font><br><font size='2' color='gray'>Avail: "
                             + cpointsl.getText() + "</font></html>");
@@ -1169,7 +1180,7 @@ public final class estimate extends javax.swing.JInternalFrame {
             String others = h27.getText();
             String loyalty_points = h30.getText().isEmpty() ? "0" : h30.getText();
             String credit = h31.getText().isEmpty() ? "0" : h31.getText();
-            String upi = "0";
+            String upi = upiField.getText().isEmpty() ? "0" : upiField.getText();
             String today_points = pointsl.getText();
             String total_points = tot_pointsl.getText();
             String ncost_rate = pratel.getText();
@@ -1234,6 +1245,10 @@ public final class estimate extends javax.swing.JInternalFrame {
             psEstimate.setString(36, ncost_rate);
             psEstimate.setString(37, UserSession.getSelectedCompanyID());
             psEstimate.executeUpdate();
+
+            String companyId_save = UserSession.getSelectedCompanyID();
+            OtherChargesDialog.saveCharges(conn, "estimate_other_charges", Integer.parseInt(billno), otherChargesList,
+                    companyId_save);
 
             PreparedStatement psEstimateItems = conn.prepareStatement(
                     "INSERT INTO estimate_items (billno, dat, cid, serial, ino, iname, quan, mrp, price, amount, disp, disamt, sub, taxp, taxamt, total, udes, barcode, hsn, tax, entry, cost_rate, profit, iname1, price_type, tax_type, item_type, prate, rprice, wprice, remarks, size, color, brand, company_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
@@ -1449,6 +1464,7 @@ public final class estimate extends javax.swing.JInternalFrame {
             h12.setText("");
             h13.setText("");
             h14.setText("");
+            otherChargesList.clear();
             h15.setText("");
             h16.setSelectedIndex(0);
             h21.setText("--");
@@ -1548,6 +1564,8 @@ public final class estimate extends javax.swing.JInternalFrame {
                     h12.setText(gross);
                     h13.setText(taxamt);
                     h14.setText(addamt);
+                    otherChargesList = OtherChargesDialog.loadCharges(util, "estimate_other_charges", billno,
+                            UserSession.getSelectedCompanyID());
                     h15.setText(round);
                     h16.setSelectedItem(set1.getString(16));
                     double net = set1.getDouble(17);
@@ -2157,6 +2175,8 @@ public final class estimate extends javax.swing.JInternalFrame {
             psDeleteEstimateItems.setString(2, companyId);
             psDeleteEstimateItems.executeUpdate();
 
+            OtherChargesDialog.deleteCharges(conn, "estimate_other_charges", Integer.parseInt(billno), companyId);
+
             if (h16.getSelectedItem().equals("Credit")) {
                 PreparedStatement psDeleteCustBal = conn.prepareStatement("DELETE FROM cust_bal WHERE billno=?");
                 psDeleteCustBal.setString(1, billno);
@@ -2306,6 +2326,8 @@ public final class estimate extends javax.swing.JInternalFrame {
             psDeleteEstimateItems.setString(1, billno);
             psDeleteEstimateItems.setString(2, companyId);
             psDeleteEstimateItems.executeUpdate();
+
+            OtherChargesDialog.deleteCharges(conn, "estimate_other_charges", Integer.parseInt(billno), companyId);
 
             if (h16.getSelectedItem().equals("Credit")) {
                 PreparedStatement psDeleteCustBal = conn.prepareStatement("DELETE FROM cust_bal WHERE billno=?");
@@ -2652,6 +2674,8 @@ public final class estimate extends javax.swing.JInternalFrame {
         jSeparator2 = new javax.swing.JSeparator();
         jLabel32 = new javax.swing.JLabel();
         h27 = new javax.swing.JTextField();
+        jLabelUpi = new javax.swing.JLabel();
+        upiField = new javax.swing.JTextField();
         jLabelLoyaltyPts = new javax.swing.JLabel();
         h30 = new javax.swing.JTextField();
         jLabelCredit = new javax.swing.JLabel();
@@ -2832,6 +2856,23 @@ public final class estimate extends javax.swing.JInternalFrame {
             }
         });
 
+        jLabelUpi.setFont(new java.awt.Font("Arial", 0, 15)); // NOI18N
+        jLabelUpi.setText("UPI");
+
+        upiField.setFont(new java.awt.Font("Arial", 1, 17)); // NOI18N
+        upiField.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        upiField.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                upiField.selectAll();
+            }
+        });
+        upiField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                get_paid_bal_details();
+                h30.requestFocus();
+            }
+        });
+
         jLabelLoyaltyPts.setFont(new java.awt.Font("Arial", 1, 13)); // NOI18N
         jLabelLoyaltyPts.setText("<html><font color='#27ae60'>Loyalty Pts</font></html>");
 
@@ -2906,6 +2947,8 @@ public final class estimate extends javax.swing.JInternalFrame {
                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addComponent(jLabel32, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jLabelUpi, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addComponent(jLabelLoyaltyPts, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addComponent(jLabelCredit, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
@@ -2919,6 +2962,8 @@ public final class estimate extends javax.swing.JInternalFrame {
                                         .addComponent(h26, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addComponent(h27, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(upiField, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addComponent(h30, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -2957,6 +3002,12 @@ public final class estimate extends javax.swing.JInternalFrame {
                                         .addComponent(jLabel32, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addComponent(h27, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(4, 4, 4)
+                                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jLabelUpi, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(upiField, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE))
                                 .addGap(4, 4, 4)
                                 .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -3369,7 +3420,14 @@ public final class estimate extends javax.swing.JInternalFrame {
         jLabel17.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jLabel17.setText("Other.Charges");
         jPanel2.add(jLabel17);
-        jLabel17.setBounds(0, 360, 100, 30);
+        jLabel17.setBounds(0, 360, 80, 30);
+
+        chargesButton = new javax.swing.JButton("...");
+        chargesButton.setFont(new java.awt.Font("Arial", 0, 10));
+        chargesButton.setMargin(new java.awt.Insets(0, 0, 0, 0));
+        chargesButton.addActionListener(e -> chargesButtonActionPerformed());
+        jPanel2.add(chargesButton);
+        chargesButton.setBounds(80, 360, 20, 30);
 
         jPanel3.setLayout(null);
 
@@ -3488,6 +3546,11 @@ public final class estimate extends javax.swing.JInternalFrame {
         h16.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
                 h16KeyPressed(evt);
+            }
+        });
+        h16.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                get_pay_mode();
             }
         });
         jPanel2.add(h16);
@@ -4146,7 +4209,7 @@ public final class estimate extends javax.swing.JInternalFrame {
 
     private void h27ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h27ActionPerformed
         get_paid_bal_details();
-        h30.requestFocus();
+        upiField.requestFocus();
     }// GEN-LAST:event_h27ActionPerformed
 
     private void h30FocusGained(java.awt.event.FocusEvent evt) {
@@ -4327,6 +4390,21 @@ public final class estimate extends javax.swing.JInternalFrame {
         h14.setBackground(color1.getBackground());
         h14.setForeground(color1.getForeground());
     }// GEN-LAST:event_h14FocusLost
+
+    private void chargesButtonActionPerformed() {
+        java.awt.Frame owner = (java.awt.Frame) javax.swing.SwingUtilities.getWindowAncestor(this);
+        OtherChargesDialog dialog = new OtherChargesDialog(owner, util);
+        if (!otherChargesList.isEmpty()) {
+            dialog.setCharges(otherChargesList);
+        }
+        dialog.setVisible(true);
+        if (dialog.isConfirmed()) {
+            otherChargesList = dialog.getCharges();
+            double total = dialog.getTotal();
+            h14.setText(total > 0 ? String.format("%." + hmany + "f", total) : "0");
+            final_calculate();
+        }
+    }
 
     private void h22ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h22ActionPerformed
 
@@ -4980,6 +5058,8 @@ public final class estimate extends javax.swing.JInternalFrame {
     private javax.swing.JTextField h28;
     private javax.swing.JTextField h30;
     private javax.swing.JTextField h31;
+    private javax.swing.JLabel jLabelUpi;
+    private javax.swing.JTextField upiField;
     private javax.swing.JTextField h3;
     private javax.swing.JTextField h4;
     private javax.swing.JTextField h5;

@@ -151,8 +151,8 @@ public final class setting_bill extends javax.swing.JInternalFrame {
             String upiId = upiIdField.getText();
             String shopType = shopTypeCombo.getSelectedItem() != null ? shopTypeCombo.getSelectedItem().toString()
                     : "General";
-            int mfg = shopType.equals("Pharmacy") ? 1 : 0;
-            int exp = shopType.equals("Pharmacy") ? 1 : 0;
+            int mfg = (shopType.equals("Pharmacy") || shopType.equals("Grocery")) ? 1 : 0;
+            int exp = (shopType.equals("Pharmacy") || shopType.equals("Grocery")) ? 1 : 0;
             String batch = "Batch";
             String weighingButtonValue = weighingButton.isSelected() ? "Yes" : "No";
             String estimateStockMinusValue = estimateStockMinusCheckbox.isSelected() ? "Yes" : "No";
@@ -535,6 +535,7 @@ public final class setting_bill extends javax.swing.JInternalFrame {
         boolean hasTax = !shopType.equals("Clothing");
         boolean hasMfg = shopType.equals("Pharmacy") || shopType.equals("Grocery");
         boolean hasExp = shopType.equals("Pharmacy") || shopType.equals("Grocery");
+        boolean hasUnit = shopType.equals("Pharmacy") || shopType.equals("Grocery") || shopType.equals("Hardware");
         boolean isClothing = shopType.equals("Clothing");
         boolean hasWprice = isClothing;
         boolean hasTaxPurchase = !isClothing;
@@ -556,6 +557,7 @@ public final class setting_bill extends javax.swing.JInternalFrame {
                 { "invoice", "hsn", hasHsn ? "1" : "0" },
                 { "invoice", "mfg_date", hasMfg ? "1" : "0" },
                 { "invoice", "exp_date", hasExp ? "1" : "0" },
+                { "invoice", "unit", hasUnit ? "1" : "0" },
                 // Estimate columns
                 { "estimate", "qty", "1" },
                 { "estimate", "mrp", "1" },
@@ -570,6 +572,7 @@ public final class setting_bill extends javax.swing.JInternalFrame {
                 { "estimate", "hsn", hasHsn ? "1" : "0" },
                 { "estimate", "mfg_date", hasMfg ? "1" : "0" },
                 { "estimate", "exp_date", hasExp ? "1" : "0" },
+                { "estimate", "unit", hasUnit ? "1" : "0" },
                 // Purchase columns
                 { "purchase", "wprice", hasWprice ? "1" : "0" },
                 { "purchase", "tax_pct", hasTaxPurchase ? "1" : "0" },

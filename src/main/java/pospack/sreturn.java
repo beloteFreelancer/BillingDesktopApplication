@@ -571,19 +571,25 @@ public final class sreturn extends javax.swing.JInternalFrame {
         if (h27.getText().equals("")) {
             h27.setText("0.00");
         }
+        if (upiField.getText().equals("")) {
+            upiField.setText("0.00");
+        }
         double cash = Double.parseDouble(h25.getText());
         double card = Double.parseDouble(h26.getText());
         double others = Double.parseDouble(h27.getText());
-        double total = cash + card + others;
+        double upiAmt = Double.parseDouble(upiField.getText());
+        double total = cash + card + others + upiAmt;
 
         String cash2 = String.format("%." + hmany + "f", cash);
         String card2 = String.format("%." + hmany + "f", card);
         String others2 = String.format("%." + hmany + "f", others);
+        String upi2 = String.format("%." + hmany + "f", upiAmt);
         String total2 = String.format("%." + hmany + "f", total);
 
         h25.setText(cash2);
         h26.setText(card2);
         h27.setText(others2);
+        upiField.setText(upi2);
         h28.setText(total2);
         paidl.setText(total2);
 
@@ -668,7 +674,7 @@ public final class sreturn extends javax.swing.JInternalFrame {
             multi_pay_mode.requestFocus();
             Point l = jLabel1.getLocationOnScreen();
             multi_pay_mode.setLocation(l.x, l.y + jLabel1.getHeight());
-            multi_pay_mode.setSize(306, 301);
+            multi_pay_mode.setSize(306, 341);
             multi_pay_mode.setVisible(true);
             h25.requestFocus();
         }
@@ -828,7 +834,7 @@ public final class sreturn extends javax.swing.JInternalFrame {
             String card = h26.getText();
             String others = h27.getText();
             String credit = "" + 0;
-            String upi = "0";
+            String upi = upiField.getText().isEmpty() ? "0" : upiField.getText();
 
             if (pby.equalsIgnoreCase("Cash")) {
                 cash = net + "";
@@ -1494,6 +1500,8 @@ public final class sreturn extends javax.swing.JInternalFrame {
         jSeparator2 = new javax.swing.JSeparator();
         jLabel32 = new javax.swing.JLabel();
         h27 = new javax.swing.JTextField();
+        jLabelUpi = new javax.swing.JLabel();
+        upiField = new javax.swing.JTextField();
         jLabel33 = new javax.swing.JLabel();
         selectbutton = new javax.swing.JButton();
         iname_list = new javax.swing.JDialog();
@@ -1629,6 +1637,25 @@ public final class sreturn extends javax.swing.JInternalFrame {
         jLabel32.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
         jLabel32.setText("Others");
 
+        jLabelUpi.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
+        jLabelUpi.setText("UPI");
+
+        upiField.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        upiField.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        upiField.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                upiField.selectAll();
+            }
+        });
+        upiField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                get_paid_bal_details();
+                get_bal_details();
+                multi_pay_mode.dispose();
+                h22.requestFocus();
+            }
+        });
+
         h27.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         h27.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         h27.addFocusListener(new java.awt.event.FocusAdapter() {
@@ -1685,6 +1712,13 @@ public final class sreturn extends javax.swing.JInternalFrame {
                                         javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGroup(jPanel9Layout.createSequentialGroup()
                                 .addGap(10, 10, 10)
+                                .addComponent(jLabelUpi, javax.swing.GroupLayout.PREFERRED_SIZE, 60,
+                                        javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(0, 0, 0)
+                                .addComponent(upiField, javax.swing.GroupLayout.PREFERRED_SIZE, 220,
+                                        javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGroup(jPanel9Layout.createSequentialGroup()
+                                .addGap(10, 10, 10)
                                 .addComponent(jLabel33, javax.swing.GroupLayout.PREFERRED_SIZE, 60,
                                         javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGroup(jPanel9Layout.createSequentialGroup()
@@ -1717,6 +1751,11 @@ public final class sreturn extends javax.swing.JInternalFrame {
                                         .addComponent(jLabel32, javax.swing.GroupLayout.PREFERRED_SIZE, 40,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addComponent(h27, javax.swing.GroupLayout.PREFERRED_SIZE, 40,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(jLabelUpi, javax.swing.GroupLayout.PREFERRED_SIZE, 40,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(upiField, javax.swing.GroupLayout.PREFERRED_SIZE, 40,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE))
                                 .addGap(10, 10, 10)
                                 .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -2179,6 +2218,11 @@ public final class sreturn extends javax.swing.JInternalFrame {
         h16.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
                 h16KeyPressed(evt);
+            }
+        });
+        h16.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                get_pay_mode();
             }
         });
         jPanel2.add(h16);
@@ -2651,16 +2695,14 @@ public final class sreturn extends javax.swing.JInternalFrame {
         multi_pay_mode.requestFocus();
         Point l = jLabel1.getLocationOnScreen();
         multi_pay_mode.setLocation(l.x, l.y + jLabel1.getHeight());
-        multi_pay_mode.setSize(306, 301);
+        multi_pay_mode.setSize(306, 341);
         multi_pay_mode.setVisible(true);
         h25.requestFocus();
     }// GEN-LAST:event_tenderbuttonActionPerformed
 
     private void h27ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h27ActionPerformed
         get_paid_bal_details();
-        get_bal_details();
-        multi_pay_mode.dispose();
-        h22.requestFocus();
+        upiField.requestFocus();
 
     }// GEN-LAST:event_h27ActionPerformed
 
@@ -3183,6 +3225,8 @@ public final class sreturn extends javax.swing.JInternalFrame {
     private javax.swing.JLabel jLabel32;
     private javax.swing.JLabel jLabel33;
     private javax.swing.JLabel jLabel34;
+    private javax.swing.JLabel jLabelUpi;
+    private javax.swing.JTextField upiField;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;

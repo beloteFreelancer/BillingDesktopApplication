@@ -126,7 +126,8 @@ public final class login extends javax.swing.JFrame {
             // Try user_valid_date first (encrypted), then fall back to encrypted dat
             String query = "select user_valid_date, dat from setting_user";
             ResultSet rs = u.doQuery(query);
-            if (rs == null) return false;
+            if (rs == null)
+                return false;
             while (rs.next()) {
                 String encValidDate = rs.getString(1);
                 if (encValidDate != null && !encValidDate.trim().isEmpty()) {
@@ -271,12 +272,7 @@ public final class login extends javax.swing.JFrame {
      */
     void get_license() {
         try {
-            String ip;
-            try (FileInputStream m = new FileInputStream(drive + ":/" + folder + "/Config_Files/Connect.txt")) {
-                Properties p = new Properties(null);
-                p.load(m);
-                ip = p.getProperty("server_ip");
-            }
+            String ip = "localhost";
             if (ip.equalsIgnoreCase("localhost")) {
                 boolean fresh = false;
                 String status = "Not", date = "", version = "", hard = "", mother = "", key1 = "";

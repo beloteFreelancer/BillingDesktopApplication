@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.awt.image.BufferedImage;
+import Utils.OtherChargesDialog;
 import Utils.UpiQrGenerator;
 
 public class print_a4 {
@@ -84,10 +85,10 @@ public class print_a4 {
 
             // ==================== SALES HEADER ====================
             String date = "", quans = "", cid = "", tax = "", pby = "";
-            double sub = 0, dis = 0, net = 0, taxamt = 0, paid = 0, bal = 0;
+            double sub = 0, dis = 0, net = 0, taxamt = 0, paid = 0, bal = 0, addamt = 0;
 
             r = util.doQuery(
-                    "select date_format(dat,'%d/%m/%Y'),quans,sub,disamt,net,cid,taxamt,tax,pby,paid,bal from sales where billno='"
+                    "select date_format(dat,'%d/%m/%Y'),quans,sub,disamt,net,cid,taxamt,tax,pby,paid,bal,addamt from sales where billno='"
                             + billno + "'");
             while (r.next()) {
                 date = r.getString(1);
@@ -101,6 +102,7 @@ public class print_a4 {
                 pby = r.getString(9);
                 paid = r.getDouble(10);
                 bal = r.getDouble(11);
+                addamt = r.getDouble(12);
             }
 
             String billno1 = letter.equals(".") ? billno : letter + billno;
@@ -178,6 +180,14 @@ public class print_a4 {
             num();
             parameters.put("AmountInWords", rupe + " Only");
             parameters.put("TermsAndConditions", salesTerms);
+
+            // ==================== OTHER CHARGES ====================
+            String companyId = UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "";
+            java.util.List<String[]> otherCharges = OtherChargesDialog.loadCharges(util, "sales_other_charges", billno,
+                    companyId);
+            String otherChargesStr = OtherChargesDialog.buildChargesDisplayString(otherCharges, hmany);
+            parameters.put("OtherChargesStr", otherChargesStr);
+            parameters.put("OtherChargesTotalStr", addamt > 0 ? String.format("%,." + hmany + "f", addamt) : "");
 
             // ==================== BANK DETAILS ====================
             String ano = compBankAccNo, aname = compBankHolder, bname = compBankName, ifsc = compBankIfsc,
@@ -381,7 +391,8 @@ public class print_a4 {
             JasperReport jasperReport;
             if ("Sales A5".equals(billformat)) {
                 jasperReport = JasperReportCompiler.compileReport("/JasperFiles/A5/Sales_A5.jrxml");
-            } else if ("Sales Half Page".equals(billformat) || (billformat != null && billformat.startsWith("A4-Half"))) {
+            } else if ("Sales Half Page".equals(billformat)
+                    || (billformat != null && billformat.startsWith("A4-Half"))) {
                 jasperReport = JasperReportCompiler.compileReport("/JasperFiles/A4_Half/Sales_Half.jrxml");
             } else {
                 jasperReport = JasperReportCompiler.compileReport("/JasperFiles/A4/Sales_A4.jrxml");

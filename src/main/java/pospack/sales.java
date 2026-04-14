@@ -2,6 +2,7 @@ package pospack;
 
 import Utils.ColorConstants;
 import Utils.CompanySettingUtil;
+import Utils.OtherChargesDialog;
 import Utils.POSWeighing;
 import Utils.UPIPaymentDialog;
 import com.selrom.db.DataUtil;
@@ -71,6 +72,8 @@ public final class sales extends javax.swing.JInternalFrame {
     double max_rdis = 0, max_wdis = 0;
     double nItemTotal = 0; // sum of per-item totals (respects per-item tax type); used in
                            // final_calculate()
+    private java.util.List<String[]> otherChargesList = new java.util.ArrayList<>();
+    private javax.swing.JButton chargesButton;
     int hmany = 2, hmany1 = 3;
     String sms_alert = "", sender = "", smsuser = "", smspass = "", smsfoot1 = "", smsfoot2 = "", alter_sms = "",
             management_no1 = "", management_no2 = "";
@@ -400,6 +403,7 @@ public final class sales extends javax.swing.JInternalFrame {
             }
             boolean hasMfgExp = shopType.equals("Pharmacy") || shopType.equals("Grocery");
             boolean hasHsn = !shopType.equals("Clothing");
+            boolean hasUnit = shopType.equals("Pharmacy") || shopType.equals("Grocery") || shopType.equals("Hardware");
 
             String colCompanyFilter = UserSession.hasSelectedCompany()
                     ? " AND company_id='" + UserSession.getSelectedCompanyID() + "'"
@@ -425,6 +429,7 @@ public final class sales extends javax.swing.JInternalFrame {
                     { "tax_pct", "13", "0" },
                     { "total", "16", "1" },
                     { "hsn", "3", hasHsn ? "1" : "0" },
+                    { "unit", "17", hasUnit ? "1" : "0" },
             };
             for (String[] mc : managed) {
                 String key = mc[0];
@@ -906,6 +911,9 @@ public final class sales extends javax.swing.JInternalFrame {
         if (h27.getText().equals("")) {
             h27.setText("0.00");
         }
+        if (upiField.getText().equals("")) {
+            upiField.setText("0.00");
+        }
         if (h30.getText().equals("")) {
             h30.setText("0.00");
         }
@@ -953,12 +961,14 @@ public final class sales extends javax.swing.JInternalFrame {
         double cash = Double.parseDouble(h25.getText());
         double card = Double.parseDouble(h26.getText());
         double others = Double.parseDouble(h27.getText());
+        double upiAmt = Double.parseDouble(upiField.getText());
         double creditAmt = Double.parseDouble(h31.getText());
-        double total = cash + card + others + loyalty_points + creditAmt;
+        double total = cash + card + others + upiAmt + loyalty_points + creditAmt;
 
         String cash2 = String.format("%." + hmany + "f", cash);
         String card2 = String.format("%." + hmany + "f", card);
         String others2 = String.format("%." + hmany + "f", others);
+        String upi2 = String.format("%." + hmany + "f", upiAmt);
         String loyalty_points2 = String.format("%." + hmany + "f", loyalty_points);
         String credit2 = String.format("%." + hmany + "f", creditAmt);
         String total2 = String.format("%." + hmany + "f", total);
@@ -966,6 +976,7 @@ public final class sales extends javax.swing.JInternalFrame {
         h25.setText(cash2);
         h26.setText(card2);
         h27.setText(others2);
+        upiField.setText(upi2);
         h30.setText(loyalty_points2);
         h31.setText(credit2);
         h28.setText(total2);
@@ -1056,7 +1067,7 @@ public final class sales extends javax.swing.JInternalFrame {
             multi_pay_mode.requestFocus();
             Point l = stockl.getLocationOnScreen();
             multi_pay_mode.setLocation(l.x, l.y + stockl.getHeight());
-            multi_pay_mode.setSize(340, 388);
+            multi_pay_mode.setSize(340, 428);
             jLabelLoyaltyPts.setText(
                     "<html><font color='#27ae60'><b>Loyalty Pts</b></font><br><font size='2' color='gray'>Avail: "
                             + cpointsl.getText() + "</font></html>");
@@ -1285,7 +1296,7 @@ public final class sales extends javax.swing.JInternalFrame {
             String others = h27.getText();
             String loyalty_points = h30.getText();
             String credit = h31.getText().isEmpty() ? "0" : h31.getText();
-            String upi = "0";
+            String upi = upiField.getText().isEmpty() ? "0" : upiField.getText();
             String today_points = pointsl.getText();
             String total_points = tot_pointsl.getText();
             String cost_rate = pratel.getText();
@@ -1356,6 +1367,11 @@ public final class sales extends javax.swing.JInternalFrame {
                 psSales.setString(37, cost_rate);
                 psSales.setString(38, UserSession.getSelectedCompanyID());
                 psSales.executeUpdate();
+
+                // Save other charges line items
+                String ocCompanyId = UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "";
+                OtherChargesDialog.saveCharges(conn, "sales_other_charges",
+                        Integer.parseInt(billno), otherChargesList, ocCompanyId);
 
                 String salesItemsQuery = "INSERT INTO sales_items (billno, dat, cid, serial, ino, iname, quan, mrp, price, amount, disp, disamt, sub, taxp, taxamt, total, udes, barcode, hsn, tax, entry, cost_rate, profit, iname1, price_type, tax_type, item_type, prate, rprice, wprice, remarks, size, color, brand, company_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
                 PreparedStatement psItems = conn.prepareStatement(salesItemsQuery);
@@ -1653,6 +1669,7 @@ public final class sales extends javax.swing.JInternalFrame {
             h13.setText("");
             h14.setText("");
             h15.setText("");
+            otherChargesList.clear();
             h16.setSelectedIndex(0);
             h21.setText("--");
             creditLabel.setText(null);
@@ -1753,6 +1770,12 @@ public final class sales extends javax.swing.JInternalFrame {
                     h13.setText(taxamt);
                     h14.setText(addamt);
                     h15.setText(round);
+
+                    // Load other charges line items
+                    String ocViewCompanyId = UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "";
+                    otherChargesList = OtherChargesDialog.loadCharges(util, "sales_other_charges",
+                            h1.getText(), ocViewCompanyId);
+
                     h16.setSelectedItem(set1.getString(16));
                     double net = set1.getDouble(17);
 
@@ -1871,6 +1894,9 @@ public final class sales extends javax.swing.JInternalFrame {
             }
             if (h27.getText().equals("")) {
                 h27.setText("" + 0);
+            }
+            if (upiField.getText().equals("")) {
+                upiField.setText("" + 0);
             }
             if (h31.getText().equals("")) {
                 h31.setText("" + 0);
@@ -2401,6 +2427,9 @@ public final class sales extends javax.swing.JInternalFrame {
                 psDeleteItems.setString(2, companyId);
                 psDeleteItems.executeUpdate();
 
+                OtherChargesDialog.deleteCharges(conn, "sales_other_charges",
+                        Integer.parseInt(billno), companyId);
+
                 if (h16.getSelectedItem().equals("Credit")) {
                     PreparedStatement psDeleteCustBal = conn.prepareStatement("DELETE FROM cust_bal WHERE billno=?");
                     psDeleteCustBal.setString(1, billno);
@@ -2552,6 +2581,9 @@ public final class sales extends javax.swing.JInternalFrame {
                 psDeleteItems.setString(1, billno);
                 psDeleteItems.setString(2, companyId);
                 psDeleteItems.executeUpdate();
+
+                OtherChargesDialog.deleteCharges(conn, "sales_other_charges",
+                        Integer.parseInt(billno), companyId);
 
                 String rno = "SALE-" + billno;
                 PreparedStatement psDeletePeracc = conn.prepareStatement("DELETE FROM peracc WHERE billno=?");
@@ -3034,6 +3066,8 @@ public final class sales extends javax.swing.JInternalFrame {
         jSeparator2 = new javax.swing.JSeparator();
         jLabel32 = new javax.swing.JLabel();
         h27 = new javax.swing.JTextField();
+        jLabelUpi = new javax.swing.JLabel();
+        upiField = new javax.swing.JTextField();
         jLabelLoyaltyPts = new javax.swing.JLabel();
         h30 = new javax.swing.JTextField();
         jLabelCredit = new javax.swing.JLabel();
@@ -3178,6 +3212,23 @@ public final class sales extends javax.swing.JInternalFrame {
         jLabel32.setFont(new java.awt.Font("Arial", 0, 15)); // NOI18N
         jLabel32.setText("Others");
 
+        jLabelUpi.setFont(new java.awt.Font("Arial", 0, 15)); // NOI18N
+        jLabelUpi.setText("UPI");
+
+        upiField.setFont(new java.awt.Font("Arial", 1, 17)); // NOI18N
+        upiField.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        upiField.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                upiField.selectAll();
+            }
+        });
+        upiField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                get_paid_bal_details();
+                h30.requestFocus();
+            }
+        });
+
         jLabelLoyaltyPts.setFont(new java.awt.Font("Arial", 1, 13)); // NOI18N
         jLabelLoyaltyPts.setText("<html><font color='#27ae60'>Loyalty Pts</font></html>");
 
@@ -3291,6 +3342,8 @@ public final class sales extends javax.swing.JInternalFrame {
                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addComponent(jLabel32, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jLabelUpi, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addComponent(jLabelLoyaltyPts, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addComponent(jLabelCredit, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
@@ -3304,6 +3357,8 @@ public final class sales extends javax.swing.JInternalFrame {
                                         .addComponent(h26, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addComponent(h27, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(upiField, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addComponent(h30, javax.swing.GroupLayout.PREFERRED_SIZE, 210,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -3342,6 +3397,12 @@ public final class sales extends javax.swing.JInternalFrame {
                                         .addComponent(jLabel32, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addComponent(h27, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(4, 4, 4)
+                                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jLabelUpi, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
+                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(upiField, javax.swing.GroupLayout.PREFERRED_SIZE, 36,
                                                 javax.swing.GroupLayout.PREFERRED_SIZE))
                                 .addGap(4, 4, 4)
                                 .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -3750,7 +3811,19 @@ public final class sales extends javax.swing.JInternalFrame {
         jLabel17.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jLabel17.setText("Other.Charges");
         jPanel2.add(jLabel17);
-        jLabel17.setBounds(0, 390, 100, 30);
+        jLabel17.setBounds(0, 390, 80, 30);
+
+        chargesButton = new javax.swing.JButton("...");
+        chargesButton.setFont(new java.awt.Font("Arial", Font.PLAIN, 10));
+        chargesButton.setMargin(new java.awt.Insets(0, 0, 0, 0));
+        chargesButton.setToolTipText("Add / Edit Other Charges");
+        chargesButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                chargesButtonActionPerformed(evt);
+            }
+        });
+        jPanel2.add(chargesButton);
+        chargesButton.setBounds(80, 390, 20, 30);
 
         jPanel3.setLayout(null);
 
@@ -3877,6 +3950,11 @@ public final class sales extends javax.swing.JInternalFrame {
         h16.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
                 h16KeyPressed(evt);
+            }
+        });
+        h16.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                get_pay_mode();
             }
         });
         jPanel2.add(h16);
@@ -4556,7 +4634,7 @@ public final class sales extends javax.swing.JInternalFrame {
 
     private void h27ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h27ActionPerformed
         get_paid_bal_details();
-        h30.requestFocus();
+        upiField.requestFocus();
 
     }// GEN-LAST:event_h27ActionPerformed
 
@@ -4770,6 +4848,21 @@ public final class sales extends javax.swing.JInternalFrame {
         h14.setBackground(color1.getBackground());
         h14.setForeground(color1.getForeground());
     }// GEN-LAST:event_h14FocusLost
+
+    private void chargesButtonActionPerformed(java.awt.event.ActionEvent evt) {
+        Frame owner = (Frame) SwingUtilities.getWindowAncestor(this);
+        OtherChargesDialog dlg = new OtherChargesDialog(owner, util);
+        if (!otherChargesList.isEmpty()) {
+            dlg.setCharges(otherChargesList);
+        }
+        dlg.setVisible(true);
+        if (dlg.isConfirmed()) {
+            otherChargesList = dlg.getCharges();
+            double total = dlg.getTotal();
+            h14.setText(total > 0 ? String.format("%." + hmany + "f", total) : "0");
+            final_calculate();
+        }
+    }
 
     private void h22ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_h22ActionPerformed
 
@@ -5489,6 +5582,8 @@ public final class sales extends javax.swing.JInternalFrame {
     private javax.swing.JTextField h28;
     private javax.swing.JTextField h29;
     private javax.swing.JTextField h30;
+    private javax.swing.JLabel jLabelUpi;
+    private javax.swing.JTextField upiField;
     private javax.swing.JTextField h3;
     private javax.swing.JTextField h4;
     private javax.swing.JTextField h5;

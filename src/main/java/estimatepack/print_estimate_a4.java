@@ -23,6 +23,7 @@ import javax.print.attribute.standard.MediaSizeName;
 import menupack.AmountInWords;
 import menupack.SelRomJasper;
 import menupack.UserSession;
+import Utils.OtherChargesDialog;
 import net.sf.jasperreports.engine.JRBand;
 import net.sf.jasperreports.engine.JRElement;
 import net.sf.jasperreports.engine.JRException;
@@ -86,8 +87,8 @@ public class print_estimate_a4 {
 
             // Fetch customer and invoice details from estimate table
             String cname = "", mobile = "", billno1 = "", date = "";
-            double sub = 0, net = 0, taxamt = 0;
-            query = "select cname, mobile, billno, date_format(dat,'%d/%m/%Y'), sub, net, taxamt from estimate where billno='"
+            double sub = 0, net = 0, taxamt = 0, addamt = 0;
+            query = "select cname, mobile, billno, date_format(dat,'%d/%m/%Y'), sub, net, taxamt, addamt from estimate where billno='"
                     + billno + "'";
             r = util.doQuery(query);
             if (r == null) {
@@ -101,6 +102,7 @@ public class print_estimate_a4 {
                 sub = r.getDouble(5);
                 net = r.getDouble(6);
                 taxamt = r.getDouble(7);
+                addamt = r.getDouble(8);
             } else {
                 throw new SQLException("No estimate found for billno: " + billno);
             }
@@ -126,6 +128,15 @@ public class print_estimate_a4 {
             parameters.put("GrandTotalStr", String.format("%,.2f", net));
             parameters.put("AmountInWords", "Rupees " + rupe + " Only");
             parameters.put("TermsAndConditions", estimateTerms);
+
+            // ==================== OTHER CHARGES ====================
+            String companyId = UserSession.hasSelectedCompany() ? UserSession.getSelectedCompanyID() : "";
+            java.util.List<String[]> otherCharges = OtherChargesDialog.loadCharges(util, "estimate_other_charges",
+                    billno, companyId);
+            String otherChargesStr = OtherChargesDialog.buildChargesDisplayString(otherCharges, hmany);
+            parameters.put("OtherChargesStr", otherChargesStr);
+            parameters.put("OtherChargesTotalStr", addamt > 0 ? String.format("%,." + hmany + "f", addamt) : "");
+
             parameters.put("CGSTAmount", taxamt / 2);
             parameters.put("SGSTAmount", taxamt / 2);
             parameters.put("IGSTAmount", 0.0);

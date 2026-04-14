@@ -38,10 +38,10 @@ public class InvoiceColumnManager extends JDialog {
     // Pre-defined column order for each doc_type (order matches DB col_order)
     private static final String[] INVOICE_KEYS = { "sno", "product_name", "qty", "mrp", "net_rate", "price",
             "disc", "disc_amt", "sub_total", "tax_pct", "tax_amt", "amount", "hsn",
-            "mfg_date", "exp_date" };
+            "mfg_date", "exp_date", "unit" };
     private static final String[] ESTIMATE_KEYS = { "sno", "product_name", "qty", "mrp", "net_rate", "price",
             "disc", "disc_amt", "sub_total", "tax_pct", "tax_amt", "amount", "hsn",
-            "mfg_date", "exp_date" };
+            "mfg_date", "exp_date", "unit" };
     private static final String[] PURCHASE_KEYS = { "mrp", "rprice", "wprice", "disc", "disc_amt", "sub_total",
             "tax_pct", "tax_amt", "hsn", "tax_type", "category", "manufacturer", "size", "color", "brand" };
     private static final String[] PO_KEYS = { "mrp", "reorder_level", "stock_hand", "tax_pct", "tax_amt",
@@ -109,6 +109,8 @@ public class InvoiceColumnManager extends JDialog {
                 return "Stock-in-Hand";
             case "total":
                 return "Total";
+            case "unit":
+                return "Unit";
             default:
                 return key;
         }
@@ -252,7 +254,7 @@ public class InvoiceColumnManager extends JDialog {
      * Grocery – HSN/Tax visible; mfg_date + exp_date visible (food expiry)
      * Clothing – No HSN/Tax; wholesale price shown; no mfg/exp
      * Pharmacy – HSN/Tax + mfg_date + exp_date + disc_amt visible
-     * Hardware – HSN/Tax; no mfg/exp; standard purchase cols
+     * Hardware – HSN/Tax; no mfg/exp; unit visible; standard purchase cols
      * Electronics – HSN/Tax; disc_amt visible; no mfg/exp
      */
     private void applyShopTypePreset() {
@@ -261,14 +263,17 @@ public class InvoiceColumnManager extends JDialog {
         boolean isPharmacy = st.equals("Pharmacy");
         boolean isClothing = st.equals("Clothing");
         boolean isGrocery = st.equals("Grocery");
+        boolean isHardware = st.equals("Hardware");
         boolean isElectronics = st.equals("Electronics");
 
         boolean hasTax = !isClothing;
         boolean hasHsn = !isClothing;
         boolean hasMfgExp = isPharmacy || isGrocery;
+        boolean hasUnit = isPharmacy || isGrocery || isHardware;
         boolean hasWprice = isClothing;
         boolean hasDiscAmt = true; // Disc % and Disc Amount visible for every shop type
-        boolean hasClothingCols = isClothing; // size, color, brand for purchase/PO only
+        boolean hasSize = isClothing || isHardware; // size for purchase/PO
+        boolean hasClothingCols = isClothing; // color, brand for purchase/PO only
         // ── Invoice ──────────────────────────────────────────────────────────
         setVisible(invoiceModel, INVOICE_KEYS, "qty", true);
         setVisible(invoiceModel, INVOICE_KEYS, "mrp", true);
@@ -283,6 +288,7 @@ public class InvoiceColumnManager extends JDialog {
         setVisible(invoiceModel, INVOICE_KEYS, "hsn", hasHsn);
         setVisible(invoiceModel, INVOICE_KEYS, "mfg_date", hasMfgExp);
         setVisible(invoiceModel, INVOICE_KEYS, "exp_date", hasMfgExp);
+        setVisible(invoiceModel, INVOICE_KEYS, "unit", hasUnit);
 
         // ── Estimate ─────────────────────────────────────────────────────────
         setVisible(estimateModel, ESTIMATE_KEYS, "qty", true);
@@ -297,6 +303,7 @@ public class InvoiceColumnManager extends JDialog {
         setVisible(estimateModel, ESTIMATE_KEYS, "hsn", hasHsn);
         setVisible(estimateModel, ESTIMATE_KEYS, "mfg_date", hasMfgExp);
         setVisible(estimateModel, ESTIMATE_KEYS, "exp_date", hasMfgExp);
+        setVisible(estimateModel, ESTIMATE_KEYS, "unit", hasUnit);
 
         // ── Purchase ─────────────────────────────────────────────────────────
         setVisible(purchaseModel, PURCHASE_KEYS, "wprice", hasWprice);
@@ -306,14 +313,14 @@ public class InvoiceColumnManager extends JDialog {
         setVisible(purchaseModel, PURCHASE_KEYS, "tax_amt", hasTax);
         setVisible(purchaseModel, PURCHASE_KEYS, "hsn", hasHsn);
         setVisible(purchaseModel, PURCHASE_KEYS, "tax_type", hasHsn);
-        setVisible(purchaseModel, PURCHASE_KEYS, "size", hasClothingCols);
+        setVisible(purchaseModel, PURCHASE_KEYS, "size", hasSize);
         setVisible(purchaseModel, PURCHASE_KEYS, "color", hasClothingCols);
         setVisible(purchaseModel, PURCHASE_KEYS, "brand", hasClothingCols);
 
         // ── PO ───────────────────────────────────────────────────────────────
         setVisible(poModel, PO_KEYS, "tax_pct", hasTax);
         setVisible(poModel, PO_KEYS, "tax_amt", hasTax);
-        setVisible(poModel, PO_KEYS, "size", hasClothingCols);
+        setVisible(poModel, PO_KEYS, "size", hasSize);
         setVisible(poModel, PO_KEYS, "color", hasClothingCols);
         setVisible(poModel, PO_KEYS, "brand", hasClothingCols);
     }
