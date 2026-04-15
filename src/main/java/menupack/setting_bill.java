@@ -744,7 +744,7 @@ public final class setting_bill extends javax.swing.JInternalFrame {
             }
         });
         getContentPane().add(savebutton);
-        savebutton.setBounds(440, 730, 130, 50);
+        savebutton.setBounds(440, 710, 130, 50);
 
         clearbutton.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         clearbutton.setMnemonic('c');
@@ -755,7 +755,7 @@ public final class setting_bill extends javax.swing.JInternalFrame {
             }
         });
         getContentPane().add(clearbutton);
-        clearbutton.setBounds(570, 730, 130, 50);
+        clearbutton.setBounds(570, 710, 130, 50);
 
         closebutton.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         closebutton.setMnemonic('o');
@@ -766,7 +766,7 @@ public final class setting_bill extends javax.swing.JInternalFrame {
             }
         });
         getContentPane().add(closebutton);
-        closebutton.setBounds(700, 730, 130, 50);
+        closebutton.setBounds(700, 710, 130, 50);
 
         jLabel11.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         jLabel11.setText("Estimate Head");

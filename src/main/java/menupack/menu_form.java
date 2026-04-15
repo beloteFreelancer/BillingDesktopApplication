@@ -984,6 +984,7 @@ public final class menu_form extends javax.swing.JFrame {
         fyCombo.setBackground(java.awt.Color.WHITE);
         fyCombo.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         fyCombo.setToolTipText("Select Period / Financial Year");
+        fyCombo.setLightWeightPopupEnabled(false);
         fyCombo.setBounds(950, 10, 155, 34);
 
         jPanel4.add(fyCombo);
@@ -1001,11 +1002,13 @@ public final class menu_form extends javax.swing.JFrame {
 
         // ── Company combobox ─────────────────────────────────────────────────
         companyCombo = new javax.swing.JComboBox<>();
-        companyCombo.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 13));
+        companyCombo.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
         companyCombo.setForeground(new java.awt.Color(115, 15, 158));
         companyCombo.setBackground(java.awt.Color.WHITE);
         companyCombo.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         companyCombo.setToolTipText("Select Company");
+        // companyCombo.setMaximumRowCount(15);
+        companyCombo.setLightWeightPopupEnabled(false);
         try {
             java.sql.ResultSet crs = util.doQuery("SELECT companyID, cname FROM company ORDER BY cname");
             while (crs.next()) {
@@ -1033,8 +1036,40 @@ public final class menu_form extends javax.swing.JFrame {
                 companyCombo.setSelectedIndex(0);
             }
         }
-        companyCombo.setBounds(1154, 10, 200, 34);
+        companyCombo.setBounds(1154, 10, 300, 34);
         jPanel4.add(companyCombo);
+
+        // Auto-widen dropdown popup to fit longest company name
+        companyCombo.addPopupMenuListener(new javax.swing.event.PopupMenuListener() {
+            @Override
+            public void popupMenuWillBecomeVisible(javax.swing.event.PopupMenuEvent e) {
+                javax.swing.JComboBox<?> box = (javax.swing.JComboBox<?>) e.getSource();
+                Object child = box.getUI().getAccessibleChild(box, 0);
+                if (child instanceof javax.swing.plaf.basic.ComboPopup) {
+                    javax.swing.JList<?> list = ((javax.swing.plaf.basic.ComboPopup) child).getList();
+                    int widest = box.getWidth();
+                    java.awt.FontMetrics fm = list.getFontMetrics(list.getFont());
+                    for (int i = 0; i < box.getItemCount(); i++) {
+                        int tw = fm.stringWidth(box.getItemAt(i).toString()) + 30;
+                        if (tw > widest)
+                            widest = tw;
+                    }
+                    javax.swing.JScrollPane sp = (javax.swing.JScrollPane) javax.swing.SwingUtilities
+                            .getAncestorOfClass(javax.swing.JScrollPane.class, list);
+                    if (sp != null) {
+                        sp.setPreferredSize(new java.awt.Dimension(widest, sp.getPreferredSize().height));
+                    }
+                }
+            }
+
+            @Override
+            public void popupMenuWillBecomeInvisible(javax.swing.event.PopupMenuEvent e) {
+            }
+
+            @Override
+            public void popupMenuCanceled(javax.swing.event.PopupMenuEvent e) {
+            }
+        });
 
         companyCombo.addActionListener(e -> {
             String sel = (String) companyCombo.getSelectedItem();
@@ -1105,14 +1140,18 @@ public final class menu_form extends javax.swing.JFrame {
         int footerY = Math.max(infoY + 100, h - FOOTER_H);
 
         // ── FY and Company combos (right-aligned in header) ──────────────
-        int compW = 200;
+        int compW = 300;
         int fyW = 155;
         int compX = w - compW - 10;
         int fyX = compX - fyW - 5;
-        if (fyCombo != null)
+        if (fyCombo != null) {
             fyCombo.setBounds(fyX, 10, fyW, 34);
-        if (companyCombo != null)
+            jPanel4.setComponentZOrder(fyCombo, 0);
+        }
+        if (companyCombo != null) {
             companyCombo.setBounds(compX, 10, compW, 34);
+            jPanel4.setComponentZOrder(companyCombo, 0);
+        }
 
         // ── Header labels ────────────────────────────────────────────────
         cnamel.setBounds(L_MARGIN, 5, fyX - L_MARGIN - 6, 50);
@@ -6667,6 +6706,37 @@ public final class menu_form extends javax.swing.JFrame {
             Dimension jInternalFrameSize = im.getSize();
             im.setLocation((desktopSize.width - jInternalFrameSize.width) / 2,
                     (desktopSize.height - jInternalFrameSize.height) / 2);
+
+            // Refresh dashboard when CompanyManagement is closed
+            im.addInternalFrameListener(new javax.swing.event.InternalFrameAdapter() {
+                @Override
+                public void internalFrameClosed(javax.swing.event.InternalFrameEvent e) {
+                    // Reload company combo items
+                    if (companyCombo != null) {
+                        String prevSel = (String) companyCombo.getSelectedItem();
+                        companyCombo.removeAllItems();
+                        try {
+                            java.sql.ResultSet crs = util
+                                    .doQuery("SELECT companyID, cname FROM company ORDER BY cname");
+                            while (crs.next()) {
+                                companyCombo.addItem(crs.getString("companyID") + " - " + crs.getString("cname"));
+                            }
+                        } catch (Exception ignored) {
+                        }
+                        // Restore previous selection if still exists
+                        if (prevSel != null) {
+                            for (int i = 0; i < companyCombo.getItemCount(); i++) {
+                                if (prevSel.equals(companyCombo.getItemAt(i))) {
+                                    companyCombo.setSelectedIndex(i);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    get_defauls();
+                    get_details();
+                }
+            });
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
